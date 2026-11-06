@@ -40,3 +40,15 @@ def test_short_tail_chunk_is_appended_to_the_previous_one():
     ch = pack_chunks([S(0, 15), S(16, 30), S(31, 31.5)], 20.0, 1.0, x)
     # 16..30 | 31..31.5 -> too short -> merged (31.5-16 <= 24)
     assert ch == [S(0, 15), (S(16, 0)[0], S(31.5, 0)[0])]
+
+
+def test_rescue_finds_energy_outside_covered_regions():
+    from refpipe.vad import rescue_segments
+
+    rng = np.random.RandomState(0)
+    x = (rng.randn(20 * SR) * 0.001).astype(np.float32)           # noise floor ~ -60 dBFS
+    x[2 * SR:4 * SR] += (rng.randn(2 * SR) * 0.05).astype(np.float32)   # burst A (covered by Silero)
+    x[10 * SR:12 * SR] += (rng.randn(2 * SR) * 0.05).astype(np.float32)  # burst B (missed by Silero)
+    out = rescue_segments(x, [(2 * SR, 4 * SR)], {"snr_db": 10, "abs_floor_db": -50})
+    assert len(out) == 1 and abs(out[0][0] - 10 * SR) <= 0.1 * SR and abs(out[0][1] - 12 * SR) <= 0.1 * SR
+    assert rescue_segments(np.zeros(5 * SR, dtype=np.float32), [], {}) == []

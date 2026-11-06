@@ -133,14 +133,76 @@ def pack_chunks(segs: list[tuple[int, int]], max_s: float, min_s: float, x: np.n
     return merged
 
 
+def rescue_segments(x: np.ndarray, covered: list[tuple[int, int]], rcfg: dict) -> list[tuple[int, int]]:
+    """EXPERIMENTAL (vad.rescue, refpipe only): energy-based speech candidates in regions Silero left empty.
+
+    Some voices (quiet / codec-damaged synthetic phone speakers) get ~0 Silero probability even though GigaAM
+    recognises them well.  20 ms frame RMS in dB; noise floor = 10th percentile; a frame is active if
+    > max(floor + snr_db, abs_floor_db); active runs are bridged over gaps < bridge_ms and kept if
+    >= min_ms; parts overlapping `covered` (+/- margin_ms) are removed; remaining pieces >= min_ms are returned
+    (samples).  Their ASR output is filtered by postprocess.drop_tiny_chunks like any chunk."""
+    fr = int(0.02 * SR)
+    n = len(x) // fr
+    if n < 10:
+        return []
+    rms = np.sqrt((x[: n * fr].reshape(n, fr) ** 2).mean(1))
+    db = 20 * np.log10(np.maximum(rms, 1e-9))
+    thr = max(float(np.percentile(db, 10)) + float(rcfg.get("snr_db", 12.0)), float(rcfg.get("abs_floor_db", -55.0)))
+    act = db > thr
+    bridge = int(rcfg.get("bridge_ms", 300) / 20)
+    minf = int(rcfg.get("min_ms", 600) / 20)
+    # bridge short gaps
+    i = 0
+    while i < n:
+        if not act[i]:
+            j = i
+            while j < n and not act[j]:
+                j += 1
+            if 0 < i and j < n and j - i <= bridge:
+                act[i:j] = True
+            i = j
+        else:
+            i += 1
+    cov = np.zeros(n, dtype=bool)
+    m = int(rcfg.get("margin_ms", 200) / 20)
+    for a, b in covered:
+        cov[max(0, a // fr - m): min(n, b // fr + m + 1)] = True
+    cand = act & ~cov
+    out = []
+    i = 0
+    while i < n:
+        if cand[i]:
+            j = i
+            while j < n and cand[j]:
+                j += 1
+            if j - i >= minf:
+                out.append((i * fr, j * fr))
+            i = j
+        else:
+            i += 1
+    return out
+
+
 def _span(a: int, b: int) -> TimeSpan:
     return TimeSpan(a * 1000 // SR, b * 1000 // SR)
 
 
+def speech_segments(x: np.ndarray, cfg: dict, vad: "SileroVad") -> list[tuple[int, int]]:
+    """Padded speech segments in samples (Silero + optional rescue + pad_segments)."""
+    raw = [(s.start_sample, s.end_sample) for s in vad.detect_samples(x)]
+    rc = cfg["vad"].get("rescue")
+    if rc and rc.get("enabled"):
+        raw = sorted(raw + rescue_segments(x, raw, rc))
+    return pad_segments(raw, int(cfg["vad"]["pad_ms"]), len(x))
+
+
+def chunks_from_segments(segs: list[tuple[int, int]], cfg: dict, x: np.ndarray) -> list[tuple[int, int]]:
+    ch = cfg["asr"]["chunk"]
+    return pack_chunks(segs, float(ch["max_s"]), float(ch.get("min_s", 0)), x)
+
+
 def speech_chunks(x: np.ndarray, cfg: dict, vad: "SileroVad") -> tuple[list[TimeSpan], list[TimeSpan]]:
     """Returns (padded speech intervals, ASR chunks), both in ms."""
-    raw = [(s.start_sample, s.end_sample) for s in vad.detect_samples(x)]
-    seg = pad_segments(raw, int(cfg["vad"]["pad_ms"]), len(x))
-    ch = cfg["asr"]["chunk"]
-    chunks = pack_chunks(seg, float(ch["max_s"]), float(ch.get("min_s", 0)), x)
+    seg = speech_segments(x, cfg, vad)
+    chunks = chunks_from_segments(seg, cfg, x)
     return [_span(a, b) for a, b in seg if b > a], [_span(a, b) for a, b in chunks if b > a]
