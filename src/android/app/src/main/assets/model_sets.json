@@ -1,0 +1,333 @@
+{
+  "version": 1,
+  "_note": "Сгенерировано src/android/app/tools/gen_model_sets.py; URL -- официальные источники (scripts/fetch_models.py)",
+  "archives": [
+    {
+      "id": "parakeet-110m",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet_tdt_transducer_110m-en-36000-int8.tar.bz2",
+      "format": "tar.bz2",
+      "stripComponents": 1,
+      "size": 108035095
+    }
+  ],
+  "sets": [
+    {
+      "id": "lite",
+      "tier": "lite",
+      "title": "Lite",
+      "description": "Минимальная нагрузка: для слабых устройств.",
+      "recommended": false,
+      "version": "1",
+      "files": [
+        {
+          "path": "silero-vad/silero_vad.onnx",
+          "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx",
+          "size": 643854,
+          "sha256": "9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/LICENSE",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/LICENSE",
+          "size": 1070,
+          "sha256": "f00de6715714c7a63d08639cdbfaa40224eefc407302614bd19f1a8b98c875aa"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/model.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/model.int8.onnx",
+          "size": 224721476,
+          "sha256": "f86ebfa0429ced91be6054fc344827e9c6c2572f3c318416cd974b06f66437ec"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/tokens.txt",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/tokens.txt",
+          "size": 196,
+          "sha256": "17cc514451bcceac9c280068c71502f8448f99e9fb1456b8d0761651fd0392f2"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/decoder.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "decoder.int8.onnx",
+          "size": 3955863,
+          "sha256": "f7c331c5504c2e593c76ed22b728e3f554af6c4a383dde862e719ced08b1da19"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/encoder.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "encoder.int8.onnx",
+          "size": 131113202,
+          "sha256": "0f35509ddeb9b39002fb077d979a9fe74f06eb0bc4dd5c34f512f82e5111d657"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/joiner.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "joiner.int8.onnx",
+          "size": 1411403,
+          "sha256": "bf7dff69e9f2cdbe9943d70da358f38b361c115ba0105bae7e908e0d6ec782f6"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/tokens.txt",
+          "archive": "parakeet-110m",
+          "member": "tokens.txt",
+          "size": 9953,
+          "sha256": "450e56bd2f036fe5b6aa821865838cc5aa9d8b0106134ce9a9ba0664abe6cd10"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/decoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-decoder.int8.onnx",
+          "size": 89855401,
+          "sha256": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/encoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-encoder.int8.onnx",
+          "size": 12937772,
+          "sha256": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/tokens.txt",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-tokens.txt",
+          "size": 816730,
+          "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+        },
+        {
+          "path": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-pyannote-segmentation-3-0/resolve/main/model.int8.onnx",
+          "size": 1540506,
+          "sha256": "d582f4b4c6b48205de7e0643c57df0df5615a3c176189be3fc461e9d18827b5d"
+        },
+        {
+          "path": "diar/embedding/model.onnx",
+          "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx",
+          "size": 28281164,
+          "sha256": "aa3cfc16963a10586a9393f5035d6d6b57e98d358b347f80c2a30bf4f00ceba2"
+        },
+        {
+          "path": "llm/qwen3-0.6b-q4_0.gguf",
+          "url": "https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q4_0.gguf",
+          "size": 428970080,
+          "sha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4"
+        }
+      ]
+    },
+    {
+      "id": "medium",
+      "tier": "medium",
+      "title": "Medium",
+      "description": "Основной набор: лучший баланс точности и скорости.",
+      "recommended": true,
+      "version": "1",
+      "files": [
+        {
+          "path": "silero-vad/silero_vad.onnx",
+          "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx",
+          "size": 643854,
+          "sha256": "9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/LICENSE",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/LICENSE",
+          "size": 1070,
+          "sha256": "f00de6715714c7a63d08639cdbfaa40224eefc407302614bd19f1a8b98c875aa"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/model.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/model.int8.onnx",
+          "size": 224721476,
+          "sha256": "f86ebfa0429ced91be6054fc344827e9c6c2572f3c318416cd974b06f66437ec"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/tokens.txt",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/tokens.txt",
+          "size": 196,
+          "sha256": "17cc514451bcceac9c280068c71502f8448f99e9fb1456b8d0761651fd0392f2"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/decoder.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "decoder.int8.onnx",
+          "size": 3955863,
+          "sha256": "f7c331c5504c2e593c76ed22b728e3f554af6c4a383dde862e719ced08b1da19"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/encoder.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "encoder.int8.onnx",
+          "size": 131113202,
+          "sha256": "0f35509ddeb9b39002fb077d979a9fe74f06eb0bc4dd5c34f512f82e5111d657"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/joiner.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "joiner.int8.onnx",
+          "size": 1411403,
+          "sha256": "bf7dff69e9f2cdbe9943d70da358f38b361c115ba0105bae7e908e0d6ec782f6"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/tokens.txt",
+          "archive": "parakeet-110m",
+          "member": "tokens.txt",
+          "size": 9953,
+          "sha256": "450e56bd2f036fe5b6aa821865838cc5aa9d8b0106134ce9a9ba0664abe6cd10"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/decoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-decoder.int8.onnx",
+          "size": 89855401,
+          "sha256": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/encoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-encoder.int8.onnx",
+          "size": 12937772,
+          "sha256": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/tokens.txt",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-tokens.txt",
+          "size": 816730,
+          "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+        },
+        {
+          "path": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-pyannote-segmentation-3-0/resolve/main/model.int8.onnx",
+          "size": 1540506,
+          "sha256": "d582f4b4c6b48205de7e0643c57df0df5615a3c176189be3fc461e9d18827b5d"
+        },
+        {
+          "path": "diar/embedding/model.onnx",
+          "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx",
+          "size": 28281164,
+          "sha256": "aa3cfc16963a10586a9393f5035d6d6b57e98d358b347f80c2a30bf4f00ceba2"
+        },
+        {
+          "path": "llm/qwen3-1.7b-q4_k_m.gguf",
+          "url": "https://huggingface.co/ggml-org/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf",
+          "size": 1282439264,
+          "sha256": "d2387ca2dbfee2ffabce7120d3770dadca0b293052bc2f0e138fdc940d9bc7b5"
+        }
+      ]
+    },
+    {
+      "id": "hard",
+      "tier": "hard",
+      "title": "Hard",
+      "description": "Максимум точности для флагманов (от 8 ГБ ОЗУ).",
+      "recommended": false,
+      "version": "1",
+      "files": [
+        {
+          "path": "silero-vad/silero_vad.onnx",
+          "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx",
+          "size": 643854,
+          "sha256": "9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6"
+        },
+        {
+          "path": "denoise/gtcrn_simple.onnx",
+          "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx",
+          "size": 535638,
+          "sha256": "e77603ac0c23dac3227dd2d7135b3a585cbee2679048aecfa886657d3ae1b534"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/LICENSE",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/LICENSE",
+          "size": 1070,
+          "sha256": "f00de6715714c7a63d08639cdbfaa40224eefc407302614bd19f1a8b98c875aa"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/model.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/model.int8.onnx",
+          "size": 224721476,
+          "sha256": "f86ebfa0429ced91be6054fc344827e9c6c2572f3c318416cd974b06f66437ec"
+        },
+        {
+          "path": "asr/gigaam-v3-ctc-int8/tokens.txt",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/tokens.txt",
+          "size": 196,
+          "sha256": "17cc514451bcceac9c280068c71502f8448f99e9fb1456b8d0761651fd0392f2"
+        },
+        {
+          "path": "asr/whisper-large-v3-turbo-int8/decoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-turbo/resolve/main/turbo-decoder.int8.onnx",
+          "size": 361080764,
+          "sha256": "20accd02388482eb3a46bd615631adfdc85e1eb2c7db9ea3f02a40ffe6b81547"
+        },
+        {
+          "path": "asr/whisper-large-v3-turbo-int8/encoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-turbo/resolve/main/turbo-encoder.int8.onnx",
+          "size": 674716297,
+          "sha256": "b02dcdf54f348741e93fe732b67d933c8dcb6735655f710640143081db38878b"
+        },
+        {
+          "path": "asr/whisper-large-v3-turbo-int8/tokens.txt",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-turbo/resolve/main/turbo-tokens.txt",
+          "size": 816730,
+          "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/decoder.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "decoder.int8.onnx",
+          "size": 3955863,
+          "sha256": "f7c331c5504c2e593c76ed22b728e3f554af6c4a383dde862e719ced08b1da19"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/encoder.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "encoder.int8.onnx",
+          "size": 131113202,
+          "sha256": "0f35509ddeb9b39002fb077d979a9fe74f06eb0bc4dd5c34f512f82e5111d657"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/joiner.int8.onnx",
+          "archive": "parakeet-110m",
+          "member": "joiner.int8.onnx",
+          "size": 1411403,
+          "sha256": "bf7dff69e9f2cdbe9943d70da358f38b361c115ba0105bae7e908e0d6ec782f6"
+        },
+        {
+          "path": "asr/parakeet-tdt-110m-en-int8/tokens.txt",
+          "archive": "parakeet-110m",
+          "member": "tokens.txt",
+          "size": 9953,
+          "sha256": "450e56bd2f036fe5b6aa821865838cc5aa9d8b0106134ce9a9ba0664abe6cd10"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/decoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-decoder.int8.onnx",
+          "size": 89855401,
+          "sha256": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/encoder.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-encoder.int8.onnx",
+          "size": 12937772,
+          "sha256": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434"
+        },
+        {
+          "path": "asr/whisper-tiny-int8/tokens.txt",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-tokens.txt",
+          "size": 816730,
+          "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+        },
+        {
+          "path": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+          "url": "https://huggingface.co/csukuangfj/sherpa-onnx-pyannote-segmentation-3-0/resolve/main/model.int8.onnx",
+          "size": 1540506,
+          "sha256": "d582f4b4c6b48205de7e0643c57df0df5615a3c176189be3fc461e9d18827b5d"
+        },
+        {
+          "path": "diar/embedding/model.onnx",
+          "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx",
+          "size": 28281164,
+          "sha256": "aa3cfc16963a10586a9393f5035d6d6b57e98d358b347f80c2a30bf4f00ceba2"
+        },
+        {
+          "path": "llm/qwen3-4b-q4_k_m.gguf",
+          "url": "https://huggingface.co/ggml-org/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf",
+          "size": 2497280640,
+          "sha256": "ab27b9bfa375a178d6cba48f3ad892b94b7739659dcc7aae8058ce0ffed6b328"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,272 @@
+package ru.neurosteno.app
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.net.Uri
+import android.media.MediaMetadataRetriever
+import android.os.Build
+import android.os.Debug
+import android.os.IBinder
+import android.os.PowerManager
+import androidx.core.app.ServiceCompat
+import java.io.File
+import java.util.EnumMap
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import ru.neurosteno.app.models.ModelBootstrap
+import ru.neurosteno.app.models.ModelsStatus
+import ru.neurosteno.app.pipeline.ModelsNotReadyException
+import ru.neurosteno.app.pipeline.PipelineRunner
+import ru.neurosteno.app.ui.Format
+import ru.neurosteno.core.PipelineException
+import ru.neurosteno.core.Stage
+
+/**
+ * Foreground Service обработки: переживает сворачивание приложения, держит CPU (partial wake lock), показывает
+ * уведомление с прогрессом. Любая ошибка превращается в [ProcessingUi.Failed] -- сервис не роняет процесс.
+ */
+class ProcessingService : Service() {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var job: Job? = null
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_CANCEL -> {
+                ProcessingState.markCancelling()
+                job?.cancel()
+                return START_NOT_STICKY
+            }
+            ACTION_START -> {
+                val uri = intent.data
+                if (uri == null) {
+                    ProcessingState.setProcessing(ProcessingUi.Failed(null, "Не передан файл для обработки"))
+                    stopSelf(startId)
+                    return START_NOT_STICKY
+                }
+                val name = intent.getStringExtra(EXTRA_NAME) ?: uri.lastPathSegment ?: "audio"
+                // на Android 12+ запуск foreground из фона может быть запрещён -- тогда обрабатываем как обычный сервис
+                runCatching { startForegroundCompat(buildNotification(name, null, 0f)) }
+                start(uri, name)
+            }
+            else -> stopSelf(startId)
+        }
+        return START_NOT_STICKY
+    }
+
+    private fun start(uri: Uri, name: String) {
+        if (job?.isActive == true) return // уже идёт обработка
+        acquireWakeLock()
+        val graph = (application as NeuroApp).graph
+        val startedAt = System.currentTimeMillis()
+        val fractions = EnumMap<Stage, Float>(Stage::class.java)
+        ProcessingState.setProcessing(ProcessingUi.Running(sourceName = name, startedAtMs = startedAt))
+        job = scope.launch {
+            var peakPssMb = 0
+            val sampler = launch {
+                // пик PSS процесса за время обработки -- в «Статистику обработки» (BACKLOG B14)
+                while (isActive) {
+                    val mi = Debug.MemoryInfo()
+                    Debug.getMemoryInfo(mi)
+                    peakPssMb = maxOf(peakPssMb, mi.totalPss / 1024)
+                    delay(1_000)
+                }
+            }
+            try {
+                val duration = withContext(Dispatchers.IO) { probeDurationMs(uri) }
+                // модели могут быть ещё не скопированы (первый запуск) -- дождёмся
+                val status = ProcessingState.models.value
+                if (status !is ModelsStatus.Ready) {
+                    val s = ModelBootstrap.ensureInstalled(graph) { ProcessingState.setModels(it) }
+                    if (s !is ModelsStatus.Ready) throw ModelsNotReadyException((s as ModelsStatus.Missing).message)
+                }
+                val runner = PipelineRunner(applicationContext, graph)
+                val result = runner.run(uri, name, graph.settings.current) { stage, stageFraction, overall ->
+                    synchronized(fractions) { fractions[stage] = stageFraction }
+                    ProcessingState.setProcessing(
+                        ProcessingUi.Running(
+                            sourceName = name, stage = stage, stageFraction = stageFraction, overall = overall,
+                            fractions = synchronized(fractions) { HashMap(fractions) }, startedAtMs = startedAt, audioDurationMs = duration,
+                        ),
+                    )
+                    updateNotification(name, stage, overall)
+                }
+                autosave(result, name)
+                val entry = graph.history.add(
+                    sourceName = name,
+                    transcript = result.transcript,
+                    warnings = result.warnings,
+                    peakPssMb = peakPssMb,
+                    deviceTotalMb = totalRamMb(),
+                    modelSetId = graph.modelStore.activeSetId,
+                    audio = { contentResolver.openInputStream(uri) ?: throw java.io.IOException("нет доступа к файлу") },
+                )
+                removeOwnRecording(uri)
+                ProcessingState.setProcessing(ProcessingUi.Done(entry.id, name))
+            } catch (e: CancellationException) {
+                ProcessingState.reset()
+            } catch (e: ModelsNotReadyException) {
+                android.util.Log.e("Neurosteno", "processing failed: models not ready: ${e.message}")
+                ProcessingState.setProcessing(ProcessingUi.Failed(name, e.message ?: "Модели не готовы"))
+            } catch (e: PipelineException) {
+                android.util.Log.e("Neurosteno", "pipeline failed at ${e.stage}", e)
+                ProcessingState.setProcessing(ProcessingUi.Failed(name, e.message ?: "Ошибка обработки"))
+            } catch (e: OutOfMemoryError) {
+                ProcessingState.setProcessing(ProcessingUi.Failed(name, "Не хватило памяти для обработки этой записи. Попробуйте файл покороче или вариант Lite."))
+            } catch (e: Throwable) {
+                android.util.Log.e("Neurosteno", "processing failed", e)
+                ProcessingState.setProcessing(ProcessingUi.Failed(name, "Не удалось обработать запись: ${e.message ?: e.javaClass.simpleName}"))
+            } finally {
+                sampler.cancel()
+                releaseWakeLock()
+                ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
+        }
+    }
+
+    /** Длительность записи для оценки оставшегося времени; null, если платформа её не сообщает. */
+    private fun probeDurationMs(uri: Uri): Long? = runCatching {
+        val r = MediaMetadataRetriever()
+        try {
+            r.setDataSource(applicationContext, uri)
+            r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()?.takeIf { it > 0 }
+        } finally {
+            r.release()
+        }
+    }.getOrNull()
+
+    private fun totalRamMb(): Int {
+        val am = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        val info = android.app.ActivityManager.MemoryInfo()
+        am.getMemoryInfo(info)
+        return (info.totalMem / (1024 * 1024)).toInt()
+    }
+
+    /** Запись с микрофона лежит в приватной папке: после сохранения копии в истории оригинал не нужен. */
+    private fun removeOwnRecording(uri: Uri) {
+        if (uri.scheme != "file") return
+        val f = File(uri.path ?: return)
+        if (f.parentFile == File(filesDir, RECORDINGS_DIR)) f.delete()
+    }
+
+    /**
+     * Автосохранение результата в приватную папку приложения (`Android/data/<pkg>/files/results/`): доступна для adb pull
+     * и проверки без интерфейса. Экспорт «наружу» остаётся только по действию пользователя (SAF).
+     */
+    private fun autosave(result: ru.neurosteno.core.PipelineResult, name: String) {
+        runCatching {
+            val dir = java.io.File(getExternalFilesDir(null) ?: filesDir, "results").apply { mkdirs() }
+            val base = name.substringBeforeLast('.', name).ifBlank { "transcript" }
+            java.io.File(dir, "$base.json").writeText(result.json, Charsets.UTF_8)
+            java.io.File(dir, "$base.full.json").writeText(ru.neurosteno.core.TranscriptJson.toFullJson(result.transcript), Charsets.UTF_8)
+            val m = result.transcript.meta
+            android.util.Log.i("Neurosteno", "done $name: duration=${m.audioDurationMs} ms processing=${m.processingMs} ms rtf=${"%.3f".format(java.util.Locale.ROOT, m.rtf)} lang=${m.language} stages=${m.stageMs} warnings=${result.warnings}")
+        }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        releaseWakeLock()
+        super.onDestroy()
+    }
+
+    // ---- уведомление ----
+
+    private fun startForegroundCompat(n: Notification) {
+        val type = if (Build.VERSION.SDK_INT >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, n, type)
+    }
+
+    private fun buildNotification(name: String, stage: Stage?, progress: Float): Notification {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL_ID) == null) {
+            nm.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW),
+            )
+        }
+        val open = PendingIntent.getActivity(
+            this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val cancel = PendingIntent.getService(
+            this, 1, Intent(this, ProcessingService::class.java).setAction(ACTION_CANCEL),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val percent = (progress * 100).toInt()
+        val text = if (stage != null) "${Format.stageTitle(stage)} · $percent%" else getString(R.string.notification_preparing)
+        return Notification.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_notify_sync)
+            .setContentTitle(getString(R.string.notification_title))
+            .setContentText("$name — $text")
+            .setContentIntent(open)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setProgress(100, percent, stage == null)
+            .addAction(Notification.Action.Builder(null, getString(R.string.btn_cancel_processing), cancel).build())
+            .build()
+    }
+
+    private var lastNotifiedPercent = -1
+
+    private fun updateNotification(name: String, stage: Stage, progress: Float) {
+        val percent = (progress * 100).toInt()
+        if (percent == lastNotifiedPercent) return
+        lastNotifiedPercent = percent
+        runCatching {
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIFICATION_ID, buildNotification(name, stage, progress))
+        }
+    }
+
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "neurosteno:processing").apply {
+            setReferenceCounted(false)
+            acquire(WAKE_LOCK_TIMEOUT_MS)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
+        wakeLock = null
+    }
+
+    companion object {
+        const val ACTION_START = "ru.neurosteno.app.action.START"
+        const val ACTION_CANCEL = "ru.neurosteno.app.action.CANCEL"
+        const val EXTRA_NAME = "name"
+        private const val CHANNEL_ID = "processing"
+        private const val NOTIFICATION_ID = 1
+        private const val WAKE_LOCK_TIMEOUT_MS = 2L * 60 * 60 * 1000
+        /** Подкаталог filesDir с записями с микрофона. */
+        const val RECORDINGS_DIR = "recordings"
+
+        fun startIntent(context: Context, uri: Uri, name: String): Intent =
+            Intent(context, ProcessingService::class.java)
+                .setAction(ACTION_START)
+                .setData(uri)
+                .putExtra(EXTRA_NAME, name)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        fun cancelIntent(context: Context): Intent =
+            Intent(context, ProcessingService::class.java).setAction(ACTION_CANCEL)
+    }
+}

@@ -1,0 +1,14 @@
+.gradle/
+build/
+local.properties
+.kotlin/
+*.apk
+*.aab
+# Нативные зависимости скачиваются скриптами (src/android/scripts/*), в git не хранятся
+engine-sherpa/libs/*.aar
+engine-llm/src/main/cpp/llama.cpp/
+# Модели наполняются scripts/stage_models.sh
+app/src/*/assets/models/
+app/src/*/assets/tier.json
+# Локальный Maven с prebuilt AAR (scripts/fetch_sherpa_onnx.sh)
+third_party/maven/

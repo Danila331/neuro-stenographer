@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stenoeval"
+version = "0.1.0"
+description = "Evaluation harness for the Neuro-Stenographer hackathon case (WER, cpWER, DER, JER, timestamps, RTF)"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "rapidfuzz>=3.6",
+    "num2words>=0.5.13",
+    "jsonschema>=4.20",
+    "pyannote.core>=5.0",
+    "pyannote.metrics>=3.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+stenoeval = "stenoeval.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["stenoeval"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
