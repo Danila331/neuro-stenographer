@@ -14,7 +14,7 @@ SUMMARY_COLS = [
     ("WER num", "wer_num", fmt_pct),
     ("cpWER", "cpwer_norm", fmt_pct),
     ("DER", "der", fmt_pct),
-    ("DER c.25", "der_collar", fmt_pct),
+    ("DER ±.25", "der_collar", fmt_pct),
     ("JER", "jer", fmt_pct),
     ("spk acc", "spk_acc", fmt_pct),
     ("ts start MAE ms", "ts_start_mae_ms", lambda v: fmt_num(v, 0)),
@@ -50,7 +50,7 @@ def legend() -> str:
     return (
         "All error rates in %. WER/cpWER/DER are micro-averaged (sum of errors / sum of reference words or "
         "speech seconds); JER, ts MAE, spk acc are per-file means; RTF = sum(processing_ms)/sum(duration_ms). "
-        "WER raw/norm/num = normalisation modes; DER c.25 = pyannote collar=0.25 s."
+        "WER raw/norm/num = normalisation modes; DER ±.25 = NIST collar +-0.25 s around reference boundaries (pyannote collar=0.5)."
     )
 
 
@@ -62,7 +62,7 @@ COMPARE_METRICS = [
     ("WER num", "wer_num", True),
     ("cpWER", "cpwer_norm", True),
     ("DER", "der", True),
-    ("DER c.25", "der_collar", True),
+    ("DER ±.25", "der_collar", True),
     ("JER", "jer", True),
     ("ts start MAE", "ts_start_mae_ms", True),
     ("ts end MAE", "ts_end_mae_ms", True),

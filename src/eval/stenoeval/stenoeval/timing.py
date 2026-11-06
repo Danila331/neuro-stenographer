@@ -19,6 +19,10 @@ Algorithm
    ``start_acc300`` = share of *all* reference utterances (unmatched count as failures) with
    |Δstart| < 300 ms; same for end.
 
+Hypothesis word times: if ``<id>.full.json`` (extended export with per-word times) lies next to
+the hypothesis, its words are used (``ts=words`` in the notes of results.csv); otherwise the
+proportional split above is used (``ts=utt``).
+
 Because only aligned words are used, a deleted first word of an utterance shifts the predicted
 start to the next recognised word; this error is part of the metric (it measures what a user
 would see when comparing timestamps) and is small for good transcripts.
@@ -72,6 +76,52 @@ def hyp_words_from_utts(utts: Sequence[Utt], mode: str = ALIGN_MODE) -> list[Hyp
             words.append(HypWord(t, pos, pos + w))
             pos += w
     return words
+
+
+def hyp_words_from_full(obj: object, mode: str = ALIGN_MODE) -> list[HypWord] | None:
+    """Real word times from an extended export (`<id>.full.json`, ARCHITECTURE section 1).
+
+    Expected: ``{"utterances":[{"start_ms","end_ms","text","words":[{"text","start_ms","end_ms"}]}]}``.
+    Utterances are ordered by (start_ms, end_ms), words keep their order. A word that normalises
+    to several tokens (e.g. "25" in norm_num) shares its interval proportionally to token length.
+    An utterance without a usable ``words`` list falls back to proportional splitting of its own
+    interval. Returns None if the structure is unusable or yields no words at all.
+    """
+    utts = obj.get("utterances") if isinstance(obj, dict) else None
+    if not isinstance(utts, list):
+        return None
+
+    def num(v: object) -> float | None:
+        return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and v == v else None
+
+    items: list[tuple[float, float, dict]] = []
+    for u in utts:
+        if isinstance(u, dict):
+            s, e = num(u.get("start_ms")), num(u.get("end_ms"))
+            items.append((s if s is not None else 0.0, e if e is not None else 0.0, u))
+    items.sort(key=lambda x: (x[0], x[1]))
+    out: list[HypWord] = []
+    for s, e, u in items:
+        words = u.get("words")
+        got: list[HypWord] = []
+        if isinstance(words, list):
+            for w in words:
+                if not isinstance(w, dict) or not isinstance(w.get("text"), str):
+                    continue
+                ws, we = num(w.get("start_ms")), num(w.get("end_ms"))
+                if ws is None or we is None:
+                    continue
+                toks = tokens(w["text"], mode)
+                total = sum(len(t) for t in toks)
+                pos = ws
+                for t in toks:
+                    d = (we - ws) * len(t) / total
+                    got.append(HypWord(t, pos, pos + d))
+                    pos += d
+        if not got and isinstance(u.get("text"), str):
+            got = hyp_words_from_utts([Utt("", int(s), int(e), u["text"])], mode)
+        out.extend(got)
+    return out or None
 
 
 def _median(xs: list[float]) -> float | None:

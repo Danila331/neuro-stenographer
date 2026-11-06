@@ -7,7 +7,7 @@ from typing import Sequence
 
 from . import diar, wer as werm
 from .textnorm import MODES
-from .timing import TimingResult, timing
+from .timing import HypWord, TimingResult, timing
 from .transcript import Utt
 
 
@@ -28,7 +28,12 @@ class PairMetrics:
         return self.spk_ref == self.spk_hyp
 
 
-def evaluate_pair(ref: Sequence[Utt], hyp: Sequence[Utt], duration_ms: int | None = None) -> PairMetrics:
+def evaluate_pair(
+    ref: Sequence[Utt],
+    hyp: Sequence[Utt],
+    duration_ms: int | None = None,
+    hyp_words: Sequence[HypWord] | None = None,
+) -> PairMetrics:
     pm = PairMetrics(duration_ms=duration_ms)
     for mode in MODES:
         pm.wer[mode] = werm.wer(ref, hyp, mode)
@@ -40,5 +45,5 @@ def evaluate_pair(ref: Sequence[Utt], hyp: Sequence[Utt], duration_ms: int | Non
     pm.jer_nist = diar.jer(ref, hyp, diar.COLLARS["nist"], duration_ms)
     pm.spk_ref = diar.num_speakers(ref)
     pm.spk_hyp = diar.num_speakers(hyp)
-    pm.timing = timing(ref, hyp)
+    pm.timing = timing(ref, hyp, hyp_words)
     return pm
