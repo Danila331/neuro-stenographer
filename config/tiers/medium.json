@@ -57,15 +57,16 @@
     "min_island_ms": 400
   },
   "punctuation": {
-    "source": "llm",
-    "model": null
+    "source": "none",
+    "model": null,
+    "_pending": "B26: выбор между asr_native (GigaAM v3 punct), punct_model (RUPunct) и паузами — по WER со знаками"
   },
   "llm": {
     "model": "llm/qwen3-1.7b-q4_k_m.gguf",
     "n_ctx": 4096,
     "n_threads": 4,
     "gpu_layers": 0,
-    "punctuation": true,
+    "punctuation": false,
     "speaker_fix": false,
     "summary": true,
     "time_budget_rtf": 0.15
