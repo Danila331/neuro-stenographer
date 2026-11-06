@@ -53,12 +53,14 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
             diarizer = { SherpaDiarizer(cfg.diarization, root, threads) },
             // Пунктуатор создаётся только после выгрузки ASR/диаризации (оркестратор). Если LLM недоступна (нет файла,
             // нет dotprod, нет нативной библиотеки) -- фабрика бросает, оркестратор переходит на fallback без падения.
-            punctuator = if (cfg.punctuation.source == "llm") { durationMs ->
-                val file = llmFile ?: error("файл LLM не найден (${cfg.llm.model})")
-                LlamaAssistant.availability()?.let { error(it) }
-                // GPU-слои не передаём (0): ускорение только опционально, по умолчанию -- CPU (BACKLOG B11)
-                val llm = LlamaAssistant(file, cfg.llm.nCtx, minOf(cfg.llm.nThreads, threads), gpuLayers = 0)
-                LlmPunctuator(llm, durationMs, cfg.llm.timeBudgetRtf)
+            punctuator = if (cfg.punctuation.source == "llm") {
+                { durationMs: Long ->
+                    val file = llmFile ?: error("файл LLM не найден (${cfg.llm.model})")
+                    LlamaAssistant.availability()?.let { error(it) }
+                    // GPU-слои не передаём (0): ускорение только опционально, по умолчанию -- CPU (BACKLOG B11)
+                    val llm = LlamaAssistant(file, cfg.llm.nCtx, minOf(cfg.llm.nThreads, threads), gpuLayers = 0)
+                    LlmPunctuator(llm, durationMs, cfg.llm.timeBudgetRtf)
+                }
             } else null,
             denoiser = if (cfg.audio.denoise.enabled && cfg.audio.denoise.model != null) {
                 { SherpaDenoiser(cfg.audio.denoise.model!!, root, threads) }

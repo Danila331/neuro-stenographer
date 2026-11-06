@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,9 +48,11 @@ class MainActivity : ComponentActivity() {
             NeuroTheme {
                 var picked by rememberSaveable { mutableStateOf<Uri?>(null) }
                 val fromIntent = incoming
-                if (fromIntent != null) {
-                    picked = fromIntent
-                    incoming = null
+                LaunchedEffect(fromIntent) {
+                    if (fromIntent != null) {
+                        picked = fromIntent
+                        incoming = null
+                    }
                 }
                 val openLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     if (uri != null) {

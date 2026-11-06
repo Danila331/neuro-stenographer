@@ -37,7 +37,7 @@ elif [ -x "$LOCAL/jdk17/bin/java" ]; then
 else
   echo "env.sh: JDK 17 не найден в $LOCAL/jdk17 (см. src/android/README.md)" >&2
 fi
-[ -n "${JAVA_HOME:-}" ] && export JAVA_HOME
+if [ -n "${JAVA_HOME:-}" ]; then export JAVA_HOME; fi
 
 # --- Android SDK и пользовательские каталоги: всё внутри $ROOT/.local ---
 export ANDROID_HOME="$LOCAL/android-sdk"
@@ -49,13 +49,17 @@ mkdir -p "$ANDROID_USER_HOME" "$ANDROID_AVD_HOME" "$GRADLE_USER_HOME" 2>/dev/nul
 
 # --- PATH (без дублей) ---
 _ns_path_prepend() {
-  case ":$PATH:" in *":$1:"*) ;; *) [ -d "$1" ] && PATH="$1:$PATH" ;; esac
+  case ":$PATH:" in
+    *":$1:"*) ;;
+    *) if [ -d "$1" ]; then PATH="$1:$PATH"; fi ;;
+  esac
+  return 0
 }
 _ns_path_prepend "$ANDROID_HOME/emulator"
 _ns_path_prepend "$LOCAL/bin"
 _ns_path_prepend "$ANDROID_HOME/platform-tools"
 _ns_path_prepend "$ANDROID_HOME/cmdline-tools/latest/bin"
-[ -n "${JAVA_HOME:-}" ] && _ns_path_prepend "$JAVA_HOME/bin"
+if [ -n "${JAVA_HOME:-}" ]; then _ns_path_prepend "$JAVA_HOME/bin"; fi
 unset -f _ns_path_prepend
 export PATH
 unset LOCAL
