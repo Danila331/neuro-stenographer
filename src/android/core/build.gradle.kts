@@ -14,8 +14,11 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
-        allWarningsAsErrors.set(true)
     }
+}
+
+tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
+    compilerOptions.allWarningsAsErrors.set(true) // production-код без предупреждений
 }
 
 dependencies {
