@@ -15,6 +15,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Prebuilt AAR sherpa-onnx: scripts/fetch_sherpa_onnx.sh кладёт его в локальный Maven (в git не хранится)
+        maven {
+            url = uri(File(rootDir, "third_party/maven"))
+            content { includeGroup("com.k2fsa.sherpa.onnx") }
+        }
     }
 }
 
@@ -53,6 +58,9 @@ val includeAndroid = when (androidMode) {
 include(":core")
 if (includeAndroid) {
     include(":audio", ":engine-sherpa", ":engine-llm", ":app")
+    if (!File(rootDir, "third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx").isDirectory) {
+        throw GradleException("Нет sherpa-onnx AAR: выполните src/android/scripts/fetch_sherpa_onnx.sh (или -Pneurosteno.android=false)")
+    }
     logger.lifecycle("neurosteno: Android-модули включены (SDK: $sdk)")
 } else {
     logger.lifecycle(
