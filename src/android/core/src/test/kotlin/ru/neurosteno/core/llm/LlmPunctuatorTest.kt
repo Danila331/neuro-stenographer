@@ -96,4 +96,14 @@ class LlmPunctuatorTest {
         p.close()
         assertTrue(llm.closed)
     }
+
+    @Test
+    fun `lenient parsing for weak models`() {
+        val p = LlmPunctuator(FakeLlm { "" }, 1000)
+        assertEquals(mapOf(1 to "Привет!"), p.parse("2. Привет!", 1)) // номер сбился
+        assertEquals(mapOf(1 to "Привет!"), p.parse("Привет!", 1)) // без номера
+        assertEquals(mapOf(1 to "А.", 2 to "Б."), p.parse("3. А.\n4. Б.", 2))
+        assertEquals(mapOf(1 to "А."), p.parse("1. А.\n1. Б.\n7. В.", 2).filterKeys { it == 1 }) // лишние/дубли не затирают
+        assertTrue(p.parse("Вот ответ:\nнесколько строк\nбез номеров", 2).isEmpty())
+    }
 }

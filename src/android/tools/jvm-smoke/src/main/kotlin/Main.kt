@@ -14,6 +14,8 @@ import ru.neurosteno.core.PipelineSettings
 import ru.neurosteno.core.ProgressListener
 import ru.neurosteno.core.ResourcePlanner
 import ru.neurosteno.core.TierConfig
+import ru.neurosteno.core.llm.LlmPunctuator
+import ru.neurosteno.llm.LlamaAssistant
 import ru.neurosteno.core.audio.WavDecoder
 import ru.neurosteno.sherpa.ModelRoot
 import ru.neurosteno.sherpa.SherpaAsr
@@ -28,6 +30,25 @@ private class WavFileDecoder : AudioDecoder {
 
 /** args: <wav> <tier.json> <models-root> [out.json] */
 fun main(args: Array<String>) {
+    if (args.firstOrNull() == "--llm-raw") { // --llm-raw <model.gguf> <вопрос...>: ChatML без правок
+        val llm = LlamaAssistant(File(args[1]), 2048, 4)
+        val q = args.drop(2).joinToString(" ")
+        println("raw: " + llm.generate("<|im_start|>user\n$q<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n", 120))
+        llm.close()
+        return
+    }
+    if (args.firstOrNull() == "--llm") { // --llm <model.gguf> <текст...>: проверка LLM-пунктуации на коротком тексте
+        val llm = LlamaAssistant(File(args[1]), 2048, 4)
+        val p = LlmPunctuator(llm, 10_000)
+        val text = args.drop(2).joinToString(" ")
+        val u = ru.neurosteno.core.Utterance("speaker_1", 0, 1000, text, emptyList())
+        val t0 = System.nanoTime()
+        val r = p.punctuate(listOf(u)) { _, _ -> }
+        println("in : $text\nout: ${r[0].text}\n(${(System.nanoTime() - t0) / 1_000_000} ms)")
+        println("raw: " + llm.generate(p.buildPrompt(listOf(text)), 200))
+        llm.close()
+        return
+    }
     if (args.size < 3) {
         System.err.println("usage: jvm-smoke <audio.wav> <config/tiers/X.json> <models-root> [out.json]")
         exitProcess(2)
@@ -40,8 +61,21 @@ fun main(args: Array<String>) {
     val threads = plan.numThreads
     println("tier=${cfg.tier} threads=$threads config_hash=${TierConfig.hash(cfgText)} wav=${wav.name}")
 
+    // LLM-пунктуация: SMOKE_LLM_GGUF=/путь/модель.gguf (нужна libneurosteno_llm: scripts/build_host_jni.sh)
+    val gguf = System.getenv("SMOKE_LLM_GGUF")?.let(::File)
+    val punct: ((Long) -> ru.neurosteno.core.Punctuator)? = gguf?.let { f ->
+        { durationMs: Long ->
+            val llm = LlamaAssistant(f, cfg.llm.nCtx, threads)
+            val shown = if (System.getenv("SMOKE_DEBUG_LLM") == null) llm else object : ru.neurosteno.core.LlmAssistant by llm {
+                override fun generate(prompt: String, maxTokens: Int, onToken: (String) -> Unit): String =
+                    llm.generate(prompt, maxTokens, onToken).also { println("LLM prompt=<<${prompt.takeLast(300)}>>\nLLM answer=<<$it>>") }
+            }
+            LlmPunctuator(shown, durationMs, cfg.llm.timeBudgetRtf)
+        }
+    }
     val providers = EngineProviders(
         vad = { SherpaVad(cfg.vad, root, 1) },
+        punctuator = punct,
         asr = { lang ->
             SherpaAsr(if (lang == "en") (cfg.asrEn ?: cfg.asr) else cfg.asr, root, threads, lang,
                 keepPunct = cfg.punctuation.source == "asr_native",

@@ -25,7 +25,7 @@ kotlin {
 sourceSets {
     main {
         java.srcDirs("src/stubs")
-        kotlin.srcDirs("../../core/src/main/kotlin", "../../engine-sherpa/src/main/kotlin")
+        kotlin.srcDirs("../../core/src/main/kotlin", "../../engine-sherpa/src/main/kotlin", "../../engine-llm/src/main/kotlin")
     }
 }
 
@@ -53,7 +53,9 @@ application {
 tasks.named<JavaExec>("run") {
     dependsOn(extractNative)
     val nativeDir = layout.buildDirectory.dir("native").get().asFile.absolutePath
-    jvmArgs("-Djava.library.path=$nativeDir")
+    // + libneurosteno_llm (scripts/build_host_jni.sh), если собрана
+    val llmDir = "$root/.cache/android-deps/llm-host-build"
+    jvmArgs("-Djava.library.path=$nativeDir:$llmDir")
     environment("DYLD_LIBRARY_PATH", nativeDir)
     workingDir = projectDir
 }

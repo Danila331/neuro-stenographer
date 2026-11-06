@@ -52,6 +52,7 @@ _ns_path_prepend() {
   case ":$PATH:" in *":$1:"*) ;; *) [ -d "$1" ] && PATH="$1:$PATH" ;; esac
 }
 _ns_path_prepend "$ANDROID_HOME/emulator"
+_ns_path_prepend "$LOCAL/bin"
 _ns_path_prepend "$ANDROID_HOME/platform-tools"
 _ns_path_prepend "$ANDROID_HOME/cmdline-tools/latest/bin"
 [ -n "${JAVA_HOME:-}" ] && _ns_path_prepend "$JAVA_HOME/bin"

@@ -81,28 +81,41 @@ class LlmPunctuator(
         append("<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n")
     }
 
-    /** Разбор «N. текст» построчно; строки без номера дописываются к предыдущему пункту. */
+    /**
+     * Разбор «N. текст» построчно; строки без номера дописываются к предыдущему пункту. Мягкие правила для слабых
+     * моделей: если номеров столько же, сколько пунктов, но они сбились (например «2.» вместо «1.»), берём по порядку;
+     * для одного пункта допустим ответ вообще без номера.
+     */
     internal fun parse(raw: String, expected: Int): Map<Int, String> {
-        val res = LinkedHashMap<Int, StringBuilder>()
-        var current = -1
+        val items = ArrayList<Pair<Int, StringBuilder>>()
         for (line in raw.replace("<|im_end|>", "").lines()) {
             val m = NUMBERED.matchEntire(line.trim())
             if (m != null) {
-                current = m.groupValues[1].toInt()
-                if (current in 1..expected) res.getOrPut(current) { StringBuilder() }.append(m.groupValues[2].trim())
-            } else if (current in 1..expected && line.isNotBlank()) {
-                res[current]!!.append(' ').append(line.trim())
+                items += m.groupValues[1].toInt() to StringBuilder(m.groupValues[2].trim())
+            } else if (items.isNotEmpty() && line.isNotBlank()) {
+                items.last().second.append(' ').append(line.trim())
             }
         }
-        return res.mapValues { it.value.toString().trim() }
+        val strict = LinkedHashMap<Int, String>()
+        for ((n, sb) in items) if (n in 1..expected && n !in strict) strict[n] = sb.toString().trim()
+        if (strict.size == expected) return strict
+        if (items.size == expected && strict.size < expected) { // номера сбились -- по порядку
+            return items.mapIndexed { i, (_, sb) -> i + 1 to sb.toString().trim() }.toMap()
+        }
+        if (items.isEmpty() && expected == 1) {
+            val plain = raw.replace("<|im_end|>", "").trim()
+            if (plain.isNotEmpty() && !plain.contains('\n')) return mapOf(1 to plain)
+        }
+        return strict
     }
 
     override fun close() = llm.close()
 
     private companion object {
         val NUMBERED = Regex("""(\d{1,3})[.)]\s*(.*)""")
-        const val SYSTEM = "Ты редактор расшифровок русской речи. Для каждой пронумерованной строки расставь знаки " +
-            "препинания и заглавные буквы. Слова не добавляй, не удаляй, не заменяй и не меняй порядок. " +
+        const val SYSTEM = "Ты корректор расшифровок русской речи. В каждой пронумерованной строке расставь знаки " +
+            "препинания и начни предложения с большой буквы (остальные буквы оставь строчными). " +
+            "Слова не добавляй, не удаляй, не заменяй и не переставляй. " +
             "Ответь теми же номерами, по одной строке на пункт, без пояснений."
     }
 }
