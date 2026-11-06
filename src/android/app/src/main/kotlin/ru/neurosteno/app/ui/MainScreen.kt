@@ -78,7 +78,7 @@ fun MainScreen(
                 }
                 is ProcessingUi.Failed -> Text(s.message, color = MaterialTheme.colorScheme.error)
                 is ProcessingUi.Done -> {
-                    val items = s.result.transcript.utterances
+                    val utterances = s.result.transcript.utterances
                     Button(onClick = { onExport(Format.exportFileName(s.sourceName)) }) {
                         Text(stringResource(R.string.btn_export_json))
                     }
@@ -86,11 +86,11 @@ fun MainScreen(
                         Text("Предупреждения: ${s.result.warnings.joinToString("; ")}", style = MaterialTheme.typography.bodySmall)
                     }
                     Text(
-                        "RTF ${"%.2f".format(java.util.Locale.ROOT, s.result.transcript.meta.rtf)}, реплик: ${items.size}",
+                        "RTF ${"%.2f".format(java.util.Locale.ROOT, s.result.transcript.meta.rtf)}, реплик: ${utterances.size}",
                         style = MaterialTheme.typography.bodySmall,
                     )
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(items) { u ->
+                        items(utterances) { u ->
                             Text(
                                 "[${Format.clock(u.startMs)}] ${u.speakerId}: ${u.text}",
                                 style = MaterialTheme.typography.bodyMedium,

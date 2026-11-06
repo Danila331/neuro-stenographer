@@ -27,6 +27,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
 
     // Один код, три набора моделей + online (без встроенных моделей). applicationId: ru.neurosteno.app.<tier>
@@ -108,6 +109,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true // нужно и Compose Preview (плагин Compose 2.4)
     }
 }
 

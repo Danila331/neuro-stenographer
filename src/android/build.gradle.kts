@@ -1,7 +1,6 @@
-// Плагины Kotlin объявлены в корне (apply false), чтобы подгрузиться один раз в общий classloader.
-// Плагины AGP подключаются в самих Android-модулях: так `:core:test` не требует ни AGP, ни SDK.
+// Корневой скрипт для сборки ТОЛЬКО :core (достаточно JDK 17, без Android SDK и без загрузки AGP).
+// При подключении Android-модулей вместо него используется build.android.gradle.kts (см. settings.gradle.kts).
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
-    alias(libs.plugins.kotlin.compose) apply false
 }
