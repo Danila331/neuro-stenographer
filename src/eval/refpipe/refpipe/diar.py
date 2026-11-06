@@ -65,3 +65,40 @@ class Diarizer:
             finally:
                 self.sd.set_config(_config(self.dcfg, self.root, self.threads, self.default_n))
         return turns
+
+
+# --- subprocess isolation -------------------------------------------------------------------
+# sherpa-onnx's Python binding holds the GIL during OfflineSpeakerDiarization.process (verified:
+# a spinning thread gets ~0 ticks), which would serialise it with the ASR thread.  So the Diarizer
+# lives in a one-process pool (spawn) and is fed with the audio; ASR/VAD (which do release the GIL)
+# keep running in the main process.  Results are identical to the in-process call.
+_WORKER: Diarizer | None = None
+
+
+def _worker_init(dcfg, root, threads):
+    global _WORKER
+    _WORKER = Diarizer(dcfg, Path(root), threads)
+
+
+def _worker_run(x, num_speakers):
+    return [(t.speaker, t.start_ms, t.end_ms) for t in _WORKER.diarize(x, num_speakers)]
+
+
+class SubprocessDiarizer:
+    def __init__(self, dcfg: dict, models_root: Path, num_threads: int):
+        import multiprocessing as mp
+        from concurrent.futures import ProcessPoolExecutor
+
+        self.pool = ProcessPoolExecutor(1, mp_context=mp.get_context("spawn"), initializer=_worker_init,
+                                        initargs=(dcfg, str(models_root), num_threads))
+        self.pool.submit(int, 0).result()  # start the worker and load the models now
+
+    def diarize(self, x: np.ndarray, num_speakers: int | None = None) -> list[SpeakerTurn]:
+        return [SpeakerTurn(*t) for t in self.pool.submit(_worker_run, x, num_speakers).result()]
+
+    def worker_pid(self) -> int | None:
+        procs = getattr(self.pool, "_processes", None) or {}
+        return next(iter(procs), None)
+
+    def close(self):
+        self.pool.shutdown(wait=True)

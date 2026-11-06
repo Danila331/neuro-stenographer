@@ -33,6 +33,9 @@ DEFAULTS: dict[str, Any] = {
         "num_threads": None,      # extra: None -> top-level num_threads
         "enabled": True,          # extra: false -> single speaker, no diarization (ablation)
     },
+    # language: refpipe/Android read it as in ARCHITECTURE (auto | ru | en); without lid_model or asr_en -> ru
+    "language": {"mode": "auto", "lid_model": None, "lid_seconds": 10.0},
+    "asr_en": None,  # same structure as "asr"
     "align": {"max_gap_ms": 1500, "min_island_words": 1, "min_island_ms": 400},
     "punctuation": {"source": "none", "model": None},
     "llm": {"model": None, "n_ctx": 4096, "n_threads": 4, "gpu_layers": 0},

@@ -26,6 +26,8 @@ def cmd_run(a) -> int:
     cfg = apply_overrides(load_config(a.config), a.override)
     if a.num_threads:
         cfg["num_threads"] = a.num_threads
+    if a.language:
+        cfg["language"]["mode"] = a.language
     models = Path(a.models)
     inp = Path(a.input)
     out = Path(a.out)
@@ -57,7 +59,9 @@ def cmd_run(a) -> int:
         write_outputs(out, fid, res, pipe.meta(res))
         sp = len({u.speaker for u in res.utterances})
         print(f"{fid}: {res.duration_ms / 1000:.1f}s -> {len(res.utterances)} utt, {sp} spk, "
-              f"{res.processing_ms} ms (RTF {res.processing_ms / max(1, res.duration_ms):.3f}) {res.stage_ms}", flush=True)
+              f"{res.processing_ms} ms (RTF {res.processing_ms / max(1, res.duration_ms):.3f}, "
+              f"peak {res.peak_rss_mb:.0f} MB, lang={res.info.get('language')}) {res.stage_ms}", flush=True)
+    pipe.close()
     return 1 if failed else 0
 
 
@@ -73,6 +77,8 @@ def main(argv=None) -> int:
     r.add_argument("--ids", nargs="*", default=None, help="only these manifest ids")
     r.add_argument("--num-speakers", type=int, default=None, help="force the number of speakers")
     r.add_argument("--oracle-num-speakers", action="store_true", help="use num_speakers from the manifest")
+    r.add_argument("--language", choices=["auto", "ru", "en"], default=None,
+                   help="language.mode: auto (LID on the first ~10 s of speech), ru, en")
     r.add_argument("--num-threads", type=int, default=None, help="override config num_threads")
     r.add_argument("--override", action="append", default=[], metavar="KEY=VALUE",
                    help="override config value, e.g. diarization.clustering.threshold=0.7 (repeatable)")

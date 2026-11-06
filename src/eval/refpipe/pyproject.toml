@@ -9,6 +9,7 @@ dependencies = [
   "soundfile>=0.12",
   "soxr>=0.5",
   "sherpa-onnx>=1.12",
+  "psutil>=5.9",
 ]
 
 [project.optional-dependencies]

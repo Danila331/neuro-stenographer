@@ -150,6 +150,28 @@ MODELS: tuple[Model, ...] = (
             ("tokens.txt", 6388, None), ("bpe.model", 246184, "c7a756aeb3550417d6b2ed3efde9a7aa3eea54787d4eac011e9cce6090c9c64a")]),
         "Apache-2.0 (alphacep/vosk zipformer-ru)", ("",), kind="asr", note="candidate",
     ),
+    Model(
+        "asr/whisper-tiny-int8",
+        (hf("csukuangfj/sherpa-onnx-whisper-tiny", "tiny-encoder.int8.onnx", dest="encoder.int8.onnx",
+            size=12937772, sha="d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434"),
+         hf("csukuangfj/sherpa-onnx-whisper-tiny", "tiny-decoder.int8.onnx", dest="decoder.int8.onnx",
+            size=89855401, sha="d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925"),
+         hf("csukuangfj/sherpa-onnx-whisper-tiny", "tiny-tokens.txt", dest="tokens.txt", size=816730)),
+        "MIT (openai/whisper tiny, multilingual)", ("",), kind="asr",
+        note="candidate: language id (language.lid_model) and a cheap multilingual ASR for the asr_en plumbing",
+    ),
+    Model(
+        "asr/parakeet-tdt-0.6b-v3-int8",
+        (hf("csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8", "encoder.int8.onnx", size=652184281,
+            sha="acfc2b4456377e15d04f0243af540b7fe7c992f8d898d751cf134c3a55fd2247"),
+         hf("csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8", "decoder.int8.onnx", size=11845275,
+            sha="179e50c43d1a9de79c8a24149a2f9bac6eb5981823f2a2ed88d655b24248db4e"),
+         hf("csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8", "joiner.int8.onnx", size=6355277,
+            sha="3164c13fc2821009440d20fcb5fdc78bff28b4db2f8d0f0b329101719c0948b3"),
+         hf("csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8", "tokens.txt", size=93939)),
+        "CC-BY-4.0 (NVIDIA Parakeet-TDT-0.6B-v3, 25 European languages incl. ru+en)", ("",), kind="asr",
+        note="candidate: one multilingual transducer for ru+en; TDT gives token durations",
+    ),
     # ---------------------------------------------------------------- diarization
     Model(
         "diar/pyannote-segmentation-3.0",
@@ -231,7 +253,7 @@ def download(url: str, dst: Path, retries: int = 4) -> None:
             req = urllib.request.Request(url, headers={"User-Agent": "refpipe-fetch/1.0"})
             if have:
                 req.add_header("Range", f"bytes={have}-")
-            with urllib.request.urlopen(req, timeout=60) as r:
+            with urllib.request.urlopen(req, timeout=120) as r:
                 mode = "ab" if (have and r.status == 206) else "wb"
                 total = int(r.headers.get("Content-Length") or 0) + (have if mode == "ab" else 0)
                 done = have if mode == "ab" else 0
@@ -294,12 +316,16 @@ def fetch(m: Model, root: Path) -> None:
     print(f"[get ] {key} ({m.license})")
     for f in m.files:
         t = tmp / f.dest
-        if not t.exists():
-            download(f.url, t)
-        digest = sha256_file(t)
-        if f.sha256 and digest != f.sha256:
+        for attempt in (1, 2):  # a resumed download can be corrupted by a lost partial read: redo from scratch once
+            if not t.exists():
+                download(f.url, t)
+            digest = sha256_file(t)
+            if not f.sha256 or digest == f.sha256:
+                break
             t.unlink()
-            raise RuntimeError(f"sha256 mismatch for {f.url}: got {digest}, expected {f.sha256}")
+            if attempt == 2:
+                raise RuntimeError(f"sha256 mismatch for {f.url}: got {digest}, expected {f.sha256}")
+            print("    sha256 mismatch, downloading again from scratch", flush=True)
         if f.size and f.dest.endswith((".onnx", ".gguf")) and abs(t.stat().st_size - f.size) > max(1, f.size // 100):
             raise RuntimeError(f"size mismatch for {f.url}: {t.stat().st_size} vs {f.size}")
         print(f"    {f.dest}: {t.stat().st_size / 1e6:.1f} MB sha256={digest[:16]}.. "
