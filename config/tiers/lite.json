@@ -77,7 +77,7 @@
   },
   "language": {
     "mode": "auto",
-    "lid_model": "lid/whisper-tiny-int8",
+    "lid_model": "asr/whisper-tiny-int8",
     "lid_seconds": 10
   },
   "asr_en": {
