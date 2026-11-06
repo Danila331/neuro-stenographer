@@ -1,32 +1,42 @@
 import numpy as np
 
-from refpipe.types import TimeSpan
-from refpipe.vad import make_chunks, pad_and_merge, split_long
-
-SR = 16000
+from refpipe.vad import SR, pack_chunks, pad_segments
 
 
-def test_pad_and_merge_clamps_and_merges():
-    out = pad_and_merge([TimeSpan(100, 500), TimeSpan(600, 900), TimeSpan(5000, 5200)], 150, 5300)
-    assert out == [TimeSpan(0, 1050), TimeSpan(4850, 5300)]
+def S(a, b):  # seconds -> samples
+    return int(a * SR), int(b * SR)
 
 
-def test_chunks_group_until_max_and_cut_only_in_pauses():
+def test_padding_is_clamped_and_never_crosses_the_middle_of_a_pause():
+    segs = [S(0.1, 0.5), S(0.6, 0.9), S(5.0, 5.2)]
+    out = pad_segments(segs, 150, int(5.3 * SR))
+    # first: lo clamped to 0; hi limited by the middle of the 0.5..0.6 pause
+    assert out[0] == (0, (S(0.5, 0)[0] + S(0.6, 0)[0]) // 2)
+    assert out[1][0] == out[0][1]  # neighbours touch at the pause middle, no overlap
+    assert out[2] == (S(5.0, 0)[0] - 150 * 16, int(5.3 * SR))  # clamped to the file end
+
+
+def test_pack_greedy_cut_only_between_segments():
     x = np.zeros(60 * SR, dtype=np.float32)
-    iv = [TimeSpan(0, 8000), TimeSpan(9000, 17000), TimeSpan(18000, 26000), TimeSpan(40000, 45000)]
-    ch = make_chunks(x, iv, 25.0)
-    assert ch[0] == TimeSpan(0, 17000)  # 0..26000 > 25000 so the third interval starts a new chunk
-    assert ch[1] == TimeSpan(18000, 26000)  # 18000..45000 > 25000
-    assert ch[2] == TimeSpan(40000, 45000)
-    for c in ch:
-        assert c.dur_ms <= 25000
-        assert any(c.start_ms == i.start_ms for i in iv) and any(c.end_ms == i.end_ms for i in iv)
+    segs = [S(0, 8), S(9, 17), S(18, 26), S(40, 45)]
+    ch = pack_chunks(segs, 20.0, 1.0, x)
+    assert ch[0] == S(0, 17)
+    assert all(b - a <= 20 * SR for a, b in ch)
+    starts = {a for a, _ in segs}
+    ends = {b for _, b in segs}
+    assert all(a in starts and b in ends for a, b in ch)
 
 
-def test_overlong_interval_is_split_at_the_quietest_frame():
+def test_overlong_segment_is_cut_at_the_quietest_place():
     x = (np.random.RandomState(0).randn(40 * SR) * 0.1).astype(np.float32)
-    x[19 * SR:int(19.1 * SR)] = 0  # silence inside the second half of the allowed window
-    parts = split_long(x, TimeSpan(0, 30000), 25000)
-    assert len(parts) == 2 and 18900 <= parts[0].end_ms <= 19200
-    assert parts[0].end_ms == parts[1].start_ms and parts[1].end_ms == 30000
-    assert all(p.dur_ms <= 25000 for p in make_chunks(x, [TimeSpan(0, 30000)], 25.0))
+    x[14 * SR:int(14.3 * SR)] = 0
+    ch = pack_chunks([S(0, 30)], 20.0, 1.0, x)
+    assert len(ch) == 2 and 14 * SR <= ch[0][1] <= int(14.3 * SR)
+    assert ch[0][1] == ch[1][0] and ch[1][1] == 30 * SR
+
+
+def test_short_tail_chunk_is_appended_to_the_previous_one():
+    x = np.zeros(60 * SR, dtype=np.float32)
+    ch = pack_chunks([S(0, 15), S(16, 30), S(31, 31.5)], 20.0, 1.0, x)
+    # 16..30 | 31..31.5 -> too short -> merged (31.5-16 <= 24)
+    assert ch == [S(0, 15), (S(16, 0)[0], S(31.5, 0)[0])]

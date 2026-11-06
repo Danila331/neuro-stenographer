@@ -103,3 +103,27 @@ def denoise(x: np.ndarray, model_path: str | Path, num_threads: int, sr: int = S
     if out.sample_rate != sr:
         y = resample(y, out.sample_rate, sr)
     return y
+
+
+def _db(v: float) -> float:
+    return 20.0 * math.log10(max(float(v), 1e-9))
+
+
+def normalize_gain(x: np.ndarray, cfg: dict | None) -> tuple[np.ndarray, float]:
+    """`audio.normalize_gain` (BACKLOG B24), mode "peak": scale so that the peak is `peak_dbfs`.
+    gain = clip(peak_dbfs - peak_db, -6, +max_gain_db), additionally never above (-1 dBFS - peak_db)
+    (no clipping); files whose peak is below `skip_if_peak_below_dbfs` (digital silence) are untouched.
+    Returns (audio, applied gain in dB)."""
+    if not cfg or not cfg.get("enabled") or len(x) == 0:
+        return x, 0.0
+    if cfg.get("mode", "peak") != "peak":
+        raise ValueError(f"unsupported normalize_gain.mode {cfg.get('mode')!r}")
+    pk = float(np.abs(x).max())
+    pk_db = _db(pk)
+    if pk_db < float(cfg.get("skip_if_peak_below_dbfs", -85.0)):
+        return x, 0.0
+    g = float(np.clip(float(cfg.get("peak_dbfs", -1.0)) - pk_db, -6.0, float(cfg.get("max_gain_db", 40.0))))
+    g = min(g, -1.0 - pk_db)
+    if abs(g) < 1e-6:
+        return x, 0.0
+    return (x * (10.0 ** (g / 20.0))).astype(np.float32), g

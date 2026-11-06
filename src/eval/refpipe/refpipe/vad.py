@@ -2,17 +2,19 @@
 
 Speech intervals (ms, ints):
   1. sherpa-onnx Silero VAD with threshold / min_silence / min_speech / max_speech from the config;
-  2. each interval is padded by `pad_ms` on both sides (clamped to the file), overlapping or touching
-     intervals are merged;
-  3. ASR chunks: consecutive intervals are grouped while (last.end - first.start) <= chunk.max_s;
-     the chunk is the contiguous audio slice [first.start, last.end] (inner pauses included), so a
-     cut can only happen inside a pause between two intervals.  An interval longer than max_s on its
-     own (pad can push a 25 s VAD segment over 25 s) is split at the quietest 20 ms frame in the
-     second half of the allowed window (`split_long`).
+  2. each interval is padded by `pad_ms` on both sides (clamped to the file); the padding never
+     crosses the middle of the pause to a neighbour, intervals are NOT merged (as bench_asr/vad.py);
+  3. ASR chunks (`pack_chunks`, ported from bench_asr/vad.py, in SAMPLES): padded intervals are
+     packed greedily while (last.end - first.start) <= chunk.max_s; the chunk is the contiguous audio
+     slice (inner pauses included) so a cut is only ever made inside a pause.  An interval longer than
+     max_s is cut at the quietest point (30 ms RMS windows, 3-window smoothing) of
+     [a + 0.55*max, a + max]; a chunk shorter than chunk.min_s is appended to the previous chunk if the
+     result is <= 1.2*max_s.
 """
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 
@@ -24,6 +26,11 @@ WINDOW = 512  # Silero v5 window at 16 kHz
 
 def _ms(samples: int) -> int:
     return samples * 1000 // SR
+
+
+class Seg(NamedTuple):
+    start_sample: int
+    end_sample: int
 
 
 class SileroVad:
@@ -44,85 +51,96 @@ class SileroVad:
             so.VadModelConfig(silero_vad=silero, sample_rate=SR, num_threads=num_threads),
             buffer_size_in_seconds=60.0)
 
-    def detect(self, x: np.ndarray) -> list[TimeSpan]:
-        """Raw Silero segments (ms), before padding."""
+    def detect_samples(self, x: np.ndarray) -> list["Seg"]:
+        """Raw Silero segments in samples, before padding.  Whole 512-sample windows only (the tail
+        shorter than one window is dropped), as in bench_asr/vad.py."""
         vad = self.vad
         vad.reset()
-        spans: list[TimeSpan] = []
+        spans: list[Seg] = []
 
         def drain():
             while not vad.empty():
                 seg = vad.front
-                spans.append(TimeSpan(_ms(seg.start), _ms(seg.start + len(seg.samples))))
+                spans.append(Seg(seg.start, seg.start + len(seg.samples)))
                 vad.pop()
 
-        for i in range(0, len(x), WINDOW):
+        for i in range(0, len(x) - WINDOW + 1, WINDOW):
             vad.accept_waveform(x[i:i + WINDOW])
             drain()
         vad.flush()
         drain()
         return spans
 
+    def detect(self, x: np.ndarray) -> list[TimeSpan]:
+        return [_span(s.start_sample, s.end_sample) for s in self.detect_samples(x)]
+
 
 def detect_speech(x: np.ndarray, vad_cfg: dict, models_root: Path, num_threads: int = 1) -> list[TimeSpan]:
     return SileroVad(vad_cfg, models_root, num_threads).detect(x)
 
 
-def pad_and_merge(spans: list[TimeSpan], pad_ms: int, dur_ms: int) -> list[TimeSpan]:
-    out: list[TimeSpan] = []
-    for s in sorted(spans, key=lambda s: (s.start_ms, s.end_ms)):
-        a, b = max(0, s.start_ms - pad_ms), min(dur_ms, s.end_ms + pad_ms)
-        if b <= a:
-            continue
-        if out and a <= out[-1].end_ms:
-            out[-1] = TimeSpan(out[-1].start_ms, max(out[-1].end_ms, b))
-        else:
-            out.append(TimeSpan(a, b))
-    return out
-
-
-def _quietest_cut(x: np.ndarray, lo_ms: int, hi_ms: int) -> int:
-    """Centre (ms) of the quietest 20 ms frame fully inside [lo, hi]; earliest wins ties."""
-    fr = 20
-    best_t, best_e = (lo_ms + hi_ms) // 2, None
-    t = lo_ms
-    while t + fr <= hi_ms:
-        seg = x[t * SR // 1000:(t + fr) * SR // 1000]
-        e = float(np.dot(seg, seg)) if len(seg) else 0.0
-        if best_e is None or e < best_e:
-            best_t, best_e = t + fr // 2, e
-        t += fr
-    return best_t
-
-
-def split_long(x: np.ndarray, span: TimeSpan, max_ms: int) -> list[TimeSpan]:
+def pad_segments(segs: list[tuple[int, int]], pad_ms: int, n_samples: int) -> list[tuple[int, int]]:
+    """Pad every VAD segment (sample indices) by pad_ms; the border between neighbours is the middle of the pause."""
+    pad = int(pad_ms * SR / 1000)
     out = []
-    cur = span
-    while cur.dur_ms > max_ms:
-        cut = _quietest_cut(x, cur.start_ms + max_ms // 2, cur.start_ms + max_ms)
-        out.append(TimeSpan(cur.start_ms, cut))
-        cur = TimeSpan(cut, cur.end_ms)
-    out.append(cur)
+    for i, (a, b) in enumerate(segs):
+        lo, hi = max(0, a - pad), min(n_samples, b + pad)
+        if i > 0:
+            lo = max(lo, (segs[i - 1][1] + a) // 2)
+        if i + 1 < len(segs):
+            hi = min(hi, (b + segs[i + 1][0]) // 2)
+        out.append((lo, hi))
     return out
 
 
-def make_chunks(x: np.ndarray, intervals: list[TimeSpan], max_s: float) -> list[TimeSpan]:
-    max_ms = int(round(max_s * 1000))
-    flat: list[TimeSpan] = []
-    for iv in intervals:
-        flat.extend(split_long(x, iv, max_ms) if iv.dur_ms > max_ms else [iv])
-    chunks: list[TimeSpan] = []
-    for iv in flat:
-        if chunks and iv.end_ms - chunks[-1].start_ms <= max_ms:
-            chunks[-1] = TimeSpan(chunks[-1].start_ms, iv.end_ms)
+def _quiet_cut(x: np.ndarray, a: int, b: int, mx: int) -> int:
+    lo, hi = a + int(0.55 * mx), min(b, a + mx)
+    if hi <= lo:
+        return hi
+    w = int(0.03 * SR)
+    seg = x[lo:hi]
+    n = len(seg) // w
+    if n < 4:
+        return hi
+    e = np.sqrt((seg[: n * w].reshape(n, w) ** 2).mean(1))
+    e = np.convolve(e, np.ones(3) / 3, mode="same")
+    return lo + int(np.argmin(e)) * w + w // 2
+
+
+def pack_chunks(segs: list[tuple[int, int]], max_s: float, min_s: float, x: np.ndarray) -> list[tuple[int, int]]:
+    if not segs:
+        return []
+    mx = int(max_s * SR)
+    pieces = []
+    for a, b in segs:
+        while b - a > mx:
+            c = _quiet_cut(x, a, b, mx)
+            pieces.append((a, c))
+            a = c
+        pieces.append((a, b))
+    chunks = [list(pieces[0])]
+    for a, b in pieces[1:]:
+        if b - chunks[-1][0] <= mx:
+            chunks[-1][1] = b
         else:
-            chunks.append(iv)
-    return chunks
+            chunks.append([a, b])
+    merged: list[tuple[int, int]] = []
+    for a, b in chunks:
+        if merged and (b - a) < min_s * SR and (b - merged[-1][0]) <= mx * 1.2:
+            merged[-1] = (merged[-1][0], b)
+        else:
+            merged.append((a, b))
+    return merged
+
+
+def _span(a: int, b: int) -> TimeSpan:
+    return TimeSpan(a * 1000 // SR, b * 1000 // SR)
 
 
 def speech_chunks(x: np.ndarray, cfg: dict, vad: "SileroVad") -> tuple[list[TimeSpan], list[TimeSpan]]:
-    """Returns (speech intervals after padding, ASR chunks)."""
-    dur_ms = len(x) * 1000 // SR
-    raw = vad.detect(x)
-    iv = pad_and_merge(raw, int(cfg["vad"]["pad_ms"]), dur_ms)
-    return iv, make_chunks(x, iv, float(cfg["asr"]["chunk"]["max_s"]))
+    """Returns (padded speech intervals, ASR chunks), both in ms."""
+    raw = [(s.start_sample, s.end_sample) for s in vad.detect_samples(x)]
+    seg = pad_segments(raw, int(cfg["vad"]["pad_ms"]), len(x))
+    ch = cfg["asr"]["chunk"]
+    chunks = pack_chunks(seg, float(ch["max_s"]), float(ch.get("min_s", 0)), x)
+    return [_span(a, b) for a, b in seg if b > a], [_span(a, b) for a, b in chunks if b > a]

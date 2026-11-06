@@ -53,8 +53,18 @@ class LanguageId:
         self.seconds = seconds
 
     def detect(self, x: np.ndarray, speech: list[TimeSpan]) -> tuple[str, str | None]:
-        """Returns (ru|en, raw detected code)."""
-        seg = first_speech(x, speech, self.seconds)
+        """Returns (ru|en, raw detected code) for the first `seconds` of speech."""
+        return self.detect_audio(first_speech(x, speech, self.seconds))
+
+    def detect_chunk(self, x: np.ndarray, chunk: TimeSpan, min_ms: int = 1500) -> tuple[str | None, str | None]:
+        """LID of the first `seconds` of one chunk; (None, None) if the chunk is shorter than min_ms."""
+        if chunk.dur_ms < min_ms:
+            return None, None
+        seg = x[chunk.start_ms * SR // 1000:(chunk.start_ms + int(self.seconds * 1000)) * SR // 1000]
+        seg = seg[: min(len(seg), chunk.dur_ms * SR // 1000)]
+        return self.detect_audio(seg)
+
+    def detect_audio(self, seg: np.ndarray) -> tuple[str, str | None]:
         if len(seg) < SR // 2:
             return "ru", None
         try:
@@ -65,3 +75,25 @@ class LanguageId:
             log.warning("language id failed: %s", e)
             return "ru", None
         return decide(raw), raw
+
+
+def smooth_languages(raw: list[str | None], durs_ms: list[int], switch_min_ms: int = 4000) -> list[str]:
+    """Offline hysteresis for per-chunk language ids (`language.per_chunk`).
+
+    raw[i] is the LID decision for chunk i ("ru"/"en") or None when the chunk was too short to classify.
+    The state starts at the first classified chunk.  A chunk changes the state only if its decision
+    differs from the state AND (the chunk lasts >= switch_min_ms OR the next classified chunk makes the same
+    decision); otherwise the chunk keeps the state (so single noisy decisions on short turns do not flip
+    the engine).  Chunks without a decision inherit the state."""
+    out: list[str] = []
+    state = next((r for r in raw if r), "ru")
+    idx = [i for i, r in enumerate(raw) if r]
+    nxt = {i: (raw[idx[k + 1]] if k + 1 < len(idx) else None) for k, i in enumerate(idx)}
+    first = True
+    for i, r in enumerate(raw):
+        if r and not first and r != state and (durs_ms[i] >= switch_min_ms or nxt[i] == r):
+            state = r
+        if r:
+            first = False
+        out.append(state)
+    return out
