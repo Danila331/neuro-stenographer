@@ -35,8 +35,21 @@ class WerCounts:
 ZERO = WerCounts(0, 0, 0, 0)
 
 
+try:  # C++ implementation: ~100x faster than the pure-Python DP below, identical distances
+    from rapidfuzz.distance import Levenshtein as _Lev
+except ImportError:  # pragma: no cover
+    _Lev = None
+
+
 def edit_distance(ref: Sequence[str], hyp: Sequence[str]) -> int:
-    """Levenshtein distance (unit costs), two-row DP."""
+    """Levenshtein distance (unit costs)."""
+    if _Lev is not None:
+        return int(_Lev.distance(list(ref), list(hyp)))
+    return _edit_distance_py(ref, hyp)
+
+
+def _edit_distance_py(ref: Sequence[str], hyp: Sequence[str]) -> int:
+    """Pure-Python two-row DP (reference implementation, used when rapidfuzz is missing)."""
     n, m = len(ref), len(hyp)
     if n == 0:
         return m
@@ -64,8 +77,41 @@ def align(ref: Sequence[str], hyp: Sequence[str]) -> list[tuple[str, int | None,
 
     Returns a list of ``(op, i, j)`` with op in {"C" correct, "S" substitution, "D" deletion,
     "I" insertion}; ``i`` indexes ``ref`` (None for I), ``j`` indexes ``hyp`` (None for D).
-    Tie-breaking (deterministic): diagonal (match/sub) > deletion > insertion.
+    The number of errors is always the Levenshtein distance; which of several equally good
+    alignments is returned is deterministic but implementation-defined.
     """
+    if _Lev is not None:
+        return _align_rf(list(ref), list(hyp))
+    return _align_py(ref, hyp)
+
+
+def _align_rf(ref: list[str], hyp: list[str]) -> list[tuple[str, int | None, int | None]]:
+    ops: list[tuple[str, int | None, int | None]] = []
+    i = j = 0
+    for e in _Lev.editops(ref, hyp):
+        while i < e.src_pos:
+            ops.append(("C", i, j))
+            i += 1
+            j += 1
+        if e.tag == "replace":
+            ops.append(("S", i, j))
+            i += 1
+            j += 1
+        elif e.tag == "delete":
+            ops.append(("D", i, None))
+            i += 1
+        else:
+            ops.append(("I", None, j))
+            j += 1
+    while i < len(ref):
+        ops.append(("C", i, j))
+        i += 1
+        j += 1
+    return ops
+
+
+def _align_py(ref: Sequence[str], hyp: Sequence[str]) -> list[tuple[str, int | None, int | None]]:
+    """Pure-Python DP alignment (tie-breaking: diagonal > deletion > insertion)."""
     n, m = len(ref), len(hyp)
     d = [[0] * (m + 1) for _ in range(n + 1)]
     for i in range(n + 1):
