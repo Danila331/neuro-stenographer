@@ -18,6 +18,7 @@ import ru.neurosteno.core.Word
 import ru.neurosteno.core.asr.AsrModelFiles
 import ru.neurosteno.core.asr.ChunkPlanner
 import ru.neurosteno.core.asr.TokenWords
+import kotlin.math.roundToLong
 
 /**
  * ASR на sherpa-onnx (OfflineRecognizer): GigaAM CTC/RNNT (NeMo), zipformer-transducer, Whisper, Paraformer --
@@ -91,13 +92,8 @@ class SherpaAsr(
     override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word> {
         require(audio.sampleRate == SAMPLE_RATE) { "ASR ожидает 16 кГц, получено ${audio.sampleRate}" }
         val rec = recognizer()
-        val chunks = ChunkPlanner.plan(
-            speech = speech,
-            durationMs = audio.durationMs,
-            maxMs = (cfg.chunk.maxS * 1000).toLong(),
-            minMs = (cfg.chunk.minS * 1000).toLong(),
-            overlapMs = cfg.chunk.overlapMs.toLong(),
-        )
+        val chunks = ChunkPlanner.plan(audio.samples, speech, (cfg.chunk.maxS * 1000).roundToLong())
+        val minSamples = (cfg.chunk.minS * SAMPLE_RATE).toInt()
         val words = ArrayList<Word>()
         progress.onProgress(Stage.ASR, 0f)
         chunks.forEachIndexed { i, chunk ->
@@ -107,7 +103,10 @@ class SherpaAsr(
             if (to > from) {
                 val stream = rec.createStream()
                 try {
-                    stream.acceptWaveform(audio.samples.copyOfRange(from, to), SAMPLE_RATE)
+                    var seg = audio.samples.copyOfRange(from, to)
+                    // как в эталоне: слишком короткий чанк дополняется тишиной до chunk.min_s (границы чанка не двигаются)
+                    if (seg.size < minSamples) seg = seg.copyOf(minSamples)
+                    stream.acceptWaveform(seg, SAMPLE_RATE)
                     rec.decode(stream)
                     val r = rec.getResult(stream)
                     onRawResult?.invoke(r.text, r.tokens.toList(), r.timestamps)

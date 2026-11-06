@@ -7,37 +7,61 @@ import org.junit.jupiter.api.assertThrows
 import ru.neurosteno.core.TimeSpan
 
 class AsrSupportTest {
+    private fun silenceWithQuietAt(n: Int, quietMs: Long): FloatArray =
+        FloatArray(n * 16) { 0.5f }.also { x -> // "речь" везде, кроме тихого окна вокруг quietMs
+            for (i in ((quietMs - 30) * 16).toInt() until ((quietMs + 30) * 16).toInt()) x[i] = 0.001f
+        }
+
     @Test
-    fun `chunks merge close spans and respect max length`() {
+    fun `chunks merge intervals while they fit and cut only between them`() {
+        val x = FloatArray(60_000 * 16) { 0.1f }
         val speech = listOf(TimeSpan(0, 3000), TimeSpan(3500, 8000), TimeSpan(20_000, 24_000), TimeSpan(24_500, 46_000))
-        // 0..8000 склеены (пауза 500); 20_000..46_000 = 26 с > 25 -> не склеиваются
-        val r = ChunkPlanner.plan(speech, 60_000, maxMs = 25_000)
-        assertEquals(listOf(TimeSpan(0, 8000), TimeSpan(20_000, 24_000), TimeSpan(24_500, 46_000)), r)
-        // большая пауза (> mergeGap) тоже разделяет
-        assertEquals(2, ChunkPlanner.plan(listOf(TimeSpan(0, 2000), TimeSpan(4000, 6000)), 10_000, mergeGapMs = 1000).size)
+        // 0..24000 склеены (<= 25 с, пауза внутри чанка); добавление 24500..46000 вышло бы за 25 с -> рез в паузе 24000..24500
+        assertEquals(listOf(TimeSpan(0, 24_000), TimeSpan(24_500, 46_000)), ChunkPlanner.plan(x, speech, 25_000))
+        assertEquals(listOf(TimeSpan(0, 24_000)), ChunkPlanner.plan(x, listOf(TimeSpan(0, 3000), TimeSpan(20_000, 24_000)), 25_000))
     }
 
     @Test
-    fun `long span is split evenly`() {
-        val r = ChunkPlanner.plan(listOf(TimeSpan(0, 60_000)), 60_000, maxMs = 25_000)
-        assertEquals(3, r.size)
-        assertTrue(r.all { it.endMs - it.startMs <= 25_000 })
-        assertEquals(0L, r.first().startMs); assertEquals(60_000L, r.last().endMs)
-        assertEquals(r.zipWithNext().map { it.first.endMs }, r.zipWithNext().map { it.second.startMs })
+    fun `long interval is cut at the quietest 20 ms frame in the second half of the window (python parity)`() {
+        val x = silenceWithQuietAt(60_000, 18_000)
+        val r = ChunkPlanner.plan(x, listOf(TimeSpan(0, 40_000)), 25_000)
+        // окно [12500, 25000]: самый тихий кадр -- в 17970..18030, центр первого такого кадра (ранний побеждает)
+        assertEquals(2, r.size)
+        assertEquals(0L, r[0].startMs); assertEquals(r[0].endMs, r[1].startMs); assertEquals(40_000L, r[1].endMs)
+        assertTrue(r[0].endMs in 17_970..18_030, "cut=${r[0].endMs}")
     }
 
     @Test
-    fun `short chunks are padded to min length within the file`() {
-        val r = ChunkPlanner.plan(listOf(TimeSpan(5_000, 5_200), TimeSpan(30_000, 30_100)), 60_000, minMs = 1_000)
-        assertEquals(listOf(1000L, 1000L), r.map { it.endMs - it.startMs })
-        assertEquals(TimeSpan(0, 1000), ChunkPlanner.plan(listOf(TimeSpan(0, 100)), 10_000, minMs = 1_000).single())
-        assertEquals(TimeSpan(9_000, 10_000), ChunkPlanner.plan(listOf(TimeSpan(9_950, 10_000)), 10_000, minMs = 1_000).single())
+    fun `no quiet frame means middle of the window, ties go to the earliest frame`() {
+        val flat = FloatArray(60_000 * 16) { 0.3f }
+        assertEquals(12_510L, ChunkPlanner.quietestCut(flat, 12_500, 25_000)) // все кадры равны -> первый (центр 12500+10)
+        assertEquals(12L, ChunkPlanner.quietestCut(flat, 10, 15)) // окно короче кадра -> середина окна
     }
 
     @Test
     fun `empty and invalid spans`() {
-        assertTrue(ChunkPlanner.plan(emptyList(), 1000).isEmpty())
-        assertTrue(ChunkPlanner.plan(listOf(TimeSpan(5, 5), TimeSpan(9, 3)), 1000).isEmpty())
+        val x = FloatArray(16_000)
+        assertTrue(ChunkPlanner.plan(x, emptyList(), 25_000).isEmpty())
+        assertTrue(ChunkPlanner.plan(x, listOf(TimeSpan(5, 5), TimeSpan(9, 3)), 25_000).isEmpty())
+    }
+
+    @Test
+    fun `real tts file chunks equal the python reference (skipped without dataset)`() {
+        val f = findCatsFile() ?: return
+        val audio = ru.neurosteno.core.audio.WavDecoder.decode(f)
+        // refpipe (medium.json): speech=[498..58580] -> chunks [498,23348] [23348,43198] [43198,58580]
+        val r = ChunkPlanner.plan(audio.samples, listOf(TimeSpan(498, 58_580)), 25_000)
+        assertEquals(listOf(TimeSpan(498, 23_348), TimeSpan(23_348, 43_198), TimeSpan(43_198, 58_580)), r)
+    }
+
+    private fun findCatsFile(): java.io.File? {
+        var d: java.io.File? = java.io.File("").absoluteFile
+        while (d != null) {
+            val f = java.io.File(d, ".cache/data/ru-dialog-tts-cats/audio/cats_c01_v0_meeting_clean.wav")
+            if (f.isFile) return f
+            d = d.parentFile
+        }
+        return null
     }
 
     private fun words(tokens: List<String>, ts: List<Float>, start: Long = 0, end: Long = 5000, tail: Long = 40, keep: Boolean = false, dur: List<Float>? = null) =
