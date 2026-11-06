@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 /** Репозиторий: .../src/android -> корень на два уровня выше (в рабочей копии и в основном дереве одинаково). */
@@ -22,6 +23,7 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         ndk { abiFilters += "arm64-v8a" }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
@@ -117,11 +119,17 @@ kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
 }
 
-// --- config/tiers/<tier>.json -> assets/tier.json каждого варианта (online использует medium как конфиг по умолчанию) ---
+// --- config/tiers/<tier>.json -> assets/tier.json каждого варианта (online использует medium как конфиг по умолчанию)
+// + assets/tiers/{lite,medium,hard}.json: скачанный набор другого уровня читается СВОИМ конфигом (manifest.tier) ---
 abstract class CopyTierConfig : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val source: RegularFileProperty
+
+    /** Все три конфига уровней (для каталога assets/tiers) -- входы задачи, иначе кэш сборки не заметит их правку. */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val allTiers: ConfigurableFileCollection
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -131,6 +139,10 @@ abstract class CopyTierConfig : DefaultTask() {
         val dir = outputDir.get().asFile
         dir.mkdirs()
         source.get().asFile.copyTo(File(dir, "tier.json"), overwrite = true)
+        val tiers = File(dir, "tiers").apply { mkdirs() }
+        for (t in listOf("lite", "medium", "hard")) {
+            File(source.get().asFile.parentFile, "$t.json").copyTo(File(tiers, "$t.json"), overwrite = true)
+        }
     }
 }
 
@@ -141,6 +153,7 @@ androidComponents {
         val taskName = "copy" + variant.name.replaceFirstChar { it.uppercase() } + "TierConfig"
         val copyTask = tasks.register<CopyTierConfig>(taskName) {
             source.set(File(repoRoot, "config/tiers/$configName.json"))
+            allTiers.from(listOf("lite", "medium", "hard").map { File(repoRoot, "config/tiers/$it.json") })
             outputDir.set(layout.buildDirectory.dir("generated/tierConfig/${variant.name}"))
         }
         variant.sources.assets?.addGeneratedSourceDirectory(copyTask, CopyTierConfig::outputDir)
@@ -158,13 +171,25 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.commons.compress) // tar.bz2-архивы моделей sherpa-onnx (менеджер загрузки)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
+
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
