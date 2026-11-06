@@ -79,6 +79,17 @@ scripts/emulator.sh stop
 Известно: `./gradlew :app:tasks --all` падает на `generate*ComposePreviewRunfiles` (релизные варианты без юнит-тестов),
 на сборку `assemble*` это не влияет.
 
+### Паритет Android <-> refpipe
+
+```bash
+src/android/scripts/parity.sh ru-dialog-tts-cats 10 medium   # N dev-файлов через tools/jvm-smoke и через refpipe, stenoeval score
+src/android/scripts/parity.sh ru-dialog-synth 5 medium       # падает, если WER norm Android хуже refpipe более чем на 1 п.п.
+```
+Чанкинг ASR (`ChunkPlanner`) — порт `refpipe/vad.py::make_chunks`: слияние интервалов VAD в чанки <= `asr.chunk.max_s`,
+рез только в паузах, а слишком длинный интервал режется по самому тихому 20-мс кадру (раньше резали на равные части —
+посреди слов). Слишком короткий чанк дополняется тишиной до `chunk.min_s`; для NeMo-transducer `feature_dim = 64`.
+`audio.normalize_gain` (peak) — `AudioNormalizer` (порт `bench_asr/audio_norm.py`), применяется после декодирования.
+
 ## Модули
 
 | Модуль | Тип | Содержимое |
