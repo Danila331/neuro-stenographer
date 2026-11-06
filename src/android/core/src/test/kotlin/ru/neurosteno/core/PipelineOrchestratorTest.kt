@@ -325,4 +325,21 @@ class PipelineOrchestratorTest {
         assertEquals("Привет мир.", r.transcript.utterances.single().text)
         assertTrue(r.warnings.any { it.contains("punctuation") })
     }
+
+    @Test
+    fun `normalize gain is applied before vad and engines see the amplified audio`() = runBlocking {
+        val quiet = AudioBuffer(FloatArray(16_000 * 3) { if (it % 2 == 0) 0.01f else -0.01f })
+        val vad = FakeVad()
+        orchestrator(decoder = FakeDecoder(quiet), vad = vad, s = settings.copy(normalizeGain = NormalizeGainConfig(mode = "peak"))).run(input)
+        assertEquals(0.891f, vad.seen!!.samples.maxOf { kotlin.math.abs(it) }, 0.002f) // -1 dBFS
+    }
+
+    @Test
+    fun `asr_native words keep punctuation and case all the way to json`() = runBlocking {
+        val words = listOf(Word("Добрый", 0, 500), Word("день,", 550, 900), Word("коллеги!", 950, 1500))
+        // пунктуатора нет (asr_native) -> текст = слова как есть, без guard
+        val r = orchestrator(asr = FakeAsr(words)).run(input)
+        assertEquals("Добрый день, коллеги!", r.transcript.utterances.single().text)
+        assertTrue(r.json.contains("Добрый день, коллеги!"))
+    }
 }

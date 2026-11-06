@@ -11,4 +11,4 @@ TIER="${2:-lite}"
 RUN_DIR="${3:-}"
 "$HERE/fetch_sherpa_onnx.sh" --host-native >/dev/null
 cd "$HERE/../tools/jvm-smoke"
-../../gradlew -p . run --args="$(cd "$(dirname "$WAV")" && pwd)/$(basename "$WAV") $(cd "$HERE/../../.." && pwd)/config/tiers/$TIER.json $NEUROSTENO_ROOT/.cache/models${RUN_DIR:+ $RUN_DIR}"
+../../gradlew -p . run --args="$(cd "$(dirname "$WAV")" && pwd)/$(basename "$WAV") ${PARITY_CONFIG:-$(cd "$HERE/../../.." && pwd)/config/tiers/$TIER.json} $NEUROSTENO_ROOT/.cache/models${RUN_DIR:+ $RUN_DIR}"

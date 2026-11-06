@@ -79,7 +79,7 @@ class SherpaAsr(
         }
         val hotwords = root.optionalFile(cfg.hotwordsFile)
         val config = OfflineRecognizerConfig(
-            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
+            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = if (files.kind == AsrModelFiles.Kind.NEMO_TRANSDUCER) 64 else 80), // как в эталоне
             modelConfig = model,
             decodingMethod = cfg.decoding,
             maxActivePaths = cfg.maxActivePaths,
