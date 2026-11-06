@@ -62,7 +62,8 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
             vad = { SherpaVad(cfg.vad, root, numThreads = 1) },
             asr = { lang ->
                 val asrCfg = if (lang == LanguageConfig.EN && hasEn) cfg.asrEn!! else cfg.asr
-                SherpaAsr(asrCfg, root, threads, lang, keepPunct = cfg.punctuation.source == "asr_native")
+                SherpaAsr(asrCfg, root, threads, lang, keepPunct = cfg.punctuation.source == "asr_native",
+                    dropTinyMaxChars = cfg.postprocess.dropTinyChunks.takeIf { it.enabled }?.maxChars)
             },
             diarizer = { SherpaDiarizer(cfg.diarization, root, threads) },
             // Пунктуатор создаётся только после выгрузки ASR/диаризации (оркестратор). Если LLM недоступна (нет файла,

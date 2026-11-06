@@ -330,7 +330,7 @@ class PipelineOrchestratorTest {
     fun `normalize gain is applied before vad and engines see the amplified audio`() = runBlocking {
         val quiet = AudioBuffer(FloatArray(16_000 * 3) { if (it % 2 == 0) 0.01f else -0.01f })
         val vad = FakeVad()
-        orchestrator(decoder = FakeDecoder(quiet), vad = vad, s = settings.copy(normalizeGain = NormalizeGainConfig(mode = "peak"))).run(input)
+        orchestrator(decoder = FakeDecoder(quiet), vad = vad, s = settings.copy(normalizeGain = NormalizeGainConfig(enabled = true, mode = "peak"))).run(input)
         assertEquals(0.891f, vad.seen!!.samples.maxOf { kotlin.math.abs(it) }, 0.002f) // -1 dBFS
     }
 
@@ -341,5 +341,49 @@ class PipelineOrchestratorTest {
         val r = orchestrator(asr = FakeAsr(words)).run(input)
         assertEquals("Добрый день, коллеги!", r.transcript.utterances.single().text)
         assertTrue(r.json.contains("Добрый день, коллеги!"))
+    }
+
+    @Test
+    fun `per chunk language runs ru asr then en asr sequentially on their own chunks and merges words`() = runBlocking {
+        val events = java.util.Collections.synchronizedList(ArrayList<String>())
+        val seen = java.util.Collections.synchronizedMap(HashMap<String, List<TimeSpan>>())
+        fun asrFor(lang: String, text: String) = object : AsrEngine {
+            override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word> {
+                events += "run:$lang"; seen[lang] = speech
+                progress.onProgress(Stage.ASR, 1f)
+                return speech.map { Word("$text${it.startMs}", it.startMs, it.startMs + 100) }
+            }
+            override fun close() { events += "close:$lang" }
+        }
+        val lid = object : LanguageId {
+            override fun detect(audio: AudioBuffer, speech: List<TimeSpan>) = if (speech.single().startMs >= 30_000) "en" else "ru"
+            override fun close() { events += "close:lid" }
+        }
+        // четыре интервала по 9 с с большими паузами: 0 и 20 с -- ru, 40 и 60 с -- en
+        val vad = FakeVad(spans = listOf(TimeSpan(0, 9_000), TimeSpan(20_000, 29_000), TimeSpan(40_000, 49_000), TimeSpan(60_000, 69_000)))
+        val r = PipelineOrchestrator(
+            FakeDecoder(silence(70_000)),
+            EngineProviders(
+                vad = { vad },
+                asr = { lang -> events += "create:$lang"; asrFor(lang, lang) },
+                diarizer = { FakeDiarizer() },
+                languageId = { lid },
+            ),
+            settings.copy(languageMode = "auto", supportedLanguages = setOf("ru", "en"), perChunkLanguage = true, chunkMaxMs = 25_000),
+            Dispatchers.IO,
+        ).run(input)
+        // при max 25 с соседние интервалы не склеиваются (расстояние > 25 с): четыре чанка; LID: ru, ru, en, en
+        assertEquals(listOf(TimeSpan(0, 9_000), TimeSpan(20_000, 29_000)), seen["ru"])
+        assertEquals(listOf(TimeSpan(40_000, 49_000), TimeSpan(60_000, 69_000)), seen["en"])
+        assertTrue(events.indexOf("close:ru") < events.indexOf("create:en"), "$events")
+        assertTrue(events.indexOf("close:lid") < events.indexOf("create:ru"), "$events")
+        assertEquals("ru", r.transcript.meta.language) // поровну 18 с / 18 с -- побеждает ru
+        assertEquals(listOf("ru0", "ru20000", "en40000", "en60000").size, r.transcript.utterances.sumOf { it.words.size })
+    }
+
+    @Test
+    fun `numbers are spelled when postprocess numbers is words`() = runBlocking {
+        val r = orchestrator(asr = FakeAsr(listOf(Word("в", 0, 100), Word("25", 100, 600), Word("мышей", 600, 900))), s = settings.copy(spellNumbers = true)).run(input)
+        assertEquals("в двадцать пять мышей", r.transcript.utterances.single().text)
     }
 }
