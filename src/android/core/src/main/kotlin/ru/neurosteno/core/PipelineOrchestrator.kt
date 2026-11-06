@@ -31,6 +31,8 @@ data class PipelineSettings(
     val plan: ResourcePlan? = null,
     /** false -> диаризация не запускается (один говорящий). */
     val diarizationEnabled: Boolean = true,
+    /** Пиковая нормализация после декодирования (до denoise/VAD/ASR/диаризации). */
+    val normalizeGain: NormalizeGainConfig = NormalizeGainConfig(),
 ) {
     companion object {
         fun from(cfg: TierConfig, appVersion: String, plan: ResourcePlan? = null): PipelineSettings = PipelineSettings(
@@ -54,6 +56,7 @@ data class PipelineSettings(
             supportedLanguages = if (cfg.asrEn != null) setOf(LanguageConfig.RU, LanguageConfig.EN) else setOf(LanguageConfig.RU),
             plan = plan,
             diarizationEnabled = cfg.diarization.enabled,
+            normalizeGain = cfg.audio.normalizeGain,
         )
     }
 }
@@ -138,6 +141,9 @@ class PipelineOrchestrator(
             warnings += "Пустое аудио"
             return finish(emptyList(), durationMs, LanguageConfig.RU, t0, stageMs, warnings, tracker)
         }
+
+        // ---- нормализация громкости (тихие записи: farfield, телефон) ----
+        ru.neurosteno.core.audio.AudioNormalizer.apply(audio, settings.normalizeGain)
 
         // ---- denoise (только при низком SNR) ----
         val dnFactory = engines.denoiser

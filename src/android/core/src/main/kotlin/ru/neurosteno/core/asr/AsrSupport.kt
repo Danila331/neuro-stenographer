@@ -7,66 +7,62 @@ import ru.neurosteno.core.TimeSpan
 import ru.neurosteno.core.Word
 
 /**
- * Разбиение речевых интервалов VAD на чанки для ASR (границы чанков -- паузы VAD).
- * Соседние интервалы склеиваются, пока пауза <= [mergeGapMs] и длина чанка <= [maxMs]; интервал длиннее [maxMs]
- * режется на равные части. Слишком короткие чанки (< [minMs]) расширяются симметрично до [minMs] (в пределах [0, durationMs]).
+ * Разбиение речевых интервалов VAD на чанки для ASR -- порт `make_chunks` / `split_long` / `_quietest_cut` эталона
+ * (`src/eval/refpipe/refpipe/vad.py`), чтобы чанки Android и Python совпадали до миллисекунды:
+ *  1. интервал длиннее [maxMs] режется на куски; точка реза -- центр самого тихого 20-мс кадра во ВТОРОЙ половине окна
+ *     `[start + max/2, start + max]` (раньше резали на равные части, прямо посреди слов -- причина BACKLOG B28);
+ *  2. соседние интервалы склеиваются в чанк, пока `last.end - first.start <= maxMs`; чанк -- непрерывный срез аудио
+ *     (внутренние паузы входят), поэтому рез возможен только в паузе между интервалами.
  */
 object ChunkPlanner {
-    fun plan(
-        speech: List<TimeSpan>,
-        durationMs: Long,
-        maxMs: Long = 25_000,
-        minMs: Long = 1_000,
-        mergeGapMs: Long = 1_000,
-        overlapMs: Long = 0,
-    ): List<TimeSpan> {
+    private const val SR = 16_000
+    private const val FRAME_MS = 20
+
+    fun plan(samples: FloatArray, speech: List<TimeSpan>, maxMs: Long): List<TimeSpan> {
         require(maxMs > 0)
-        val sorted = speech.filter { it.endMs > it.startMs }.sortedBy { it.startMs }
-        if (sorted.isEmpty()) return emptyList()
-
-        val merged = ArrayList<TimeSpan>()
-        var cur = sorted.first()
-        for (s in sorted.drop(1)) {
-            val gap = s.startMs - cur.endMs
-            if (gap <= mergeGapMs && max(cur.endMs, s.endMs) - cur.startMs <= maxMs) {
-                cur = TimeSpan(cur.startMs, max(cur.endMs, s.endMs))
-            } else {
-                merged += cur
-                cur = s
-            }
+        val sorted = speech.filter { it.endMs > it.startMs }.sortedWith(compareBy({ it.startMs }, { it.endMs }))
+        val flat = ArrayList<TimeSpan>()
+        for (iv in sorted) {
+            if (iv.endMs - iv.startMs > maxMs) flat += splitLong(samples, iv, maxMs) else flat += iv
         }
-        merged += cur
-
-        val split = ArrayList<TimeSpan>()
-        for (m in merged) {
-            val len = m.endMs - m.startMs
-            if (len <= maxMs) {
-                split += m
-            } else {
-                val parts = ((len + maxMs - 1) / maxMs).toInt()
-                val step = len.toDouble() / parts
-                for (i in 0 until parts) {
-                    val s = m.startMs + (step * i).roundToLong()
-                    val e = if (i == parts - 1) m.endMs else m.startMs + (step * (i + 1)).roundToLong()
-                    split += TimeSpan(max(m.startMs, s - if (i > 0) overlapMs else 0), min(m.endMs, e))
-                }
-            }
+        val chunks = ArrayList<TimeSpan>()
+        for (iv in flat) {
+            val last = chunks.lastOrNull()
+            if (last != null && iv.endMs - last.startMs <= maxMs) chunks[chunks.size - 1] = TimeSpan(last.startMs, iv.endMs)
+            else chunks += iv
         }
+        return chunks
+    }
 
-        return split.map { c ->
-            val len = c.endMs - c.startMs
-            if (len >= minMs || durationMs <= 0) {
-                c
-            } else {
-                val grow = (minMs - len + 1) / 2
-                var s = max(0L, c.startMs - grow)
-                var e = min(durationMs, c.endMs + grow)
-                if (e - s < minMs) { // упёрлись в край записи -- добираем с другой стороны
-                    if (s == 0L) e = min(durationMs, s + minMs) else s = max(0L, e - minMs)
-                }
-                TimeSpan(s, e)
-            }
+    internal fun splitLong(samples: FloatArray, span: TimeSpan, maxMs: Long): List<TimeSpan> {
+        val out = ArrayList<TimeSpan>()
+        var cur = span
+        while (cur.endMs - cur.startMs > maxMs) {
+            val cut = quietestCut(samples, cur.startMs + maxMs / 2, cur.startMs + maxMs)
+            out += TimeSpan(cur.startMs, cut)
+            cur = TimeSpan(cut, cur.endMs)
         }
+        out += cur
+        return out
+    }
+
+    /** Центр (мс) самого тихого 20-мс кадра, целиком лежащего в [lo, hi]; при равенстве побеждает ранний. */
+    internal fun quietestCut(samples: FloatArray, loMs: Long, hiMs: Long): Long {
+        var bestT = (loMs + hiMs) / 2
+        var bestE = -1.0
+        var t = loMs
+        while (t + FRAME_MS <= hiMs) {
+            val from = (t * SR / 1000).toInt().coerceIn(0, samples.size)
+            val to = ((t + FRAME_MS) * SR / 1000).toInt().coerceIn(from, samples.size)
+            var e = 0.0
+            for (i in from until to) e += samples[i].toDouble() * samples[i]
+            if (bestE < 0 || e < bestE) {
+                bestT = t + FRAME_MS / 2
+                bestE = e
+            }
+            t += FRAME_MS
+        }
+        return bestT
     }
 }
 
