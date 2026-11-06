@@ -11,7 +11,8 @@ from pathlib import Path
 from . import dataset as ds
 from .evaluate import PairMetrics, evaluate_pair
 from .results import pack_notes
-from .transcript import StrictJSONError, Utt, load_transcript, sort_utts
+from .timing import hyp_words_from_full
+from .transcript import StrictJSONError, Utt, load_transcript, read_text_strict, sort_utts, strict_loads
 from .validate import validate_file
 
 
@@ -38,6 +39,7 @@ class FileScore:
     metrics: PairMetrics
     row: dict[str, object]
     flags: list[str] = field(default_factory=list)
+    ts_source: str = "utt"
 
 
 def git_commit(cwd: Path | None = None) -> str:
@@ -106,7 +108,17 @@ def run_score(opt: ScoreOptions) -> tuple[list[FileScore], list[str]]:
                 flags.append("unparseable_hyp")
                 warnings.append(f"{it.id}: cannot parse hypothesis, scored as empty ({e})")
 
-        pm = evaluate_pair(ref, hyp, duration)
+        hyp_words = None
+        full_path = opt.run_dir / f"{it.id}.full.json"
+        if full_path.is_file():
+            try:
+                hyp_words = hyp_words_from_full(strict_loads(read_text_strict(full_path)))
+            except (StrictJSONError, ValueError, OSError):
+                hyp_words = None
+            if hyp_words is None:
+                warnings.append(f"{it.id}: {full_path.name} unusable, timestamps use proportional word split")
+        ts_source = "words" if hyp_words is not None else "utt"
+        pm = evaluate_pair(ref, hyp, duration, hyp_words)
         meta = ds.read_meta(opt.run_dir, it.id)
         proc = meta.get("processing_ms")
         proc = float(proc) if isinstance(proc, (int, float)) and not isinstance(proc, bool) else None
@@ -121,9 +133,10 @@ def run_score(opt: ScoreOptions) -> tuple[list[FileScore], list[str]]:
             "refw_hy": w["norm_hy"].ref_words, "werr_hy": w["norm_hy"].errors,
             "cperr": pm.cpwer["norm"].counts.errors,
             "dtot": round(pm.der["c0"].total, 3), "derr": round(pm.der["c0"].errors, 3),
-            "dtot_c": round(pm.der["c025"].total, 3), "derr_c": round(pm.der["c025"].errors, 3),
+            "dtot_c": round(pm.der["nist"].total, 3), "derr_c": round(pm.der["nist"].errors, 3),
             "tsn": t.n_matched, "nutt": t.n_ref_utts,
             "ts_acc300": None if t.start_acc300 is None else round(t.start_acc300, 4),
+            "ts": ts_source,
             "flag": ",".join(flags) if flags else None,
         }
         n_ref_spk = it.num_speakers if it.num_speakers is not None else pm.spk_ref
@@ -148,7 +161,7 @@ def run_score(opt: ScoreOptions) -> tuple[list[FileScore], list[str]]:
             "wer_norm": _r(w["norm"].wer, 5),
             "cpwer_norm": _r(pm.cpwer["norm"].wer, 5),
             "der": _r(pm.der["c0"].der, 5),
-            "der_collar": _r(pm.der["c025"].der, 5),
+            "der_collar": _r(pm.der["nist"].der, 5),
             "jer": _r(pm.jer, 5),
             "ts_start_mae_ms": _r(t.start_mae_ms, 1),
             "ts_end_mae_ms": _r(t.end_mae_ms, 1),
@@ -156,7 +169,7 @@ def run_score(opt: ScoreOptions) -> tuple[list[FileScore], list[str]]:
             "rtf": _r(rtf, 4),
             "notes": pack_notes(opt.notes, counters),
         }
-        out.append(FileScore(it, pm, row, flags))
+        out.append(FileScore(it, pm, row, flags, ts_source))
 
     if missing:
         what = "skipped (--only-present)" if opt.only_present else "scored as EMPTY hypothesis (WER 100%)"
@@ -193,6 +206,7 @@ def details_json(scores: list[FileScore]) -> list[dict]:
                     "start_median_ms": t.start_median_ms, "end_median_ms": t.end_median_ms,
                     "start_acc300": t.start_acc300, "end_acc300": t.end_acc300,
                 },
+                "ts_source": s.ts_source,
                 "row": s.row,
             }
         )

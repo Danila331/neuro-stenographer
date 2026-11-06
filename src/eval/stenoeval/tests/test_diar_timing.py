@@ -102,3 +102,32 @@ def test_timing_substitution_fallback():
     ref = [U("speaker_1", 1000, 2000, "кошка")]
     t = timing(ref, [U("speaker_1", 1100, 2100, "мошка")])
     assert t.n_matched == 1 and t.start_mae_ms == 100
+
+
+def test_hyp_words_from_full():
+    from stenoeval.timing import hyp_words_from_full
+
+    obj = {"utterances": [
+        {"speaker_id": "speaker_1", "start_ms": 5000, "end_ms": 6000, "text": "поздно", "words": []},
+        {"speaker_id": "speaker_1", "start_ms": 0, "end_ms": 2000, "text": "Раз, 25!",
+         "words": [{"text": "Раз,", "start_ms": 100, "end_ms": 400, "confidence": 0.9},
+                   {"text": "25!", "start_ms": 500, "end_ms": 1500}]},
+    ]}
+    w = hyp_words_from_full(obj)
+    assert [x.text for x in w] == ["раз", "двадцать", "пять", "поздно"]   # utterances sorted, 25 -> two tokens
+    assert (w[0].start_ms, w[0].end_ms) == (100, 400)
+    assert w[1].start_ms == 500 and w[2].end_ms == pytest.approx(1500)
+    assert w[3].start_ms == 5000 and w[3].end_ms == 6000               # no words -> proportional fallback
+    assert hyp_words_from_full({"transcript": []}) is None
+    assert hyp_words_from_full({"utterances": []}) is None
+    assert hyp_words_from_full([1]) is None
+    assert hyp_words_from_full({"utterances": [{"words": [{"text": "x", "start_ms": "a", "end_ms": 1}], "text": 5}]}) is None
+
+
+def test_real_word_times_beat_proportional_split():
+    ref = [U("speaker_1", 1000, 3000, "аа бб вв")]
+    # hypothesis utterance has padded boundaries, but words are timed precisely
+    hyp = [U("speaker_1", 500, 3500, "аа бб вв")]
+    prop = timing(ref, hyp)
+    real = timing(ref, hyp, hyp_words=[HypWord("аа", 1000, 1500), HypWord("бб", 1600, 2200), HypWord("вв", 2300, 3000)])
+    assert prop.start_mae_ms == 500 and real.start_mae_ms == 0 and real.end_mae_ms == 0

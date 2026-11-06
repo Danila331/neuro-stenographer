@@ -7,7 +7,7 @@ import pytest
 from conftest import write_json
 from stenoeval.cli import main
 from stenoeval.results import COLUMNS, read_csv, summarize, unpack_notes, pack_notes
-from stenoeval.score import ScoreOptions, run_score
+from stenoeval.score import ScoreOptions, details_json, run_score
 
 
 def score(fixtures, run, **kw):
@@ -141,3 +141,44 @@ def test_split_filter(fixtures):
         score(fixtures, "run_perfect", split="test")       # no test files in the fixture -> nothing to score
     scores, _ = score(fixtures, "run_perfect", split="dev", ids=["cat01"])
     assert [s.item.id for s in scores] == ["cat01"]
+
+
+def test_der_collar_column_is_nist(fixtures):
+    scores, _ = score(fixtures, "run_noisy")
+    for s in scores:
+        d = s.metrics.der
+        assert s.row["der_collar"] == (round(d["nist"].der, 5) if d["nist"].der is not None else "")
+    cat02 = {s.item.id: s for s in scores}["cat02"]
+    assert cat02.metrics.der["c025"].der != cat02.metrics.der["nist"].der   # collar=0.25 kept only in details
+    assert cat02.row["der_collar"] < cat02.row["der"]
+    d = details_json(scores)[1]["der"]
+    assert set(d) == {"c0", "c025", "nist"}
+    assert "dtot_c=" in cat02.row["notes"]
+
+
+def test_full_json_word_times(fixtures, tmp_path):
+    ds = fixtures / "dataset"
+    run = tmp_path / "run"
+    shutil.copytree(fixtures / "run_noisy", run)
+    # no .full.json -> proportional split
+    scores, _ = run_score(ScoreOptions(dataset_root=ds, run_dir=run, commit="x", ids=["cat01"]))
+    assert "ts=utt" in scores[0].row["notes"] and scores[0].ts_source == "utt"
+    prop_mae = scores[0].row["ts_start_mae_ms"]
+    # exact word times of the reference (spread evenly) -> MAE ~0 and ts=words
+    ref = json.loads((ds / "ref" / "cat01.json").read_text(encoding="utf-8"))["transcript"]
+    utts = []
+    for u in ref:
+        ws = u["text"].split()
+        step = (u["end_ms"] - u["start_ms"]) / len(ws)
+        words = [{"text": w, "start_ms": round(u["start_ms"] + i * step), "end_ms": round(u["start_ms"] + (i + 1) * step)} for i, w in enumerate(ws)]
+        utts.append({**u, "words": words})
+    (run / "cat01.full.json").write_text(json.dumps({"utterances": utts, "tier": "lite"}, ensure_ascii=False), encoding="utf-8")
+    scores, warnings = run_score(ScoreOptions(dataset_root=ds, run_dir=run, commit="x", ids=["cat01"]))
+    s = scores[0]
+    assert "ts=words" in s.row["notes"] and s.ts_source == "words"
+    assert s.row["ts_start_mae_ms"] < prop_mae and s.row["ts_start_mae_ms"] <= 2 and s.row["ts_end_mae_ms"] <= 2
+    assert s.row["wer_norm"] == 0                      # WER/DER still come from cat01.json
+    # broken .full.json -> warning + fallback
+    (run / "cat01.full.json").write_text("{oops", encoding="utf-8")
+    scores, warnings = run_score(ScoreOptions(dataset_root=ds, run_dir=run, commit="x", ids=["cat01"]))
+    assert "ts=utt" in scores[0].row["notes"] and any("full.json" in w for w in warnings)
