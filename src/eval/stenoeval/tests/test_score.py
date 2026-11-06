@@ -182,3 +182,52 @@ def test_full_json_word_times(fixtures, tmp_path):
     (run / "cat01.full.json").write_text("{oops", encoding="utf-8")
     scores, warnings = run_score(ScoreOptions(dataset_root=ds, run_dir=run, commit="x", ids=["cat01"]))
     assert "ts=utt" in scores[0].row["notes"] and any("full.json" in w for w in warnings)
+
+
+def test_punct_wer_in_notes_summary_and_json(fixtures, tmp_path, capsys):
+    scores, _ = score(fixtures, "run_noisy")
+    by = {s.item.id: s for s in scores}
+    notes = by["cat01"].row["notes"]
+    for key in ("refw_p=", "werr_p=", "refw_ps=", "werr_ps=", "refw_pl=", "werr_pl="):
+        assert key in notes
+    assert by["cat01"].metrics.wer["punct_lc"].errors > 0          # hyp has no punctuation
+    assert by["cat01"].metrics.wer["norm"].errors == 0
+    rows = [{k: str(v) for k, v in s.row.items()} for s in scores]
+    sm = summarize(rows)
+    errs = sum(x.metrics.wer["punct"].errors for x in scores)
+    words = sum(x.metrics.wer["punct"].ref_words for x in scores)
+    assert sm["wer_punct"] == pytest.approx(errs / words)
+    assert sm["wer_punct"] > sm["wer_norm"]
+    assert sm["wer_punct_sep"] is not None and sm["wer_punct_lc"] is not None
+    # JSON details carry all modes
+    d = details_json(scores)[0]
+    assert {"raw", "norm", "norm_hy", "norm_num", "punct", "punct_sep", "punct_lc"} <= set(d["wer"])
+
+    # CLI: headline, compare and report show the punct columns
+    csv_path = tmp_path / "r.csv"
+    ds = str(fixtures / "dataset")
+    for run, rid in (("run_perfect", "a"), ("run_noisy", "b")):
+        assert main(["score", "--dataset", ds, "--run", str(fixtures / run), "--run-id", rid, "--csv", str(csv_path)]) == 0
+    out = capsys.readouterr().out
+    assert "MAIN (micro): WER norm" in out and "WER punct" in out
+    main(["compare", str(csv_path), "--run-ids", "a,b"])
+    out = capsys.readouterr().out
+    assert "WER punct" in out and "WER p-sep" in out and "WER p-lc" in out
+    main(["report", str(csv_path), "--out", str(tmp_path / "r.md")])
+    assert "WER punct" in (tmp_path / "r.md").read_text(encoding="utf-8")
+
+
+def test_punct_regression_detected(fixtures, tmp_path):
+    """A run that only gets worse in punctuation (norm WER equal) must be flagged by compare."""
+    run = tmp_path / "run"
+    shutil.copytree(fixtures / "run_perfect", run)
+    p = run / "cat01.json"
+    obj = json.loads(p.read_text(encoding="utf-8"))
+    for u in obj["transcript"]:
+        u["text"] = u["text"].replace(",", "").replace("!", "").replace(".", "")
+    p.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
+    csv_path = tmp_path / "r.csv"
+    ds = str(fixtures / "dataset")
+    main(["score", "--dataset", ds, "--run", str(fixtures / "run_perfect"), "--run-id", "a", "--csv", str(csv_path)])
+    main(["score", "--dataset", ds, "--run", str(run), "--run-id", "b", "--csv", str(csv_path)])
+    assert main(["compare", str(csv_path), "--run-ids", "a,b", "--fail-on-regression"]) == 1

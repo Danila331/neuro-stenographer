@@ -42,3 +42,24 @@ def test_unknown_mode():
 
     with pytest.raises(ValueError):
         tokens("a", "bogus")
+
+
+def test_punct_modes():
+    t = "Ёлки-палки, «да»! Это 3,5 кг... Ну — кто-то?"
+    assert tokens(t, "punct") == ["Елки-палки,", "«да»!", "Это", "3,5", "кг...", "Ну", "—", "кто-то?"]
+    assert tokens(t, "punct_sep") == [
+        "Елки-палки", ",", "«", "да", "»", "!", "Это", "3,5", "кг", ".", ".", ".", "Ну", "—", "кто-то", "?",
+    ]
+    assert tokens(t, "punct_lc") == [x.lower() for x in tokens(t, "punct_sep")]
+
+
+def test_punct_yo_and_case():
+    assert tokens("Ёж ёлка", "punct") == ["Еж", "елка"]            # е/ё not distinguished, case kept
+    assert tokens("Привет", "punct") != tokens("привет", "punct")
+    assert tokens("Привет", "punct_lc") == tokens("привет", "punct_lc")
+    assert tokens("  день  !  ", "punct") == ["день", "!"]          # whitespace collapsed
+    assert tokens("день!", "punct_sep") == ["день", "!"]
+    assert tokens("день !", "punct_sep") == tokens("день!", "punct_sep")
+    assert tokens("день !", "punct") != tokens("день!", "punct")
+    assert tokens("", "punct_sep") == [] and tokens("!?", "punct_sep") == ["!", "?"]
+    assert tokens("а … б", "punct_sep") == ["а", ".", ".", ".", "б"]  # NFKC expands the ellipsis

@@ -110,3 +110,21 @@ def test_rapidfuzz_and_python_agree():
         assert w.edit_distance(a, b) == d
         assert sum(o != "C" for o, _, _ in w._align_py(a, b)) == d
         assert sum(o != "C" for o, _, _ in w._align_rf(a, b)) == d
+
+
+def test_punct_wer_modes():
+    ref = [U("speaker_1", 0, 1000, "Привет, мир! Ёжик спит.")]
+    hyp_nopunct = [U("speaker_1", 0, 1000, "привет мир ежик спит")]
+    assert wer(ref, hyp_nopunct, "norm").errors == 0
+    # punct: Привет, / мир! / Ёжик->Елк... / спит. all differ in case or marks
+    assert wer(ref, hyp_nopunct, "punct").errors == 4
+    # punct_sep: marks become tokens (, ! .) -> 3 deletions + capital "Привет"/"Ежик" subs
+    c = wer(ref, hyp_nopunct, "punct_sep")
+    assert c.dele == 3 and c.sub == 2 and c.ref_words == 7
+    c = wer(ref, hyp_nopunct, "punct_lc")
+    assert c.dele == 3 and c.sub == 0 and c.wer == pytest.approx(3 / 7)
+    assert wer(ref, [U("speaker_1", 0, 1000, "Привет, мир! Ежик спит.")], "punct").errors == 0   # ё == е
+    assert wer(ref, ref, "punct_sep").errors == 0
+    # comma moved after "мир" and "!" replaced: deletion of "," + substitution "!" -> ","
+    moved = [U("speaker_1", 0, 1000, "Привет мир, Ежик спит.")]
+    assert wer(ref, moved, "punct_sep").errors == 2

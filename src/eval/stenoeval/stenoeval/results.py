@@ -117,6 +117,9 @@ def summarize(rows: Sequence[dict[str, str]]) -> dict[str, object]:
     out: dict[str, object] = {"files": n}
     out["wer_raw"], out["wer_raw_exact"] = _micro(rows, "werr_raw", "refw_raw", "wer_raw")
     out["wer_norm"], out["wer_norm_exact"] = _micro(rows, "werr", "refw", "wer_norm")
+    out["wer_punct"], _ = _micro(rows, "werr_p", "refw_p", None)
+    out["wer_punct_sep"], _ = _micro(rows, "werr_ps", "refw_ps", None)
+    out["wer_punct_lc"], _ = _micro(rows, "werr_pl", "refw_pl", None)
     out["wer_num"], _ = _micro(rows, "werr_num", "refw_num", None)
     out["wer_hy"], _ = _micro(rows, "werr_hy", "refw_hy", None)
     out["cpwer_norm"], out["cpwer_exact"] = _micro(rows, "cperr", "refw", "cpwer_norm")
