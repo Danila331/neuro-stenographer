@@ -1,3 +1,7 @@
 .venv/
 __pycache__/
 *.pyc
+results/cache/
+results/stage_cache/
+results/*.log
+.pytest_cache/
