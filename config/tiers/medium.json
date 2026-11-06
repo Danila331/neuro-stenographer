@@ -10,9 +10,11 @@
       "snr_threshold_db": 12.0
     },
     "normalize_gain": {
+      "enabled": true,
       "mode": "peak",
-      "target_peak_dbfs": -1.0,
-      "max_gain_db": 40.0
+      "peak_dbfs": -1.0,
+      "max_gain_db": 40.0,
+      "skip_if_peak_below_dbfs": -85.0
     }
   },
   "vad": {
@@ -31,14 +33,14 @@
     "hotwords_file": null,
     "hotwords_score": 1.5,
     "chunk": {
-      "max_s": 25.0,
+      "max_s": 20.0,
       "min_s": 1.0,
       "overlap_ms": 0
     },
     "second_pass": null,
     "batch_size": 1,
     "word_tail_ms": 40,
-    "word_start_offset_ms": 0,
+    "word_start_offset_ms": -30,
     "language": "ru"
   },
   "diarization": {
@@ -83,17 +85,25 @@
   "language": {
     "mode": "auto",
     "lid_model": "asr/whisper-tiny-int8",
-    "lid_seconds": 10
+    "lid_seconds": 10,
+    "per_chunk": true
   },
   "asr_en": {
     "engine": "nemo_tdt",
     "model_dir": "asr/parakeet-tdt-110m-en-int8",
     "decoding": "greedy_search",
     "chunk": {
-      "max_s": 25.0,
+      "max_s": 20.0,
       "min_s": 1.0,
       "overlap_ms": 0
     },
     "language": "en"
+  },
+  "postprocess": {
+    "numbers": "as_is",
+    "drop_tiny_chunks": {
+      "enabled": true,
+      "max_chars": 2
+    }
   }
 }
