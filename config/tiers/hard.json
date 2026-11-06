@@ -35,7 +35,11 @@
       "model_dir": "asr/whisper-large-v3-turbo-int8",
       "trigger": "low_confidence",
       "confidence_threshold": 0.6
-    }
+    },
+    "batch_size": 1,
+    "word_tail_ms": 40,
+    "word_start_offset_ms": 0,
+    "language": "ru"
   },
   "diarization": {
     "segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
@@ -47,7 +51,10 @@
       "max_speakers": 8
     },
     "min_duration_on_s": 0.2,
-    "min_duration_off_s": 0.3
+    "min_duration_off_s": 0.3,
+    "enabled": true,
+    "window_shift_ratio": 0.1,
+    "num_threads": null
   },
   "align": {
     "max_gap_ms": 1500,
@@ -72,5 +79,11 @@
     "numbers": "as_is",
     "yo_to_e": false,
     "case": "as_is"
-  }
+  },
+  "language": {
+    "mode": "auto",
+    "lid_model": null,
+    "lid_seconds": 10
+  },
+  "asr_en": null
 }
