@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_name задаётся для каждого варианта в build.gradle.kts (resValue) -->
+    <string name="btn_pick_file">Выбрать файл</string>
+    <string name="btn_process">Обработать</string>
+    <string name="btn_cancel">Отмена</string>
+    <string name="btn_export_json">Экспорт JSON</string>
+    <string name="label_on_device">Обработка выполняется на устройстве</string>
+    <string name="notification_channel">Обработка записи</string>
+    <string name="notification_title">Идёт обработка записи</string>
+    <string name="status_models_missing">Модели не найдены. Вариант «Online» не содержит моделей: скачайте набор на экране «Модели» (появится в следующей версии).</string>
+    <string name="status_no_file">Файл не выбран</string>
+</resources>
