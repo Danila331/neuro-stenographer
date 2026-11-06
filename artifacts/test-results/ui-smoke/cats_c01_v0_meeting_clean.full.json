@@ -1,0 +1,626 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 658,
+      "end_ms": 4338,
+      "text": "добрый день коллеги объявляю заседание в котовице открытым",
+      "words": [
+        {
+          "text": "добрый",
+          "start_ms": 658,
+          "end_ms": 938,
+          "confidence": null
+        },
+        {
+          "text": "день",
+          "start_ms": 1058,
+          "end_ms": 1258,
+          "confidence": null
+        },
+        {
+          "text": "коллеги",
+          "start_ms": 1458,
+          "end_ms": 1898,
+          "confidence": null
+        },
+        {
+          "text": "объявляю",
+          "start_ms": 2138,
+          "end_ms": 2538,
+          "confidence": null
+        },
+        {
+          "text": "заседание",
+          "start_ms": 2658,
+          "end_ms": 3138,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 3218,
+          "end_ms": 3258,
+          "confidence": null
+        },
+        {
+          "text": "котовице",
+          "start_ms": 3338,
+          "end_ms": 3818,
+          "confidence": null
+        },
+        {
+          "text": "открытым",
+          "start_ms": 3938,
+          "end_ms": 4338,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 4658,
+      "end_ms": 8498,
+      "text": "здравствуйте мурзик васильевич нас сегодня сколько",
+      "words": [
+        {
+          "text": "здравствуйте",
+          "start_ms": 4658,
+          "end_ms": 5338,
+          "confidence": null
+        },
+        {
+          "text": "мурзик",
+          "start_ms": 5618,
+          "end_ms": 6058,
+          "confidence": null
+        },
+        {
+          "text": "васильевич",
+          "start_ms": 6218,
+          "end_ms": 6818,
+          "confidence": null
+        },
+        {
+          "text": "нас",
+          "start_ms": 7058,
+          "end_ms": 7258,
+          "confidence": null
+        },
+        {
+          "text": "сегодня",
+          "start_ms": 7578,
+          "end_ms": 7938,
+          "confidence": null
+        },
+        {
+          "text": "сколько",
+          "start_ms": 8098,
+          "end_ms": 8498,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 8898,
+      "end_ms": 10978,
+      "text": "по списку двенадцать котов и три кошки",
+      "words": [
+        {
+          "text": "по",
+          "start_ms": 8898,
+          "end_ms": 8978,
+          "confidence": null
+        },
+        {
+          "text": "списку",
+          "start_ms": 9058,
+          "end_ms": 9338,
+          "confidence": null
+        },
+        {
+          "text": "двенадцать",
+          "start_ms": 9418,
+          "end_ms": 9858,
+          "confidence": null
+        },
+        {
+          "text": "котов",
+          "start_ms": 9978,
+          "end_ms": 10218,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 10298,
+          "end_ms": 10338,
+          "confidence": null
+        },
+        {
+          "text": "три",
+          "start_ms": 10418,
+          "end_ms": 10578,
+          "confidence": null
+        },
+        {
+          "text": "кошки",
+          "start_ms": 10698,
+          "end_ms": 10978,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 11618,
+      "end_ms": 16818,
+      "text": "а котята которые пишут протоколля кушинк этжи",
+      "words": [
+        {
+          "text": "а",
+          "start_ms": 11618,
+          "end_ms": 11658,
+          "confidence": null
+        },
+        {
+          "text": "котята",
+          "start_ms": 11778,
+          "end_ms": 12218,
+          "confidence": null
+        },
+        {
+          "text": "которые",
+          "start_ms": 12418,
+          "end_ms": 12738,
+          "confidence": null
+        },
+        {
+          "text": "пишут",
+          "start_ms": 12858,
+          "end_ms": 13098,
+          "confidence": null
+        },
+        {
+          "text": "протоколля",
+          "start_ms": 13258,
+          "end_ms": 15138,
+          "confidence": null
+        },
+        {
+          "text": "кушинк",
+          "start_ms": 15258,
+          "end_ms": 15778,
+          "confidence": null
+        },
+        {
+          "text": "этжи",
+          "start_ms": 16178,
+          "end_ms": 16818,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 17258,
+      "end_ms": 19298,
+      "text": "отлично кука записывайте",
+      "words": [
+        {
+          "text": "отлично",
+          "start_ms": 17258,
+          "end_ms": 17698,
+          "confidence": null
+        },
+        {
+          "text": "кука",
+          "start_ms": 17938,
+          "end_ms": 18458,
+          "confidence": null
+        },
+        {
+          "text": "записывайте",
+          "start_ms": 18738,
+          "end_ms": 19298,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 20659,
+      "end_ms": 24179,
+      "text": "ая",
+      "words": [
+        {
+          "text": "ая",
+          "start_ms": 20659,
+          "end_ms": 24179,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 24419,
+      "end_ms": 29459,
+      "text": "сегодняцатоенпрс",
+      "words": [
+        {
+          "text": "сегодняцатоенпрс",
+          "start_ms": 24419,
+          "end_ms": 29459,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 29619,
+      "end_ms": 32859,
+      "text": "поповесткенчбарсик лушаю",
+      "words": [
+        {
+          "text": "поповесткенчбарсик",
+          "start_ms": 29619,
+          "end_ms": 32219,
+          "confidence": null
+        },
+        {
+          "text": "лушаю",
+          "start_ms": 32579,
+          "end_ms": 32859,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 33499,
+      "end_ms": 36619,
+      "text": "почему вопрос по сметанам стоит только на пятом месте",
+      "words": [
+        {
+          "text": "почему",
+          "start_ms": 33499,
+          "end_ms": 33819,
+          "confidence": null
+        },
+        {
+          "text": "вопрос",
+          "start_ms": 33979,
+          "end_ms": 34219,
+          "confidence": null
+        },
+        {
+          "text": "по",
+          "start_ms": 34419,
+          "end_ms": 34499,
+          "confidence": null
+        },
+        {
+          "text": "сметанам",
+          "start_ms": 34619,
+          "end_ms": 35179,
+          "confidence": null
+        },
+        {
+          "text": "стоит",
+          "start_ms": 35339,
+          "end_ms": 35619,
+          "confidence": null
+        },
+        {
+          "text": "только",
+          "start_ms": 35659,
+          "end_ms": 35939,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 35979,
+          "end_ms": 36059,
+          "confidence": null
+        },
+        {
+          "text": "пятом",
+          "start_ms": 36099,
+          "end_ms": 36339,
+          "confidence": null
+        },
+        {
+          "text": "месте",
+          "start_ms": 36379,
+          "end_ms": 36619,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 36979,
+      "end_ms": 40019,
+      "text": "потому что сначала нужно решить вопрос с мы наскладе",
+      "words": [
+        {
+          "text": "потому",
+          "start_ms": 36979,
+          "end_ms": 37219,
+          "confidence": null
+        },
+        {
+          "text": "что",
+          "start_ms": 37299,
+          "end_ms": 37419,
+          "confidence": null
+        },
+        {
+          "text": "сначала",
+          "start_ms": 37499,
+          "end_ms": 37779,
+          "confidence": null
+        },
+        {
+          "text": "нужно",
+          "start_ms": 37819,
+          "end_ms": 38059,
+          "confidence": null
+        },
+        {
+          "text": "решить",
+          "start_ms": 38099,
+          "end_ms": 38339,
+          "confidence": null
+        },
+        {
+          "text": "вопрос",
+          "start_ms": 38419,
+          "end_ms": 38659,
+          "confidence": null
+        },
+        {
+          "text": "с",
+          "start_ms": 38699,
+          "end_ms": 38739,
+          "confidence": null
+        },
+        {
+          "text": "мы",
+          "start_ms": 38859,
+          "end_ms": 38939,
+          "confidence": null
+        },
+        {
+          "text": "наскладе",
+          "start_ms": 39539,
+          "end_ms": 40019,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 40219,
+      "end_ms": 43139,
+      "text": "мыши значит важнее сметаны не согласен",
+      "words": [
+        {
+          "text": "мыши",
+          "start_ms": 40219,
+          "end_ms": 40499,
+          "confidence": null
+        },
+        {
+          "text": "значит",
+          "start_ms": 40659,
+          "end_ms": 40939,
+          "confidence": null
+        },
+        {
+          "text": "важнее",
+          "start_ms": 41059,
+          "end_ms": 41459,
+          "confidence": null
+        },
+        {
+          "text": "сметаны",
+          "start_ms": 41579,
+          "end_ms": 42019,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 42259,
+          "end_ms": 42339,
+          "confidence": null
+        },
+        {
+          "text": "согласен",
+          "start_ms": 42579,
+          "end_ms": 43139,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 43779,
+      "end_ms": 45699,
+      "text": "согласие не требуется повестка",
+      "words": [
+        {
+          "text": "согласие",
+          "start_ms": 43779,
+          "end_ms": 44219,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 44339,
+          "end_ms": 44419,
+          "confidence": null
+        },
+        {
+          "text": "требуется",
+          "start_ms": 44539,
+          "end_ms": 45019,
+          "confidence": null
+        },
+        {
+          "text": "повестка",
+          "start_ms": 45259,
+          "end_ms": 45699,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 45819,
+      "end_ms": 47459,
+      "text": "утвержденапонла",
+      "words": [
+        {
+          "text": "утвержденапонла",
+          "start_ms": 45819,
+          "end_ms": 47459,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 47819,
+      "end_ms": 51539,
+      "text": "тогда я требую внести мое возражение в протокол",
+      "words": [
+        {
+          "text": "тогда",
+          "start_ms": 47819,
+          "end_ms": 48059,
+          "confidence": null
+        },
+        {
+          "text": "я",
+          "start_ms": 48299,
+          "end_ms": 48339,
+          "confidence": null
+        },
+        {
+          "text": "требую",
+          "start_ms": 48499,
+          "end_ms": 48819,
+          "confidence": null
+        },
+        {
+          "text": "внести",
+          "start_ms": 48979,
+          "end_ms": 49339,
+          "confidence": null
+        },
+        {
+          "text": "мое",
+          "start_ms": 49619,
+          "end_ms": 49859,
+          "confidence": null
+        },
+        {
+          "text": "возражение",
+          "start_ms": 50179,
+          "end_ms": 50859,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 50939,
+          "end_ms": 50979,
+          "confidence": null
+        },
+        {
+          "text": "протокол",
+          "start_ms": 51099,
+          "end_ms": 51539,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 53259,
+      "end_ms": 57859,
+      "text": "диктуйте возражаю против порядка вопросов подпись баси",
+      "words": [
+        {
+          "text": "диктуйте",
+          "start_ms": 53259,
+          "end_ms": 53819,
+          "confidence": null
+        },
+        {
+          "text": "возражаю",
+          "start_ms": 54579,
+          "end_ms": 55059,
+          "confidence": null
+        },
+        {
+          "text": "против",
+          "start_ms": 55259,
+          "end_ms": 55539,
+          "confidence": null
+        },
+        {
+          "text": "порядка",
+          "start_ms": 55659,
+          "end_ms": 55979,
+          "confidence": null
+        },
+        {
+          "text": "вопросов",
+          "start_ms": 56099,
+          "end_ms": 56539,
+          "confidence": null
+        },
+        {
+          "text": "подпись",
+          "start_ms": 56819,
+          "end_ms": 57259,
+          "confidence": null
+        },
+        {
+          "text": "баси",
+          "start_ms": 57499,
+          "end_ms": 57859,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-medium",
+    "tier": "medium",
+    "language": "ru",
+    "audio_duration_ms": 58580,
+    "processing_ms": 10664,
+    "rtf": 0.182,
+    "stage_ms": {
+      "decode": 114,
+      "vad": 619,
+      "lid": 460,
+      "asr": 5761,
+      "diarization": 9448,
+      "align": 2,
+      "punctuation": 0,
+      "export": 3,
+      "total": 10664
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-ctc-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/embedding/model.onnx",
+      "llm": "llm/qwen3-1.7b-q4_k_m.gguf"
+    }
+  }
+}
