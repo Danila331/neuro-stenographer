@@ -34,11 +34,16 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
         val cfg = graph.tierConfig ?: throw ModelsNotReadyException("Не удалось прочитать конфигурацию варианта: ${graph.configError}")
         val dir = graph.modelStore.activeDir()
             ?: throw ModelsNotReadyException("Модели не найдены. Вариант «${BuildConfig.TIER}» без встроенных моделей: скачайте набор на экране «Модели».")
-        val missing = graph.modelStore.missing(cfg.requiredModelPaths())
+        val missing = graph.modelStore.missing(cfg.essentialModelPaths())
         if (missing.isNotEmpty()) {
             throw ModelsNotReadyException("В наборе моделей нет файлов: ${missing.joinToString()}")
         }
         val root = ModelRoot(dir)
+        // Необязательные модели: нет файлов -- возможность отключается (не падаем)
+        val optionalMissing = graph.modelStore.missing(cfg.requiredModelPaths() - cfg.essentialModelPaths().toSet()).toSet()
+        val hasEn = cfg.asrEn != null && cfg.asrEn!!.modelDir !in optionalMissing
+        val hasLid = cfg.language.lidModel != null && cfg.language.lidModel!! !in optionalMissing
+        val hasDenoise = cfg.audio.denoise.model != null && cfg.audio.denoise.model!! !in optionalMissing
 
         val plan = ResourcePlanner.plan(memorySnapshot(), cfg, Runtime.getRuntime().availableProcessors())
         val threads = plan.numThreads
@@ -47,7 +52,7 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
         val providers = EngineProviders(
             vad = { SherpaVad(cfg.vad, root, numThreads = 1) },
             asr = { lang ->
-                val asrCfg = if (lang == LanguageConfig.EN) cfg.asrEn ?: cfg.asr else cfg.asr
+                val asrCfg = if (lang == LanguageConfig.EN && hasEn) cfg.asrEn!! else cfg.asr
                 SherpaAsr(asrCfg, root, threads, lang, keepPunct = cfg.punctuation.source == "asr_native")
             },
             diarizer = { SherpaDiarizer(cfg.diarization, root, threads) },
@@ -62,17 +67,20 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
                     LlmPunctuator(llm, durationMs, cfg.llm.timeBudgetRtf)
                 }
             } else null,
-            denoiser = if (cfg.audio.denoise.enabled && cfg.audio.denoise.model != null) {
+            denoiser = if (cfg.audio.denoise.enabled && hasDenoise) {
                 { SherpaDenoiser(cfg.audio.denoise.model!!, root, threads) }
             } else null,
-            languageId = if (cfg.language.effectiveMode == LanguageConfig.AUTO && cfg.language.lidModel != null) {
+            languageId = if (cfg.language.effectiveMode == LanguageConfig.AUTO && hasLid && hasEn) {
                 { SherpaLanguageId(cfg.language.lidModel!!, root, 1, cfg.language.lidSeconds) }
             } else null,
         )
         val orchestrator = PipelineOrchestrator(
             decoder = MediaCodecAudioDecoder(context),
             engines = providers,
-            settings = PipelineSettings.from(cfg, BuildConfig.VERSION_NAME, plan),
+            settings = PipelineSettings.from(cfg, BuildConfig.VERSION_NAME, plan).let { s ->
+                val langs = if (hasEn) s.supportedLanguages else setOf(LanguageConfig.RU)
+                s.copy(supportedLanguages = langs, denoiseEnabled = s.denoiseEnabled && hasDenoise)
+            },
         )
         return orchestrator.run(UriAudioInput(uri, displayName), listener)
     }

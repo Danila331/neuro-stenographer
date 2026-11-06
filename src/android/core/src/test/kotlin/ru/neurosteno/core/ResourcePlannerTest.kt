@@ -71,10 +71,12 @@ class ResourcePlannerTest {
 
     @Test
     fun `jury 2gb and 4gb emulator scenarios`() {
-        // AVD 2 ГБ: после системы доступно ~900 МБ -> lite-план (peak 1000) частично урезан, но работает
+        // AVD 2 ГБ: после системы доступно ~900 МБ -> lite-план (peak 1000) частично урезан, но работает; LLM выключена
         val lite = TierConfig(tier = "lite", numThreads = 4, llm = LlmConfig(model = "llm/q.gguf"), punctuation = PunctuationConfig("llm"))
         val p2 = ResourcePlanner.plan(MemorySnapshot(2048, 900), lite, cores = 2)
         assertTrue(p2.numThreads in 1..2)
+        assertFalse(p2.llmPunctuation)
+        assertFalse(ResourcePlanner.plan(MemorySnapshot(2400, 1500), lite, cores = 2).llmPunctuation)
         // AVD 4 ГБ: доступно ~2300 МБ -> medium (peak 1500) идёт без урезаний по памяти, LLM 1800*1.25=2250 влезает
         val p4 = ResourcePlanner.plan(MemorySnapshot(4096, 2300), medium, cores = 4)
         assertEquals(4, p4.numThreads)

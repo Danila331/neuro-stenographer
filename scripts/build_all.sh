@@ -6,6 +6,7 @@
 #   scripts/build_all.sh medium             # только medium
 #   NO_STAGE=1 scripts/build_all.sh lite    # не перекладывать модели (уже лежат в assets)
 #   ALLOW_MISSING_MODELS=1 scripts/build_all.sh   # собрать даже при неполном наборе моделей (для проверки сборки)
+#   STAGE_EXTRA='--skip-llm' scripts/build_all.sh lite   # доп. аргументы для stage_models.sh
 #
 # Требует готового Android SDK (scripts/../src/android/scripts/sdk_setup.sh) и исходников llama.cpp / AAR sherpa-onnx
 # (скрипт скачивает их сам через fetch_*.sh).
@@ -52,8 +53,10 @@ VERSION="$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts | hea
 for tier in "${TIERS[@]}"; do
   echo "=== $tier ==="
   if [ -z "${NO_STAGE:-}" ]; then
-    if [ -n "${ALLOW_MISSING_MODELS:-}" ]; then "$HERE/stage_models.sh" "$tier" --allow-missing
-    else "$HERE/stage_models.sh" "$tier"; fi
+    # STAGE_EXTRA -- дополнительные аргументы stage_models.sh (например, "--map a=b")
+    # shellcheck disable=SC2086
+    if [ -n "${ALLOW_MISSING_MODELS:-}" ]; then "$HERE/stage_models.sh" "$tier" --allow-missing ${STAGE_EXTRA:-}
+    else "$HERE/stage_models.sh" "$tier" ${STAGE_EXTRA:-}; fi
   fi
   cap="$(printf '%s' "${tier:0:1}" | tr '[:lower:]' '[:upper:]')${tier:1}"
   ./gradlew ":app:assemble${cap}Release" -Pneurosteno.android=true \

@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val graph = (application as NeuroApp).graph
-        incoming = uriFrom(intent)
+        handleExternalIntent(intent)
 
         // Подготовка моделей в фоне: копирование встроенного набора из assets при первом запуске
         lifecycleScope.launch {
@@ -76,8 +76,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS) // отказ не мешает обработке
                         }
-                        ProcessingState.reset()
-                        ContextCompat.startForegroundService(this@MainActivity, ProcessingService.startIntent(this@MainActivity, uri, displayName(uri)))
+                        startProcessing(uri)
                     },
                     onCancel = { startService(ProcessingService.cancelIntent(this@MainActivity)) },
                     onExport = { name -> exportLauncher.launch(name) },
@@ -89,7 +88,19 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        incoming = uriFrom(intent)
+        handleExternalIntent(intent)
+    }
+
+    /** «Открыть с помощью» / «Поделиться» / adb: файл подставляется и обработка стартует сразу (BACKLOG B2/B3). */
+    private fun handleExternalIntent(intent: Intent?) {
+        val uri = uriFrom(intent) ?: return
+        incoming = uri
+        startProcessing(uri)
+    }
+
+    private fun startProcessing(uri: Uri) {
+        ProcessingState.reset()
+        ContextCompat.startForegroundService(this, ProcessingService.startIntent(this, uri, displayName(uri)))
     }
 
     private fun uriFrom(intent: Intent?): Uri? = when (intent?.action) {

@@ -76,22 +76,41 @@ class ProcessingService : Service() {
                     ProcessingState.setProcessing(ProcessingUi.Running(stage, stageFraction, overall))
                     updateNotification(overall)
                 }
+                autosave(result, name)
                 ProcessingState.setProcessing(ProcessingUi.Done(result, name))
             } catch (e: CancellationException) {
                 ProcessingState.reset()
             } catch (e: ModelsNotReadyException) {
+                android.util.Log.e("Neurosteno", "processing failed: models not ready: ${e.message}")
                 ProcessingState.setProcessing(ProcessingUi.Failed(e.message ?: "Модели не готовы"))
             } catch (e: PipelineException) {
+                android.util.Log.e("Neurosteno", "pipeline failed at ${e.stage}", e)
                 ProcessingState.setProcessing(ProcessingUi.Failed(e.message ?: "Ошибка обработки"))
             } catch (e: OutOfMemoryError) {
                 ProcessingState.setProcessing(ProcessingUi.Failed("Не хватило памяти для обработки этой записи. Попробуйте файл покороче или вариант Lite."))
             } catch (e: Throwable) {
+                android.util.Log.e("Neurosteno", "processing failed", e)
                 ProcessingState.setProcessing(ProcessingUi.Failed("Не удалось обработать запись: ${e.message ?: e.javaClass.simpleName}"))
             } finally {
                 releaseWakeLock()
                 ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
+        }
+    }
+
+    /**
+     * Автосохранение результата в приватную папку приложения (`Android/data/<pkg>/files/results/`): доступна для adb pull
+     * и проверки без интерфейса. Экспорт «наружу» остаётся только по действию пользователя (SAF).
+     */
+    private fun autosave(result: ru.neurosteno.core.PipelineResult, name: String) {
+        runCatching {
+            val dir = java.io.File(getExternalFilesDir(null) ?: filesDir, "results").apply { mkdirs() }
+            val base = name.substringBeforeLast('.', name).ifBlank { "transcript" }
+            java.io.File(dir, "$base.json").writeText(result.json, Charsets.UTF_8)
+            java.io.File(dir, "$base.full.json").writeText(ru.neurosteno.core.TranscriptJson.toFullJson(result.transcript), Charsets.UTF_8)
+            val m = result.transcript.meta
+            android.util.Log.i("Neurosteno", "done $name: duration=${m.audioDurationMs} ms processing=${m.processingMs} ms rtf=${"%.3f".format(java.util.Locale.ROOT, m.rtf)} lang=${m.language} stages=${m.stageMs} warnings=${result.warnings}")
         }
     }
 

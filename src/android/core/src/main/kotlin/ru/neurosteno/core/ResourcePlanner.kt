@@ -43,6 +43,8 @@ object ResourcePlanner {
         cores: Int,
         peakMb: Long = defaultPeakMb(cfg.tier),
         llmMb: Long = defaultLlmMb(cfg.tier),
+        /** На устройствах с меньшим объёмом RAM LLM-пунктуация отключается (замер: AVD 2 ГБ -- стадия 105 с вместо 9 с). */
+        minTotalMbForLlm: Long = 3_000,
     ): ResourcePlan {
         val reasons = ArrayList<String>()
         val maxThreads = maxOf(1, minOf(cfg.numThreads, cores))
@@ -68,6 +70,10 @@ object ResourcePlanner {
                 denoise = false
                 reasons += "мало памяти (доступно $avail МБ, нужно ~$peakMb МБ): потоков $threads, без второго прохода и денойза"
             }
+        }
+        if (llm && memory.totalMb in 1 until minTotalMbForLlm) {
+            llm = false
+            reasons += "RAM устройства ${memory.totalMb} МБ < $minTotalMbForLlm МБ: LLM-пунктуация отключена (слишком медленно)"
         }
         if (llm && avail < llmMb * 1.25) {
             llm = false

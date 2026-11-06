@@ -1,6 +1,8 @@
 package ru.neurosteno.app.models
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import ru.neurosteno.app.AppGraph
 import ru.neurosteno.core.models.InsufficientSpaceException
@@ -21,14 +23,18 @@ sealed interface ModelsStatus {
  * можно теми же [ModelStore.delete] / [ensureInstalled] (экран «Модели», волна 2).
  */
 object ModelBootstrap {
+    /** Активность и сервис могут вызвать подготовку одновременно -- установка набора строго по одной. */
+    private val lock = Mutex()
 
-    suspend fun ensureInstalled(graph: AppGraph, onStatus: (ModelsStatus) -> Unit): ModelsStatus = withContext(Dispatchers.IO) {
+    suspend fun ensureInstalled(graph: AppGraph, onStatus: (ModelsStatus) -> Unit): ModelsStatus = lock.withLock { withContext(Dispatchers.IO) {
         val store = graph.modelStore
         val setId = graph.bundledSetId
         val result = try {
             when {
                 setId == null -> activeOrMissing(graph, "В этом варианте нет встроенных моделей.")
-                store.state(setId) == SetState.COMPLETE && store.activeSetId != null -> ModelsStatus.Ready(store.activeSetId!!)
+                // уже установлен ТОТ ЖЕ набор (манифест совпал с встроенным -- после обновления APK модели могут смениться)
+                store.state(setId) == SetState.COMPLETE && store.activeSetId != null &&
+                    store.readManifest(store.setDir(setId)) == graph.bundledSource()?.manifest() -> ModelsStatus.Ready(store.activeSetId!!)
                 else -> {
                     onStatus(ModelsStatus.Installing(0f))
                     val source = graph.bundledSource()!!
@@ -46,7 +52,7 @@ object ModelBootstrap {
         }
         onStatus(result)
         result
-    }
+    } }
 
     private fun activeOrMissing(graph: AppGraph, message: String): ModelsStatus {
         val id = graph.modelStore.activeSetId
