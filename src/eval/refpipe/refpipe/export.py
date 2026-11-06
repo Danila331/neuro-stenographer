@@ -30,8 +30,11 @@ def write_outputs(out_dir: Path, file_id: str, res: Result, meta: dict, full: bo
     _write(out_dir / f"{file_id}.meta.json", dumps(meta, indent=2))
     if full:
         obj = {
+            "tier": meta.get("tier"),
             "utterances": [{"speaker_id": u.speaker_id, "start_ms": u.start_ms, "end_ms": u.end_ms, "text": u.text,
-                            "words": [[w.text, w.start_ms, w.end_ms, w.confidence] for w in u.words]}
+                            "words": [{"text": w.text, "start_ms": w.start_ms, "end_ms": w.end_ms,
+                                       "confidence": None if w.confidence is None else round(w.confidence, 4)}
+                                      for w in u.words]}
                            for u in res.utterances],
             "turns": [[t.speaker, t.start_ms, t.end_ms] for t in res.turns],
             "speech": [[s.start_ms, s.end_ms] for s in res.speech],

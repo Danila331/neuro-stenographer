@@ -26,34 +26,46 @@ def _ms(samples: int) -> int:
     return samples * 1000 // SR
 
 
-def detect_speech(x: np.ndarray, vad_cfg: dict, models_root: Path, num_threads: int = 1) -> list[TimeSpan]:
-    """Raw Silero segments, before padding."""
-    import sherpa_onnx as so
+class SileroVad:
+    """Silero VAD through sherpa-onnx; the model is loaded once and reset() between files."""
 
-    silero = so.SileroVadModelConfig(
-        model=str(models_root / vad_cfg["model"]),
-        threshold=float(vad_cfg["threshold"]),
-        min_silence_duration=vad_cfg["min_silence_ms"] / 1000.0,
-        min_speech_duration=vad_cfg["min_speech_ms"] / 1000.0,
-        window_size=WINDOW,
-        max_speech_duration=float(vad_cfg["max_speech_s"]),
-    )
-    cfg = so.VadModelConfig(silero_vad=silero, sample_rate=SR, num_threads=num_threads)
-    vad = so.VoiceActivityDetector(cfg, buffer_size_in_seconds=max(30.0, len(x) / SR + 1))
-    spans: list[TimeSpan] = []
+    def __init__(self, vad_cfg: dict, models_root: Path, num_threads: int = 1):
+        import sherpa_onnx as so
 
-    def drain():
-        while not vad.empty():
-            seg = vad.front
-            spans.append(TimeSpan(_ms(seg.start), _ms(seg.start + len(seg.samples))))
-            vad.pop()
+        silero = so.SileroVadModelConfig(
+            model=str(models_root / vad_cfg["model"]),
+            threshold=float(vad_cfg["threshold"]),
+            min_silence_duration=vad_cfg["min_silence_ms"] / 1000.0,
+            min_speech_duration=vad_cfg["min_speech_ms"] / 1000.0,
+            window_size=WINDOW,
+            max_speech_duration=float(vad_cfg["max_speech_s"]),
+        )
+        self.vad = so.VoiceActivityDetector(
+            so.VadModelConfig(silero_vad=silero, sample_rate=SR, num_threads=num_threads),
+            buffer_size_in_seconds=60.0)
 
-    for i in range(0, len(x), WINDOW):
-        vad.accept_waveform(x[i:i + WINDOW])
+    def detect(self, x: np.ndarray) -> list[TimeSpan]:
+        """Raw Silero segments (ms), before padding."""
+        vad = self.vad
+        vad.reset()
+        spans: list[TimeSpan] = []
+
+        def drain():
+            while not vad.empty():
+                seg = vad.front
+                spans.append(TimeSpan(_ms(seg.start), _ms(seg.start + len(seg.samples))))
+                vad.pop()
+
+        for i in range(0, len(x), WINDOW):
+            vad.accept_waveform(x[i:i + WINDOW])
+            drain()
+        vad.flush()
         drain()
-    vad.flush()
-    drain()
-    return spans
+        return spans
+
+
+def detect_speech(x: np.ndarray, vad_cfg: dict, models_root: Path, num_threads: int = 1) -> list[TimeSpan]:
+    return SileroVad(vad_cfg, models_root, num_threads).detect(x)
 
 
 def pad_and_merge(spans: list[TimeSpan], pad_ms: int, dur_ms: int) -> list[TimeSpan]:
@@ -108,9 +120,9 @@ def make_chunks(x: np.ndarray, intervals: list[TimeSpan], max_s: float) -> list[
     return chunks
 
 
-def speech_chunks(x: np.ndarray, cfg: dict, models_root: Path) -> tuple[list[TimeSpan], list[TimeSpan]]:
+def speech_chunks(x: np.ndarray, cfg: dict, vad: "SileroVad") -> tuple[list[TimeSpan], list[TimeSpan]]:
     """Returns (speech intervals after padding, ASR chunks)."""
     dur_ms = len(x) * 1000 // SR
-    raw = detect_speech(x, cfg["vad"], models_root, num_threads=1)
+    raw = vad.detect(x)
     iv = pad_and_merge(raw, int(cfg["vad"]["pad_ms"]), dur_ms)
     return iv, make_chunks(x, iv, float(cfg["asr"]["chunk"]["max_s"]))

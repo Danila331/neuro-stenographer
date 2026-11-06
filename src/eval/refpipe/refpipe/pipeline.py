@@ -24,7 +24,7 @@ from .config import config_hash
 from .diar import Diarizer
 from .punct import make_punctuator
 from .types import SpeakerTurn, TimeSpan, Utterance, Word
-from .vad import speech_chunks
+from .vad import SileroVad, speech_chunks
 
 log = logging.getLogger(__name__)
 SR = 16000
@@ -52,6 +52,7 @@ class Pipeline:
         self.cfg, self.root = cfg, Path(models_root)
         self.threads = int(cfg["num_threads"])
         t0 = time.perf_counter()
+        self.vad = SileroVad(cfg["vad"], self.root, 1)
         self.asr = AsrEngine(cfg["asr"], self.root, self.threads)
         self.second = None
         sp = cfg["asr"].get("second_pass")
@@ -107,7 +108,7 @@ class Pipeline:
 
         def run_asr():
             t1 = time.perf_counter()
-            speech, chunks = speech_chunks(x, cfg, self.root)
+            speech, chunks = speech_chunks(x, cfg, self.vad)
             vad_ms = _ms(t1)
             t2 = time.perf_counter()
             words = self.asr.transcribe(x, chunks, keep_punct=self.keep_punct) if chunks else []
