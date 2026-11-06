@@ -1,0 +1,56 @@
+# Secrets and local configuration
+.env
+*.key
+*.pem
+*.jks
+*.keystore
+local.properties
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# Build output
+build/
+dist/
+out/
+target/
+obj/
+.cxx/
+.externalNativeBuild/
+.kotlin/
+
+# Dependencies and caches
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.gradle/
+.pytest_cache/
+.ruff_cache/
+
+# Shared model/data cache, local toolchain, agent worktrees — never committed
+.cache/
+.local/
+.worktrees/
+
+# Model weights come from scripts/fetch_models.py
+*.onnx
+*.gguf
+*.safetensors
+*.pt
+
+# Large demo media and APKs
+artifacts/demo/*.mp4
+artifacts/demo/*.mov
+artifacts/demo/*.mkv
+artifacts/demo/*.wav
+artifacts/apk/*.apk

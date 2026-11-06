@@ -1,0 +1,1 @@
+run_id,timestamp_utc,commit,tier,config_hash,platform,device,num_threads,dataset,file_id,condition,duration_ms,num_speakers_ref,num_speakers_hyp,wer_raw,wer_norm,cpwer_norm,der,der_collar,jer,ts_start_mae_ms,ts_end_mae_ms,processing_ms,rtf,notes
