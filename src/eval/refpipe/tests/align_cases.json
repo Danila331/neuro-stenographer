@@ -1,0 +1,1224 @@
+{
+ "version": 1,
+ "description": "Aligner reference cases (ARCHITECTURE §5). words/turns/params -> utterances. Speaker ids are renumbered speaker_1..N by first appearance. All times in ms.",
+ "cases": [
+  {
+   "name": "empty",
+   "description": "no words -> no utterances",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "no_turns_single",
+   "description": "no turns at all: everyone is speaker_1",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "добрый",
+     "start_ms": 0,
+     "end_ms": 400
+    },
+    {
+     "text": "день",
+     "start_ms": 450,
+     "end_ms": 800
+    }
+   ],
+   "turns": [],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 800,
+     "text": "добрый день"
+    }
+   ]
+  },
+  {
+   "name": "no_turns_gap_split",
+   "description": "no turns, gap 2000 > 1500 starts a new utterance of the same speaker",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "два",
+     "start_ms": 2300,
+     "end_ms": 2600
+    }
+   ],
+   "turns": [],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 300,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 2300,
+     "end_ms": 2600,
+     "text": "два"
+    }
+   ]
+  },
+  {
+   "name": "gap_exactly_max_merges",
+   "description": "gap == max_gap_ms merges (<=), gap == max+1 splits",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "а",
+     "start_ms": 0,
+     "end_ms": 100
+    },
+    {
+     "text": "б",
+     "start_ms": 1600,
+     "end_ms": 1700
+    },
+    {
+     "text": "в",
+     "start_ms": 3301,
+     "end_ms": 3400
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 4000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 1700,
+     "text": "а б"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 3301,
+     "end_ms": 3400,
+     "text": "в"
+    }
+   ]
+  },
+  {
+   "name": "two_speakers_alternate",
+   "description": "plain two-speaker dialogue; start/end come from words, not turns",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "привет",
+     "start_ms": 100,
+     "end_ms": 500
+    },
+    {
+     "text": "как",
+     "start_ms": 600,
+     "end_ms": 800
+    },
+    {
+     "text": "дела",
+     "start_ms": 850,
+     "end_ms": 1200
+    },
+    {
+     "text": "нормально",
+     "start_ms": 1500,
+     "end_ms": 2100
+    },
+    {
+     "text": "спасибо",
+     "start_ms": 2150,
+     "end_ms": 2700
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1300
+    },
+    {
+     "speaker": 1,
+     "start_ms": 1300,
+     "end_ms": 3000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 100,
+     "end_ms": 1200,
+     "text": "привет как дела"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 1500,
+     "end_ms": 2700,
+     "text": "нормально спасибо"
+    }
+   ]
+  },
+  {
+   "name": "boundary_word_goes_to_larger_overlap",
+   "description": "word 900-1300 overlaps A 100ms, B 300ms -> B",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "слово",
+     "start_ms": 900,
+     "end_ms": 1300
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    },
+    {
+     "speaker": 1,
+     "start_ms": 1000,
+     "end_ms": 2000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 900,
+     "end_ms": 1300,
+     "text": "слово"
+    }
+   ]
+  },
+  {
+   "name": "boundary_word_speaker_order",
+   "description": "same, but with first appearance numbering: A word first then B word",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 100,
+     "end_ms": 400
+    },
+    {
+     "text": "слово",
+     "start_ms": 900,
+     "end_ms": 1300
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    },
+    {
+     "speaker": 1,
+     "start_ms": 1000,
+     "end_ms": 2000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 100,
+     "end_ms": 400,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 900,
+     "end_ms": 1300,
+     "text": "слово"
+    }
+   ]
+  },
+  {
+   "name": "overlap_tie_first_turn_wins",
+   "description": "identical turns of speakers 0 and 1: tie -> first in (start,end,speaker) order (speaker 0, input order irrelevant)",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "ты",
+     "start_ms": 100,
+     "end_ms": 300
+    },
+    {
+     "text": "а",
+     "start_ms": 1050,
+     "end_ms": 1150
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 1,
+     "start_ms": 0,
+     "end_ms": 1000
+    },
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    },
+    {
+     "speaker": 1,
+     "start_ms": 1000,
+     "end_ms": 1200
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 100,
+     "end_ms": 300,
+     "text": "ты"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 1050,
+     "end_ms": 1150,
+     "text": "а"
+    }
+   ]
+  },
+  {
+   "name": "no_overlap_nearest_turn",
+   "description": "word in a gap: mid 1900, distance to A(0-1000)=900, to B(3000-4000)=1100 -> A; second word after all turns -> B",
+   "params": {
+    "max_gap_ms": 1000,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 100,
+     "end_ms": 500
+    },
+    {
+     "text": "пауза",
+     "start_ms": 1800,
+     "end_ms": 2000
+    },
+    {
+     "text": "конец",
+     "start_ms": 3500,
+     "end_ms": 3900
+    },
+    {
+     "text": "после",
+     "start_ms": 5000,
+     "end_ms": 5200
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    },
+    {
+     "speaker": 1,
+     "start_ms": 3000,
+     "end_ms": 4000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 100,
+     "end_ms": 500,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 1800,
+     "end_ms": 2000,
+     "text": "пауза"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 3500,
+     "end_ms": 3900,
+     "text": "конец"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 5000,
+     "end_ms": 5200,
+     "text": "после"
+    }
+   ]
+  },
+  {
+   "name": "island_reassigned",
+   "description": "w2 (100ms) lies 30/40/30 over A1/B/A2: B has the largest overlap but 40% < 50% -> island -> A",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "два",
+     "start_ms": 350,
+     "end_ms": 450
+    },
+    {
+     "text": "три",
+     "start_ms": 500,
+     "end_ms": 900
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 380
+    },
+    {
+     "speaker": 1,
+     "start_ms": 380,
+     "end_ms": 420
+    },
+    {
+     "speaker": 0,
+     "start_ms": 420,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 900,
+     "text": "раз два три"
+    }
+   ]
+  },
+  {
+   "name": "island_protected_short_yes",
+   "description": "a short word fully inside the other speaker's turn (ratio 100%) is kept",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "да",
+     "start_ms": 380,
+     "end_ms": 420
+    },
+    {
+     "text": "три",
+     "start_ms": 500,
+     "end_ms": 900
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 380
+    },
+    {
+     "speaker": 1,
+     "start_ms": 380,
+     "end_ms": 420
+    },
+    {
+     "speaker": 0,
+     "start_ms": 420,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 300,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 380,
+     "end_ms": 420,
+     "text": "да"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 500,
+     "end_ms": 900,
+     "text": "три"
+    }
+   ]
+  },
+  {
+   "name": "island_too_long_not_reassigned",
+   "description": "island duration 100 >= min_island_ms 100 -> stays",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 100
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "два",
+     "start_ms": 350,
+     "end_ms": 450
+    },
+    {
+     "text": "три",
+     "start_ms": 500,
+     "end_ms": 900
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 380
+    },
+    {
+     "speaker": 1,
+     "start_ms": 380,
+     "end_ms": 420
+    },
+    {
+     "speaker": 0,
+     "start_ms": 420,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 300,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 350,
+     "end_ms": 450,
+     "text": "два"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 500,
+     "end_ms": 900,
+     "text": "три"
+    }
+   ]
+  },
+  {
+   "name": "island_two_words_allowed",
+   "description": "min_island_words=2: two low-overlap words (total 250ms < 400) are both reassigned",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 2,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "два",
+     "start_ms": 350,
+     "end_ms": 450
+    },
+    {
+     "text": "три",
+     "start_ms": 460,
+     "end_ms": 520
+    },
+    {
+     "text": "четыре",
+     "start_ms": 700,
+     "end_ms": 900
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 380
+    },
+    {
+     "speaker": 1,
+     "start_ms": 380,
+     "end_ms": 420
+    },
+    {
+     "speaker": 0,
+     "start_ms": 420,
+     "end_ms": 480
+    },
+    {
+     "speaker": 1,
+     "start_ms": 480,
+     "end_ms": 505
+    },
+    {
+     "speaker": 0,
+     "start_ms": 505,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 900,
+     "text": "раз два три четыре"
+    }
+   ]
+  },
+  {
+   "name": "island_two_words_default_not_merged",
+   "description": "same data with min_island_words=1: run of 2 words is not an island",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "два",
+     "start_ms": 350,
+     "end_ms": 450
+    },
+    {
+     "text": "три",
+     "start_ms": 460,
+     "end_ms": 520
+    },
+    {
+     "text": "четыре",
+     "start_ms": 700,
+     "end_ms": 900
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 380
+    },
+    {
+     "speaker": 1,
+     "start_ms": 380,
+     "end_ms": 420
+    },
+    {
+     "speaker": 0,
+     "start_ms": 420,
+     "end_ms": 480
+    },
+    {
+     "speaker": 1,
+     "start_ms": 480,
+     "end_ms": 505
+    },
+    {
+     "speaker": 0,
+     "start_ms": 505,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 300,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 350,
+     "end_ms": 520,
+     "text": "два три"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 700,
+     "end_ms": 900,
+     "text": "четыре"
+    }
+   ]
+  },
+  {
+   "name": "island_at_start_not_reassigned",
+   "description": "run without a previous neighbour is never an island",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "эй",
+     "start_ms": 0,
+     "end_ms": 100
+    },
+    {
+     "text": "раз",
+     "start_ms": 400,
+     "end_ms": 800
+    },
+    {
+     "text": "два",
+     "start_ms": 850,
+     "end_ms": 1200
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 1,
+     "start_ms": 0,
+     "end_ms": 50
+    },
+    {
+     "speaker": 0,
+     "start_ms": 50,
+     "end_ms": 2000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 100,
+     "text": "эй"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 400,
+     "end_ms": 1200,
+     "text": "раз два"
+    }
+   ]
+  },
+  {
+   "name": "island_neighbours_differ",
+   "description": "A B C: B's neighbours are different speakers -> kept",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "а",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "б",
+     "start_ms": 350,
+     "end_ms": 450
+    },
+    {
+     "text": "в",
+     "start_ms": 500,
+     "end_ms": 900
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 380
+    },
+    {
+     "speaker": 1,
+     "start_ms": 380,
+     "end_ms": 420
+    },
+    {
+     "speaker": 2,
+     "start_ms": 420,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 300,
+     "text": "а"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 350,
+     "end_ms": 450,
+     "text": "б"
+    },
+    {
+     "speaker_id": "speaker_3",
+     "start_ms": 500,
+     "end_ms": 900,
+     "text": "в"
+    }
+   ]
+  },
+  {
+   "name": "overlapping_turns",
+   "description": "overlapping turns: best overlap wins (A 100 vs B 800; A 0 vs B 600); overlapping words merge and end_ms is the end of the LAST word (1600, not 1700), as in §5.4",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "один",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "два",
+     "start_ms": 900,
+     "end_ms": 1700
+    },
+    {
+     "text": "три",
+     "start_ms": 1000,
+     "end_ms": 1600
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    },
+    {
+     "speaker": 1,
+     "start_ms": 500,
+     "end_ms": 2000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 300,
+     "text": "один"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 900,
+     "end_ms": 1600,
+     "text": "два три"
+    }
+   ]
+  },
+  {
+   "name": "renumber_by_first_appearance",
+   "description": "raw ids 5 then 2 become speaker_1, speaker_2; raw 7 has no words and vanishes",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 500
+    },
+    {
+     "text": "два",
+     "start_ms": 1000,
+     "end_ms": 1500
+    },
+    {
+     "text": "три",
+     "start_ms": 2000,
+     "end_ms": 2500
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 5,
+     "start_ms": 0,
+     "end_ms": 800
+    },
+    {
+     "speaker": 2,
+     "start_ms": 800,
+     "end_ms": 1800
+    },
+    {
+     "speaker": 7,
+     "start_ms": 1800,
+     "end_ms": 1900
+    },
+    {
+     "speaker": 5,
+     "start_ms": 1900,
+     "end_ms": 3000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 500,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 1000,
+     "end_ms": 1500,
+     "text": "два"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 2000,
+     "end_ms": 2500,
+     "text": "три"
+    }
+   ]
+  },
+  {
+   "name": "unsorted_words_input",
+   "description": "words are sorted by (start,end) first",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "два",
+     "start_ms": 500,
+     "end_ms": 900
+    },
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 400
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 900,
+     "text": "раз два"
+    }
+   ]
+  },
+  {
+   "name": "zero_length_word",
+   "description": "zero-length word: overlap 0 with everything -> nearest turn by midpoint (inside B -> distance 0); utterance end bumped to start+1",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "раз",
+     "start_ms": 0,
+     "end_ms": 300
+    },
+    {
+     "text": "ага",
+     "start_ms": 500,
+     "end_ms": 500
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 400
+    },
+    {
+     "speaker": 1,
+     "start_ms": 400,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 300,
+     "text": "раз"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 500,
+     "end_ms": 501,
+     "text": "ага"
+    }
+   ]
+  },
+  {
+   "name": "max_gap_zero",
+   "description": "max_gap_ms=0: only touching/overlapping words merge",
+   "params": {
+    "max_gap_ms": 0,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "а",
+     "start_ms": 0,
+     "end_ms": 100
+    },
+    {
+     "text": "б",
+     "start_ms": 100,
+     "end_ms": 200
+    },
+    {
+     "text": "в",
+     "start_ms": 201,
+     "end_ms": 300
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 1000
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 200,
+     "text": "а б"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 201,
+     "end_ms": 300,
+     "text": "в"
+    }
+   ]
+  },
+  {
+   "name": "overlapping_utterances_sorted_by_start",
+   "description": "a long word of A (0-1000) and B's 'да' (200-300) inside it: words sorted by (start,end); grouping is by CONSECUTIVE words, so A's later word starts a new utterance; output sorted by start",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "потом",
+     "start_ms": 1100,
+     "end_ms": 1300
+    },
+    {
+     "text": "да",
+     "start_ms": 200,
+     "end_ms": 300
+    },
+    {
+     "text": "длинное",
+     "start_ms": 0,
+     "end_ms": 1000
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 0,
+     "end_ms": 200
+    },
+    {
+     "speaker": 1,
+     "start_ms": 200,
+     "end_ms": 300
+    },
+    {
+     "speaker": 0,
+     "start_ms": 300,
+     "end_ms": 1400
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 0,
+     "end_ms": 1000,
+     "text": "длинное"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 200,
+     "end_ms": 300,
+     "text": "да"
+    },
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 1100,
+     "end_ms": 1300,
+     "text": "потом"
+    }
+   ]
+  },
+  {
+   "name": "dialogue_with_pause_and_turn_change",
+   "description": "realistic: long pause inside one speaker, then the other speaker",
+   "params": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+   },
+   "words": [
+    {
+     "text": "добрый",
+     "start_ms": 1250,
+     "end_ms": 1700
+    },
+    {
+     "text": "день",
+     "start_ms": 1750,
+     "end_ms": 2100
+    },
+    {
+     "text": "слушаю",
+     "start_ms": 2200,
+     "end_ms": 2800
+    },
+    {
+     "text": "вас",
+     "start_ms": 2850,
+     "end_ms": 3100
+    },
+    {
+     "text": "мне",
+     "start_ms": 6000,
+     "end_ms": 6200
+    },
+    {
+     "text": "нужна",
+     "start_ms": 6250,
+     "end_ms": 6700
+    },
+    {
+     "text": "справка",
+     "start_ms": 6750,
+     "end_ms": 7400
+    }
+   ],
+   "turns": [
+    {
+     "speaker": 0,
+     "start_ms": 1000,
+     "end_ms": 3300
+    },
+    {
+     "speaker": 1,
+     "start_ms": 5800,
+     "end_ms": 7600
+    }
+   ],
+   "expected": [
+    {
+     "speaker_id": "speaker_1",
+     "start_ms": 1250,
+     "end_ms": 3100,
+     "text": "добрый день слушаю вас"
+    },
+    {
+     "speaker_id": "speaker_2",
+     "start_ms": 6000,
+     "end_ms": 7400,
+     "text": "мне нужна справка"
+    }
+   ]
+  }
+ ]
+}

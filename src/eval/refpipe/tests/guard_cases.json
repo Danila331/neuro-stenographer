@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "description": "Reference cases for punct.norm / punct.guard_text (ARCHITECTURE §6). guard: if norm(output).split() != norm(input).split() -> fallback = input.strip() with capitalised first char and a final '.' unless it already ends with . ! ? or the ellipsis char; accepted outputs are returned stripped but otherwise untouched.",
+ "norm": [
+  {"in": "Привет, Мир!", "out": "привет мир"},
+  {"in": "Ёлка  и  ёж", "out": "елка и еж"},
+  {"in": "три-четыре", "out": "тричетыре"},
+  {"in": "Что? Да...", "out": "что да"},
+  {"in": "   ", "out": ""},
+  {"in": "А1,Б2", "out": "а1б2"},
+  {"in": "«Кавычки» — тире", "out": "кавычки тире"},
+  {"in": "слово\tслово\nслово", "out": "слово слово слово"}
+ ],
+ "guard": [
+  {"input": "привет как дела", "output": "Привет, как дела?", "text": "Привет, как дела?", "accepted": true},
+  {"input": "привет как дела", "output": "Привет, как поживаешь?", "text": "Привет как дела.", "accepted": false},
+  {"input": "привет как дела", "output": "", "text": "Привет как дела.", "accepted": false},
+  {"input": "привет как дела", "output": "привет как", "text": "Привет как дела.", "accepted": false},
+  {"input": "ёлка", "output": "Елка.", "text": "Елка.", "accepted": true},
+  {"input": "да", "output": "Да!", "text": "Да!", "accepted": true},
+  {"input": "привет мир", "output": "  Привет, мир!  \n", "text": "Привет, мир!", "accepted": true},
+  {"input": "привет мир", "output": "Привет, мир! Как дела?", "text": "Привет мир.", "accepted": false},
+  {"input": "как дела?", "output": "Как жизнь?", "text": "Как дела?", "accepted": false},
+  {"input": "  привет", "output": "совсем другое", "text": "Привет.", "accepted": false},
+  {"input": "2 раза", "output": "Два раза.", "text": "2 раза.", "accepted": false},
+  {"input": "привет", "output": "Привет…", "text": "Привет…", "accepted": true},
+  {"input": "привет мир", "output": "мир привет", "text": "Привет мир.", "accepted": false},
+  {"input": "", "output": "что-то", "text": "", "accepted": false}
+ ]
+}
