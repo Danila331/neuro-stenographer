@@ -111,8 +111,10 @@ Hugging Face) из `config/models.json`; своего сервера нет. З�
   audio/<id>.wav          16 kHz mono PCM16 (оригиналы других форматов — audio_orig/)
   ref/<id>.json           тот же формат, что выход (transcript)
 ```
-`condition`: clean | noise | reverb | overlap | phone | real. `split`: dev | test (test не трогаем
-при подборе параметров).
+`condition`: clean | noise | reverb | overlap | phone | farfield | real. `split`: dev | test (test не
+трогаем при подборе параметров). Дополнительные колонки (`scenario` call|meeting, `lang` ru|en|ru+en,
+`ref_style`, `overlap_frac`, `lang_segments`, `license` и др.) парсеры обязаны игнорировать, если не
+используют.
 
 Гипотезы: `<run_dir>/<id>.json` (формат выхода) + `<run_dir>/<id>.meta.json`
 (`{"processing_ms":..., "stage_ms":{...}, "tier":..., "config_hash":..., "device":...}`).
