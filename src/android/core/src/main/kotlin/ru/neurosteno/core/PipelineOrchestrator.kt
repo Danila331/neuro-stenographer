@@ -29,6 +29,8 @@ data class PipelineSettings(
     val supportedLanguages: Set<String> = setOf(LanguageConfig.RU),
     /** План ресурсов (память/потоки); null -> без ограничений. */
     val plan: ResourcePlan? = null,
+    /** false -> диаризация не запускается (один говорящий). */
+    val diarizationEnabled: Boolean = true,
 ) {
     companion object {
         fun from(cfg: TierConfig, appVersion: String, plan: ResourcePlan? = null): PipelineSettings = PipelineSettings(
@@ -51,6 +53,7 @@ data class PipelineSettings(
             languageMode = cfg.language.effectiveMode,
             supportedLanguages = if (cfg.asrEn != null) setOf(LanguageConfig.RU, LanguageConfig.EN) else setOf(LanguageConfig.RU),
             plan = plan,
+            diarizationEnabled = cfg.diarization.enabled,
         )
     }
 }
@@ -65,7 +68,8 @@ class EngineProviders(
     /** Аргумент -- язык ("ru" | "en"). */
     val asr: (language: String) -> AsrEngine,
     val diarizer: () -> Diarizer,
-    val punctuator: (() -> Punctuator)? = null,
+    /** Аргумент -- длительность записи в мс (для бюджета времени LLM). */
+    val punctuator: ((audioDurationMs: Long) -> Punctuator)? = null,
     val denoiser: (() -> Denoiser)? = null,
     val languageId: (() -> LanguageId)? = null,
 )
@@ -173,6 +177,10 @@ class PipelineOrchestrator(
                 }
             }
             val diarJob = async {
+                if (!settings.diarizationEnabled) {
+                    tracker.report(Stage.DIARIZATION, 1f)
+                    return@async emptyList<SpeakerTurn>()
+                }
                 timed(Stage.DIARIZATION) {
                     soft(Stage.DIARIZATION, warnings, emptyList()) {
                         blocking(tracker, Stage.DIARIZATION) { l ->
@@ -194,7 +202,7 @@ class PipelineOrchestrator(
             val allowed = settings.plan?.llmPunctuation ?: true
             if (factory != null && !allowed) warnings += "Пунктуация LLM отключена планом ресурсов"
             val punct: Punctuator? = if (factory != null && allowed) {
-                soft<Punctuator?>(Stage.PUNCTUATION, warnings, null) { blocking(tracker, Stage.PUNCTUATION) { factory() } }
+                soft<Punctuator?>(Stage.PUNCTUATION, warnings, null) { blocking(tracker, Stage.PUNCTUATION) { factory(durationMs) } }
             } else {
                 null
             }

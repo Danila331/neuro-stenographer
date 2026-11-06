@@ -44,6 +44,7 @@ fun main(args: Array<String>) {
         vad = { SherpaVad(cfg.vad, root, 1) },
         asr = { lang ->
             SherpaAsr(if (lang == "en") (cfg.asrEn ?: cfg.asr) else cfg.asr, root, threads, lang,
+                keepPunct = cfg.punctuation.source == "asr_native",
                 onRawResult = if (System.getenv("SMOKE_DEBUG_ASR") != null) { text, tokens, ts ->
                     println("RAW text=\"$text\"\n    tokens=$tokens\n    ts=${ts.toList()}")
                 } else null)

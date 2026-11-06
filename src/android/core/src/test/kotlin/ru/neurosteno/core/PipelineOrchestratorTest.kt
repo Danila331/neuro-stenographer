@@ -35,7 +35,7 @@ class PipelineOrchestratorTest {
             vad = { vad },
             asr = { lang -> if (lang == "en") checkNotNull(asrEn) else asr },
             diarizer = { diar },
-            punctuator = punct?.let { p -> { p } },
+            punctuator = punct?.let { p -> { _: Long -> p } },
             denoiser = denoiser?.let { d -> { d } },
             languageId = lid?.let { l -> { l } },
         ),
@@ -283,7 +283,7 @@ class PipelineOrchestratorTest {
                 vad = { vad.logged("vad") },
                 asr = { asr.logged("asr") },
                 diarizer = { diar.logged("diar") },
-                punctuator = { punct.logged("punct") },
+                punctuator = { _ -> punct.logged("punct") },
             ),
             settings,
             Dispatchers.IO,
@@ -318,7 +318,7 @@ class PipelineOrchestratorTest {
     fun `punctuator factory failure is not fatal`() = runBlocking {
         val r = PipelineOrchestrator(
             FakeDecoder(),
-            EngineProviders(vad = { FakeVad() }, asr = { FakeAsr() }, diarizer = { FakeDiarizer() }, punctuator = { error("gguf missing") }),
+            EngineProviders(vad = { FakeVad() }, asr = { FakeAsr() }, diarizer = { FakeDiarizer() }, punctuator = { _ -> error("gguf missing") }),
             settings,
             Dispatchers.IO,
         ).run(input)

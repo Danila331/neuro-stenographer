@@ -71,70 +71,89 @@ object ChunkPlanner {
 }
 
 /**
- * Сборка слов из токенов ASR. Токены BPE/sentencepiece начинают слово с «▁» (U+2581) либо с пробела;
- * символьные модели отдают пробел отдельным токеном. Времена токенов (секунды от начала чанка) переводятся в
- * абсолютные миллисекунды. Конец слова = начало следующего слова (но не дальше начала + [maxWordMs]) либо конец чанка.
- * Нет времён токенов (Whisper) -- слова равномерно распределяются по чанку пропорционально длине.
+ * Сборка слов из токенов ASR -- порт `build_words`/`spread_words` эталона (`src/eval/refpipe/refpipe/asr.py`).
+ *
+ * sherpa-onnx отдаёт на токен только ВРЕМЯ НАЧАЛА (секунды от начала чанка). Токены: символы или BPE-куски,
+ * `▁`/пробел -- граница слова. `start` слова = время первого токена (+ [startOffsetMs]); `end` = время последнего
+ * токена + [tailMs] (для TDT-моделей вместо хвоста берётся реальная длительность токена), но не позже начала
+ * следующего слова и не позже конца чанка. Абсолютное время = начало чанка + round(ts * 1000).
+ *
+ * [keepPunct] = false ("none"): слово приводится к нижнему регистру, остаются буквы/цифры и внутренние `-`/`'`;
+ * true ("asr_native"): знаки сохраняются, одиночная пунктуация приклеивается к предыдущему слову.
  */
 object TokenWords {
-    private const val MARKER = '▁'
+    private const val MARKER = '\u2581'
+    private const val PUNCT_CHARS = ".,!?;:\u2026\u2014\u2013-\u00ab\u00bb\"'()[]"
+
+    fun plainWord(t: String): String =
+        t.filter { it.isLetterOrDigit() || it == '-' || it == '\'' }.trim('-', '\'').lowercase()
+
+    private class Acc(var text: StringBuilder, val start: Long, var last: Long, var lastDur: Long?)
 
     fun build(
-        text: String,
         tokens: List<String>,
         timestampsSec: FloatArray,
         chunkStartMs: Long,
         chunkEndMs: Long,
-        maxWordMs: Long = 2_000,
+        durationsSec: FloatArray? = null,
+        tailMs: Long = 40,
+        startOffsetMs: Long = 0,
+        keepPunct: Boolean = false,
     ): List<Word> {
-        val clean = text.trim()
-        if (clean.isEmpty()) return emptyList()
-        val usable = tokens.isNotEmpty() && timestampsSec.size == tokens.size
-        if (!usable) return spread(clean, chunkStartMs, chunkEndMs)
+        val n = minOf(tokens.size, timestampsSec.size)
+        val words = ArrayList<Acc>()
+        var cur: Acc? = null
+        fun flush() {
+            cur?.let { if (it.text.isNotBlank()) words += it }
+            cur = null
+        }
+        for (i in 0 until n) {
+            val tk = tokens[i].replace(MARKER, ' ')
+            if (tk.length > 2 && tk.startsWith("<") && tk.endsWith(">")) continue // спец-токены
+            val lead = tk.isNotEmpty() && tk[0].isWhitespace()
+            val body = tk.trim()
+            if (lead) flush()
+            if (body.isNotEmpty()) {
+                val tMs = chunkStartMs + (timestampsSec[i].toDouble() * 1000 + 0.5).toLong() + startOffsetMs
+                val c = cur ?: Acc(StringBuilder(), tMs, tMs, null).also { cur = it }
+                c.text.append(body)
+                c.last = tMs
+                c.lastDur = if (durationsSec != null && i < durationsSec.size) (durationsSec[i].toDouble() * 1000 + 0.5).toLong() else null
+            }
+            if (tk.isNotEmpty() && tk.last().isWhitespace() && tk.length > 1) flush()
+        }
+        flush()
 
-        // группируем токены в слова
-        class Acc(val sb: StringBuilder, val startMs: Long)
-        val groups = ArrayList<Acc>()
-        var pendingSpace = true
-        for (i in tokens.indices) {
-            val raw = tokens[i]
-            val tMs = chunkStartMs + (timestampsSec[i] * 1000f).roundToLong()
-            val piece = raw.replace(MARKER, ' ').trim()
-            if (piece.isEmpty()) { // токен-пробел
-                pendingSpace = true
+        val out = ArrayList<Word>()
+        for ((k, w) in words.withIndex()) {
+            val text = if (keepPunct) w.text.toString() else plainWord(w.text.toString())
+            if (text.isEmpty()) continue
+            if (keepPunct && out.isNotEmpty() && text.all { it in PUNCT_CHARS }) {
+                val p = out.removeAt(out.size - 1)
+                out += Word(p.text + text, p.startMs, p.endMs, p.confidence)
                 continue
             }
-            if (raw.startsWith(MARKER) || raw.startsWith(" ") || pendingSpace || groups.isEmpty()) {
-                groups += Acc(StringBuilder(piece), tMs)
-            } else {
-                groups.last().sb.append(piece)
-            }
-            pendingSpace = raw.endsWith(MARKER) || raw.endsWith(" ")
+            val start = maxOf(chunkStartMs, w.start)
+            var end = w.last + (w.lastDur?.takeIf { it != 0L } ?: tailMs)
+            if (k + 1 < words.size) end = minOf(end, maxOf(words[k + 1].start, start + 1))
+            end = minOf(maxOf(end, start + 1), maxOf(chunkEndMs, start + 1))
+            out += Word(text, start, end, null)
         }
-        val words = groups.filter { it.sb.isNotBlank() }
-        if (words.isEmpty()) return spread(clean, chunkStartMs, chunkEndMs)
-
-        return words.mapIndexed { i, g ->
-            val start = g.startMs.coerceIn(chunkStartMs, chunkEndMs)
-            val nextStart = if (i + 1 < words.size) words[i + 1].startMs else chunkEndMs
-            var end = min(nextStart, start + maxWordMs).coerceIn(start, chunkEndMs)
-            if (end <= start) end = min(chunkEndMs, start + 1)
-            Word(g.sb.toString(), start, max(end, start))
-        }
+        return out
     }
 
-    /** Равномерная раскладка слов по [startMs, endMs] пропорционально числу букв. */
-    fun spread(text: String, startMs: Long, endMs: Long): List<Word> {
-        val parts = text.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
-        if (parts.isEmpty()) return emptyList()
-        val total = parts.sumOf { max(1, it.length) }.toDouble()
-        val span = max(1L, endMs - startMs).toDouble()
-        var acc = 0.0
-        return parts.map { w ->
-            val s = startMs + (span * acc / total).roundToLong()
-            acc += max(1, w.length)
-            val e = startMs + (span * acc / total).roundToLong()
-            Word(w, s, max(e, s + 1).coerceAtMost(max(endMs, s + 1)))
+    /** Нет времён токенов (Whisper): слова равномерно по чанку пропорционально длине (+1 на пробел). */
+    fun spread(text: String, chunkStartMs: Long, chunkEndMs: Long, keepPunct: Boolean = false): List<Word> {
+        val ws = text.split(Regex("\\s+")).map { if (keepPunct) it else plainWord(it) }.filter { it.isNotEmpty() }
+        if (ws.isEmpty()) return emptyList()
+        val total = ws.sumOf { it.length + 1 }.toLong()
+        val dur = chunkEndMs - chunkStartMs
+        var acc = 0L
+        return ws.map { w ->
+            val a = chunkStartMs + dur * acc / total
+            acc += w.length + 1
+            val b = chunkStartMs + dur * acc / total
+            Word(w, a, maxOf(b - 1, a + 1))
         }
     }
 }

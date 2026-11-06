@@ -42,11 +42,8 @@ object TextGuard {
         return input.copy(text = text)
     }
 
-    private fun capitalizeFirst(s: String): String {
-        val i = s.indexOfFirst { it.isLetter() }
-        if (i < 0) return s
-        return s.substring(0, i) + s[i].uppercaseChar() + s.substring(i + 1)
-    }
+    /** Как в эталоне: заглавной становится первый СИМВОЛ строки (если он не буква, остаётся как есть). */
+    private fun capitalizeFirst(s: String): String = s.substring(0, 1).uppercase() + s.substring(1)
 
     private val WHITESPACE = Regex("\\s+")
     private val TERMINAL = setOf('.', '!', '?', '…')

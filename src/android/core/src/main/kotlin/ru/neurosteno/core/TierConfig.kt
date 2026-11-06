@@ -70,6 +70,8 @@ data class LanguageConfig(
     /** auto | ru | en. Нет секции / неизвестное значение -> ru (как раньше). */
     val mode: String = RU,
     @SerialName("lid_model") val lidModel: String? = null,
+    /** Сколько секунд речи отдавать определителю языка. */
+    @SerialName("lid_seconds") val lidSeconds: Int = 10,
 ) {
     val effectiveMode: String
         get() = when (mode.lowercase()) {
@@ -118,6 +120,13 @@ data class AsrConfig(
     @SerialName("hotwords_score") val hotwordsScore: Double = 1.5,
     val chunk: ChunkConfig = ChunkConfig(),
     @SerialName("second_pass") val secondPass: SecondPassConfig? = null,
+    /** Размер батча чанков (используется только Python-эталоном; на Android чанки декодируются по одному). */
+    @SerialName("batch_size") val batchSize: Int = 1,
+    /** Конец слова = старт последнего токена + tail (мс), не позже начала следующего слова. */
+    @SerialName("word_tail_ms") val wordTailMs: Int = 40,
+    /** Сдвиг всех временных меток токенов (калибровка по размеченным данным). */
+    @SerialName("word_start_offset_ms") val wordStartOffsetMs: Int = 0,
+    val language: String = "ru",
 )
 
 @Serializable
@@ -142,6 +151,11 @@ data class DiarizationConfig(
     val clustering: ClusteringConfig = ClusteringConfig(),
     @SerialName("min_duration_on_s") val minDurationOnS: Double = 0.2,
     @SerialName("min_duration_off_s") val minDurationOffS: Double = 0.3,
+    /** false -> диаризация не запускается, все слова одного говорящего. */
+    val enabled: Boolean = true,
+    @SerialName("window_shift_ratio") val windowShiftRatio: Double = 0.1,
+    /** null -> `num_threads` верхнего уровня. */
+    @SerialName("num_threads") val numThreads: Int? = null,
 )
 
 @Serializable

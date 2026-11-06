@@ -40,40 +40,68 @@ class AsrSupportTest {
         assertTrue(ChunkPlanner.plan(listOf(TimeSpan(5, 5), TimeSpan(9, 3)), 1000).isEmpty())
     }
 
+    private fun words(tokens: List<String>, ts: List<Float>, start: Long = 0, end: Long = 5000, tail: Long = 40, keep: Boolean = false, dur: List<Float>? = null) =
+        TokenWords.build(tokens, ts.toFloatArray(), start, end, dur?.toFloatArray(), tail, 0, keep)
+
     @Test
-    fun `bpe tokens become words with absolute times`() {
-        val tokens = listOf("▁при", "вет", "▁мир")
-        val ts = floatArrayOf(0.0f, 0.2f, 0.6f)
-        val w = TokenWords.build("привет мир", tokens, ts, chunkStartMs = 10_000, chunkEndMs = 11_000)
-        assertEquals(listOf("привет", "мир"), w.map { it.text })
-        assertEquals(10_000L, w[0].startMs); assertEquals(10_600L, w[0].endMs) // до начала следующего слова
-        assertEquals(10_600L, w[1].startMs); assertEquals(11_000L, w[1].endMs) // до конца чанка
+    fun `char tokens to words with absolute time (python parity)`() {
+        val w = words("да нет".map { it.toString() }, listOf(0.00f, 0.04f, 0.08f, 0.20f, 0.24f, 0.28f), 1000, 2000)
+        assertEquals(listOf(Triple("да", 1000L, 1080L), Triple("нет", 1200L, 1320L)), w.map { Triple(it.text, it.startMs, it.endMs) })
     }
 
     @Test
-    fun `char level tokens with separate space tokens`() {
-        val tokens = listOf("п", "р", "и", "▁", "м", "и", "р")
-        val ts = floatArrayOf(0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f)
-        val w = TokenWords.build("при мир", tokens, ts, 0, 1000)
-        assertEquals(listOf("при", "мир"), w.map { it.text })
-        assertEquals(400L, w[1].startMs)
+    fun `end is clipped by next word start`() {
+        val w = words("а б".map { it.toString() }, listOf(0.00f, 0.04f, 0.06f), 0, 1000, tail = 200)
+        assertEquals(60L, w[0].endMs)
+        assertEquals(60L, w[1].startMs)
+        assertEquals(260L, w[1].endMs)
     }
 
     @Test
-    fun `word duration is capped and times stay in chunk`() {
-        val w = TokenWords.build("а б", listOf("▁а", "▁б"), floatArrayOf(0f, 9f), 0, 20_000, maxWordMs = 1500)
-        assertEquals(1500L, w[0].endMs)
-        assertTrue(w.all { it.startMs in 0..20_000 && it.endMs in it.startMs..20_000 })
+    fun `bpe pieces with underscore boundary`() {
+        val w = words(listOf("▁при", "вет", "▁мир"), listOf(0.0f, 0.2f, 0.6f))
+        assertEquals(listOf("привет" to 0L, "мир" to 600L), w.map { it.text to it.startMs })
     }
 
     @Test
-    fun `no timestamps spreads words proportionally`() {
-        val w = TokenWords.build("раз три", listOf("a"), floatArrayOf(), 1000, 2000)
-        assertEquals(listOf("раз", "три"), w.map { it.text })
+    fun `plain mode strips punctuation, native keeps it, lone punctuation attaches`() {
+        val toks = "Привет, мир!".map { it.toString() }
+        val ts = toks.indices.map { it * 0.04f }
+        assertEquals(listOf("привет", "мир"), words(toks, ts).map { it.text })
+        assertEquals(listOf("Привет,", "мир!"), words(toks, ts, keep = true).map { it.text })
+        val lone = words(listOf("▁да", "▁", ",", "▁нет"), listOf(0.0f, 0.1f, 0.1f, 0.5f), keep = true)
+        assertEquals(listOf("да,", "нет"), lone.map { it.text })
+    }
+
+    @Test
+    fun `special tokens empty input and tdt durations`() {
+        assertTrue(words(listOf("<unk>"), listOf(0f), 0, 10).isEmpty())
+        assertTrue(words(emptyList(), emptyList(), 0, 10).isEmpty())
+        val w = words(listOf("▁а"), listOf(0.0f), 0, 5000, dur = listOf(0.5f))
+        assertEquals(500L, w[0].endMs) // реальная длительность токена вместо хвоста 40 мс
+    }
+
+    @Test
+    fun `word times stay inside the chunk and never go backwards`() {
+        val w = words(listOf("▁а", "▁б"), listOf(0f, 9f), 0, 10_000, tail = 1500)
+        assertTrue(w.all { it.startMs >= 0 && it.endMs in (it.startMs + 1)..10_000 })
+        assertTrue(w.zipWithNext().all { (a, b) -> a.endMs <= b.startMs })
+    }
+
+    @Test
+    fun `spread covers chunk proportionally`() {
+        val w = TokenWords.spread("раз три", 1000, 2000)
         assertEquals(1000L, w.first().startMs)
-        assertTrue(w.last().endMs <= 2001)
-        assertTrue(w.zipWithNext().all { (a, b) -> a.endMs <= b.startMs + 1 })
-        assertTrue(TokenWords.build("  ", emptyList(), floatArrayOf(), 0, 100).isEmpty())
+        assertTrue(w.last().endMs <= 2000)
+        assertTrue(w[0].endMs <= w[1].startMs)
+        assertTrue(TokenWords.spread("  ", 0, 100).isEmpty())
+    }
+
+    @Test
+    fun `plain word`() {
+        assertEquals("привет", TokenWords.plainWord("Привет,"))
+        assertEquals("кто-то", TokenWords.plainWord("-Кто-то!"))
+        assertEquals("", TokenWords.plainWord("..."))
     }
 
     @Test

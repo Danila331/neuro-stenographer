@@ -36,6 +36,8 @@ class SherpaAsr(
     private val root: ModelRoot,
     private val numThreads: Int,
     private val language: String = "ru",
+    /** true -> модель сама ставит знаки и регистр (`punctuation.source == asr_native`), слова сохраняют их. */
+    private val keepPunct: Boolean = false,
     /** Отладка/диагностика: сырой результат распознавания каждого чанка (текст, токены, времена токенов в секундах). */
     private val onRawResult: ((text: String, tokens: List<String>, timestamps: FloatArray) -> Unit)? = null,
 ) : AsrEngine {
@@ -109,7 +111,7 @@ class SherpaAsr(
                     rec.decode(stream)
                     val r = rec.getResult(stream)
                     onRawResult?.invoke(r.text, r.tokens.toList(), r.timestamps)
-                    words += TokenWords.build(r.text, r.tokens.toList(), r.timestamps, chunk.startMs, chunk.endMs)
+                    words += wordsOf(r.text, r.tokens.toList(), r.timestamps, r.durations, chunk.startMs, chunk.endMs)
                 } finally {
                     stream.release()
                 }
@@ -117,6 +119,21 @@ class SherpaAsr(
             progress.onProgress(Stage.ASR, (i + 1).toFloat() / chunks.size)
         }
         return dropOverlapDuplicates(words)
+    }
+
+    /** Токены -> слова по правилам эталона; без времён токенов (Whisper) -- равномерная раскладка по чанку. */
+    private fun wordsOf(text: String, tokens: List<String>, ts: FloatArray, durations: FloatArray, startMs: Long, endMs: Long): List<Word> {
+        if (tokens.isEmpty() || ts.size < tokens.size) return TokenWords.spread(text, startMs, endMs, keepPunct)
+        return TokenWords.build(
+            tokens = tokens,
+            timestampsSec = ts,
+            chunkStartMs = startMs,
+            chunkEndMs = endMs,
+            durationsSec = durations.takeIf { it.size >= tokens.size },
+            tailMs = cfg.wordTailMs.toLong(),
+            startOffsetMs = cfg.wordStartOffsetMs.toLong(),
+            keepPunct = keepPunct,
+        )
     }
 
     /** При overlap_ms > 0 соседние чанки могут дать одно и то же слово дважды -- убираем повтор на стыке. */

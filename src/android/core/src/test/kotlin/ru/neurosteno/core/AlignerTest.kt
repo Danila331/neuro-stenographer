@@ -35,11 +35,11 @@ class AlignerTest {
     }
 
     @Test
-    fun `overlap tie goes to smaller speaker index`() {
-        val turns = listOf(SpeakerTurn(5, 0, 500), SpeakerTurn(2, 500, 1000))
-        // "x" 250..750 -- ровно по 250 мс с обоими -> speaker 2
+    fun `overlap tie goes to the first turn in (start, end, speaker) order`() {
+        val turns = listOf(SpeakerTurn(2, 500, 1000), SpeakerTurn(5, 0, 500)) // порядок на входе не важен
+        // "x" 250..750 -- ровно по 250 мс с обоими -> побеждает turn, идущий раньше по start (speaker 5)
         val r = aligner.align(listOf(w("a", 0, 100), w("x", 250, 750), w("b", 900, 1000)), turns)
-        assertEquals(listOf("a", "x b"), r.map { it.text })
+        assertEquals(listOf("a x", "b"), r.map { it.text })
     }
 
     @Test

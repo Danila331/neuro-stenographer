@@ -24,8 +24,10 @@ import ru.neurosteno.core.Stage
 class SherpaDiarizer(
     private val cfg: DiarizationConfig,
     private val root: ModelRoot,
-    private val numThreads: Int,
+    defaultThreads: Int,
 ) : Diarizer {
+    private val numThreads: Int = cfg.numThreads ?: defaultThreads
+
 
     private var engine: OfflineSpeakerDiarization? = null
 
@@ -40,7 +42,10 @@ class SherpaDiarizer(
         }
         val config = OfflineSpeakerDiarizationConfig(
             segmentation = OfflineSpeakerSegmentationModelConfig(
-                pyannote = OfflineSpeakerSegmentationPyannoteModelConfig(model = root.file(cfg.segmentation).absolutePath),
+                pyannote = OfflineSpeakerSegmentationPyannoteModelConfig(
+                    model = root.file(cfg.segmentation).absolutePath,
+                    windowShiftRatio = cfg.windowShiftRatio.toFloat(),
+                ),
                 numThreads = numThreads,
                 provider = "cpu",
             ),

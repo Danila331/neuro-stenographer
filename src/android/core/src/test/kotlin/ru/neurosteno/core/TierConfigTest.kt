@@ -76,6 +76,22 @@ class TierConfigTest {
     }
 
     @Test
+    fun `new reference fields are parsed with defaults`() {
+        val c = TierConfig.parse(load("medium"))
+        assertEquals(40, c.asr.wordTailMs)
+        assertEquals(0, c.asr.wordStartOffsetMs)
+        assertEquals(1, c.asr.batchSize)
+        assertEquals("ru", c.asr.language)
+        assertTrue(c.diarization.enabled)
+        assertEquals(0.1, c.diarization.windowShiftRatio)
+        assertNull(c.diarization.numThreads)
+        val d = TierConfig.parse("""{"asr":{},"diarization":{}}""")
+        assertEquals(40, d.asr.wordTailMs)
+        assertTrue(d.diarization.enabled)
+        assertFalse(TierConfig.parse("""{"diarization":{"enabled":false}}""").diarization.enabled)
+    }
+
+    @Test
     fun `pipeline settings from config`() {
         val s = PipelineSettings.from(TierConfig.parse(load("medium")), "1.0")
         assertEquals("medium", s.tier)
@@ -85,11 +101,13 @@ class TierConfigTest {
 
     @Test
     fun `language section and asr_en are optional - missing means ru only`() {
-        val c = TierConfig.parse(load("medium"))
-        assertEquals("ru", c.language.effectiveMode)
-        assertNull(c.asrEn)
-        val s = PipelineSettings.from(c, "1")
-        assertEquals(setOf("ru"), s.supportedLanguages)
+        val real = TierConfig.parse(load("medium"))
+        assertNull(real.asrEn)
+        assertEquals(setOf("ru"), PipelineSettings.from(real, "1").supportedLanguages)
+        val bare = TierConfig.parse("""{"tier":"x"}""")
+        assertEquals("ru", bare.language.effectiveMode)
+        assertEquals(10, bare.language.lidSeconds)
+        assertNull(bare.asrEn)
     }
 
     @Test
