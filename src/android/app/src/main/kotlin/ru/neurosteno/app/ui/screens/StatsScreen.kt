@@ -86,7 +86,7 @@ fun StatsScreen(entries: List<HistoryEntry>, deviceTotalMb: Int, tier: String, o
                 InfoRow("Память устройства", if (deviceTotalMb > 0) "$deviceTotalMb МБ" else (runs.maxOf { it.deviceTotalMb }.takeIf { it > 0 }?.let { "$it МБ" } ?: "—"))
             }
             SectionCard(title = "Запуски") {
-                val df = SimpleDateFormat("d MMM, HH:mm", Locale("ru"))
+                val df = SimpleDateFormat("d MMM, HH:mm", Locale.forLanguageTag("ru"))
                 runs.take(15).forEach { e ->
                     Column(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
                         contentDescription = "${e.title}: RTF ${Format.rtf(e.rtf)}, ${Format.duration(e.processingMs)}"

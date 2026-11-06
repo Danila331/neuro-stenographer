@@ -42,9 +42,9 @@ object Format {
     fun bytes(n: Long): String {
         val kb = 1024.0
         return when {
-            n >= kb * kb * kb -> String.format(Locale("ru"), "%.1f ГБ", n / (kb * kb * kb))
-            n >= kb * kb -> String.format(Locale("ru"), "%.0f МБ", n / (kb * kb))
-            n >= kb -> String.format(Locale("ru"), "%.0f КБ", n / kb)
+            n >= kb * kb * kb -> String.format(Locale.forLanguageTag("ru"), "%.1f ГБ", n / (kb * kb * kb))
+            n >= kb * kb -> String.format(Locale.forLanguageTag("ru"), "%.0f МБ", n / (kb * kb))
+            n >= kb -> String.format(Locale.forLanguageTag("ru"), "%.0f КБ", n / kb)
             else -> "$n Б"
         }
     }

@@ -51,6 +51,17 @@ object PromptBuilder {
         .replace(Regex("\n{3,}"), "\n\n")
         .trim()
 
+    private val RUNAWAY = Regex("\\n\\s*(Вопрос|Question|Q)\\s*:")
+
+    /**
+     * Небольшие модели после ответа иногда сами придумывают следующий вопрос («Вопрос: ... Ответ: ...»): возвращает позицию,
+     * с которой текст нужно отбросить, или -1.
+     */
+    fun runawayIndex(answer: String): Int {
+        val m = RUNAWAY.find(answer) ?: return -1
+        return if (m.range.first >= 12) m.range.first else -1
+    }
+
     /**
      * Для вопроса выбирает самые подходящие фрагменты (по пересечению слов вопроса и фрагмента, сравнение по основе из 5 букв),
      * укладывая их в [budgetChars]; порядок фрагментов сохраняется по времени.

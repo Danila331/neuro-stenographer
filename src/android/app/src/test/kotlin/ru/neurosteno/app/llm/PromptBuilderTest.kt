@@ -58,6 +58,14 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun runawayQuestionIsDetected() {
+        assertEquals(-1, PromptBuilder.runawayIndex("Двенадцать котов и три кошки."))
+        assertEquals(-1, PromptBuilder.runawayIndex("\nВопрос: что-то")) // слишком рано -- это не продолжение
+        val text = "Двенадцать котов и три кошки.\n\nВопрос: Почему?\nОтвет: потому"
+        assertEquals("Двенадцать котов и три кошки.", text.substring(0, PromptBuilder.runawayIndex(text)))
+    }
+
+    @Test
     fun selectRelevantPrefersMatchingChunks() {
         val chunks = listOf("обсуждали погоду и обед", "решили перенести релиз на пятницу", "говорили про отпуск", "бюджет проекта утвердили")
         val picked = PromptBuilder.selectRelevant(chunks, "Когда релиз?", 40)

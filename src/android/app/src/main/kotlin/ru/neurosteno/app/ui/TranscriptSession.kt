@@ -63,6 +63,8 @@ class TranscriptSession(
     }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     private var saveJob: Job? = null
+    /** Есть несохранённые правки. */
+    @Volatile private var dirty = false
 
     init {
         scope.launch {
@@ -108,6 +110,7 @@ class TranscriptSession(
         _canUndo.value = undoStack.isNotEmpty()
         val d = _doc.value ?: return
         _doc.value = d.copy(transcript = prev)
+        dirty = true
         scheduleSave()
     }
 
@@ -119,6 +122,7 @@ class TranscriptSession(
         if (undoStack.size > 50) undoStack.removeFirst()
         _canUndo.value = true
         _doc.value = d.copy(transcript = next)
+        dirty = true
         scheduleSave()
     }
 
@@ -133,6 +137,8 @@ class TranscriptSession(
     /** Немедленно сохраняет правки (вызывается и при уходе с экрана). */
     suspend fun flush() = withContext(Dispatchers.IO) {
         val d = _doc.value ?: return@withContext
+        if (!dirty) return@withContext
+        dirty = false
         val tr = Transcript(d.transcript.utterances, d.source.meta)
         graph.history.saveTranscript(entryId, StoredTranscript.of(tr, d.transcript.speakerNames, edited = true))
         graph.history.get(entryId)?.let { e ->

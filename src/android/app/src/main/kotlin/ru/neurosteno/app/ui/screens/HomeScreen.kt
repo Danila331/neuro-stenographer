@@ -217,7 +217,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.historyItems(
     }
 }
 
-private val dateFormat = ThreadLocal.withInitial { SimpleDateFormat("d MMM yyyy, HH:mm", Locale("ru")) }
+private val dateFormat = ThreadLocal.withInitial { SimpleDateFormat("d MMM yyyy, HH:mm", Locale.forLanguageTag("ru")) }
 
 @Composable
 private fun HistoryCard(e: HistoryEntry, onOpen: () -> Unit, onDelete: () -> Unit) {

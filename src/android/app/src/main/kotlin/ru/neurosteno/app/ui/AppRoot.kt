@@ -52,6 +52,8 @@ interface AppHost {
     fun openAppSettings()
     fun moveToBackground()
     fun cancelProcessing()
+    /** Цвет значков строки состояния/навигации под выбранную тему (светлые значки на тёмном фоне и наоборот). */
+    fun applySystemBars(dark: Boolean)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -59,6 +61,12 @@ interface AppHost {
 fun AppRoot(host: AppHost, vm: AppViewModel) {
     val graph = vm.graph
     val settings by graph.settings.state.collectAsStateWithLifecycle()
+    val dark = when (settings.theme) {
+        ru.neurosteno.app.data.ThemeChoice.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+        ru.neurosteno.app.data.ThemeChoice.LIGHT -> false
+        ru.neurosteno.app.data.ThemeChoice.DARK -> true
+    }
+    androidx.compose.runtime.SideEffect { host.applySystemBars(dark) }
     NeuroTheme(settings.theme) {
         // resource-id у тегов: на них опираются uiautomator-скрипты и автоматизация проверки
         Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {

@@ -79,7 +79,7 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         }
         val totalMb = totalRamMb()
         if (totalMb < MIN_TOTAL_MB) {
-            return LlmAvailability.Unavailable("Недостаточно памяти: для языковой модели нужно не менее 3 ГБ ОЗУ, у устройства около ${String.format(java.util.Locale("ru"), "%.1f", totalMb / 1024.0)} ГБ.")
+            return LlmAvailability.Unavailable("Недостаточно памяти: для языковой модели нужно не менее 3 ГБ ОЗУ, у устройства около ${String.format(java.util.Locale.forLanguageTag("ru"), "%.1f", totalMb / 1024.0)} ГБ.")
         }
         LlamaAssistant.availability()?.let { return LlmAvailability.Unavailable("Языковая модель не поддерживается на этом устройстве: $it.") }
         return LlmAvailability.Available
@@ -156,12 +156,25 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
                 _ui.update { it.copy(status = "Поиск ответа…") }
                 val prompt = PromptBuilder.chatml(system, "Расшифровка:\n$material\n\nВопрос: $q")
                 val sb = StringBuilder()
-                generate(llm, prompt, QA_MAX_TOKENS) { piece ->
-                    sb.append(piece)
-                    setAnswer(index, PromptBuilder.clean(sb.toString()), done = false)
-                    _ui.update { it.copy(tokens = it.tokens + 1) }
+                var runaway = false
+                try {
+                    generate(llm, prompt, QA_MAX_TOKENS) { piece ->
+                        sb.append(piece)
+                        if (PromptBuilder.runawayIndex(sb.toString()) >= 0) {
+                            // модель начала выдумывать следующий вопрос -- прерываем генерацию (llama.cpp проверяет флаг потока)
+                            runaway = true
+                            Thread.currentThread().interrupt()
+                        } else {
+                            setAnswer(index, PromptBuilder.clean(sb.toString()), done = false)
+                        }
+                        _ui.update { it.copy(tokens = it.tokens + 1) }
+                    }
+                } catch (e: CancellationException) {
+                    if (!runaway) throw e
                 }
-                setAnswer(index, PromptBuilder.clean(sb.toString()).ifBlank { "Модель не дала ответа." }, done = true)
+                val full = sb.toString()
+                val cut = if (runaway) full.substring(0, PromptBuilder.runawayIndex(full).coerceAtLeast(0)) else full
+                setAnswer(index, PromptBuilder.clean(cut).ifBlank { "Модель не дала ответа." }, done = true)
                 _ui.update { it.copy(running = false, status = "") }
             } catch (e: CancellationException) {
                 _ui.update { s ->
