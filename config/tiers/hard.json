@@ -1,5 +1,5 @@
 {
-  "_note": "ASR ru: GigaAM v3 CTC int8 — лучший WER (FLEURS 2.75%, ru-asr-dev 6.57%). asr_en: Parakeet-TDT-110m-en (FLEURS en 6.64%). LID: whisper-tiny, 100% ru/en на 10 с. Порог диаризации 0.85 — предварительно (0.5–0.6 дробит спикеров), подтвердить diar-bench. Скорость/RAM ещё не измерены на спокойной машине. Пути — относительно корня моделей.",
+  "_note": "ASR ru: GigaAM v3 RNNT с пунктуацией (int8) — лучший на диалогах и по WER norm (synth test 16.8%), и по WER со знаками (31% против 45% у моделей без знаков; просодия по паузам — 23–25%). Нормализация громкости peak: на тихих записях WER 35%→13%, на обычных без потерь. asr_en: Parakeet-TDT-110m-en. LID: whisper-tiny. Порог диаризации 0.85 — предварительно. Скорость/RAM финально — по отчёту asr-bench и эмулятору.",
   "tier": "hard",
   "num_threads": 6,
   "audio": {
@@ -8,6 +8,11 @@
       "enabled": true,
       "model": "denoise/gtcrn_simple.onnx",
       "snr_threshold_db": 12.0
+    },
+    "normalize_gain": {
+      "mode": "peak",
+      "target_peak_dbfs": -1.0,
+      "max_gain_db": 40.0
     }
   },
   "vad": {
@@ -19,8 +24,8 @@
     "max_speech_s": 25.0
   },
   "asr": {
-    "engine": "gigaam_ctc",
-    "model_dir": "asr/gigaam-v3-ctc-int8",
+    "engine": "gigaam_rnnt",
+    "model_dir": "asr/gigaam-v3-rnnt-punct-int8",
     "decoding": "greedy_search",
     "max_active_paths": 4,
     "hotwords_file": null,
@@ -62,7 +67,7 @@
     "min_island_ms": 400
   },
   "punctuation": {
-    "source": "llm",
+    "source": "asr_native",
     "model": null
   },
   "llm": {
@@ -70,7 +75,7 @@
     "n_ctx": 4096,
     "n_threads": 4,
     "gpu_layers": 99,
-    "punctuation": true,
+    "punctuation": false,
     "speaker_fix": true,
     "summary": true,
     "time_budget_rtf": 0.15
