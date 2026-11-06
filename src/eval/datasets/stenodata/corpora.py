@@ -15,6 +15,8 @@ LICENSES = {
     "ruls": "Public Domain (LibriVox), Russian LibriSpeech OpenSLR SLR96; зеркало HF istupakov/russian_librispeech (CC-BY-4.0 карточка)",
     "voxforge": "GPL-3.0 (VoxForge, http://www.voxforge.org/ru/downloads)",
     "fleurs": "CC-BY-4.0 (google/fleurs)",
+    "librispeech": "CC-BY-4.0 (LibriSpeech, OpenSLR SLR12)",
+    "fleurs_en": "CC-BY-4.0 (google/fleurs)",
     "golos_crowd": "SberDevices Golos license (https://github.com/sberdevices/golos/blob/master/license/en_us.pdf), OpenSLR SLR114",
     "golos_farfield": "SberDevices Golos license (https://github.com/sberdevices/golos/blob/master/license/en_us.pdf), OpenSLR SLR114",
     "musan": "CC-BY-4.0 / ранее PD-подмножества (OpenSLR SLR17, music/fma)",
@@ -39,8 +41,14 @@ class Clip:
 
 
 def ref_style_of(text: str) -> str:
-    """punct_case: есть пунктуация или заглавные; norm: нижний регистр без знаков."""
-    return "punct_case" if (re.search(r"[.,!?;:—–\-«»\"()…]", text) or any(c.isupper() for c in text)) else "norm"
+    """punct_case: пунктуация и/или смешанный регистр; upper_nopunct: ВЕРХНИЙ РЕГИСТР без знаков (LibriSpeech);
+    lower_nopunct: нижний регистр без знаков (Golos)."""
+    letters = [c for c in text if c.isalpha()]
+    if re.search(r"[.,!?;:—–\-«»\"()…]", text):
+        return "punct_case"
+    if letters and all(c.isupper() for c in letters):
+        return "upper_nopunct"
+    return "punct_case" if any(c.isupper() for c in letters) else "lower_nopunct"
 
 
 def _parse_vf_readme(p: Path) -> dict:
@@ -82,7 +90,7 @@ def load_voxforge(root: Path | None = None) -> list[Clip]:
     return clips
 
 
-def load_fleurs(root: Path | None = None) -> list[Clip]:
+def load_fleurs(root: Path | None = None, prefix: str = "fleurs", source: str = "fleurs") -> list[Clip]:
     root = root or (raw_root() / "fleurs")
     clips = []
     for sp in ("dev", "test"):
@@ -97,7 +105,7 @@ def load_fleurs(root: Path | None = None) -> list[Clip]:
                 wav = root / "audio" / sp / fn
                 if not wav.exists():
                     continue
-                clips.append(Clip(id=f"fleurs_{sp}_{uid}", path=wav, text=raw.strip(), speaker=None, source="fleurs",
+                clips.append(Clip(id=f"{prefix}_{sp}_{uid}", path=wav, text=raw.strip(), speaker=None, source=source,
                                   ref_style="punct_case", gender={"MALE": "M", "FEMALE": "F"}.get(row[6].strip().upper()),
                                   extra={"norm_text": norm.strip()}))
     return clips
@@ -165,3 +173,26 @@ def load_ruls(root: Path | None = None) -> list[Clip]:
                               ref_style=ref_style_of(text), gender=genders.get(spk),
                               extra={"duration": d.get("duration")}))
     return clips
+
+
+def load_librispeech(root: Path | None = None) -> list[Clip]:
+    """LibriSpeech test-clean + test-other: LibriSpeech/<subset>/<spk>/<chapter>/<spk>-<chapter>-<utt>.flac."""
+    root = root or (raw_root() / "librispeech")
+    clips = []
+    for tr in sorted(root.rglob("*.trans.txt")):
+        subset = tr.parent.parent.parent.name  # test-clean / test-other
+        spk = tr.parent.parent.name
+        for line in tr.read_text(encoding="utf-8").splitlines():
+            parts = line.strip().split(" ", 1)
+            if len(parts) != 2:
+                continue
+            uid, text = parts
+            p = tr.parent / f"{uid}.flac"
+            if p.exists():
+                clips.append(Clip(id=f"ls_{subset}_{uid}", path=p, text=text.strip(), speaker=f"ls_{spk}", source=f"librispeech_{subset}",
+                                  ref_style=ref_style_of(text), extra={"subset": subset}))
+    return clips
+
+
+def load_fleurs_en(root: Path | None = None) -> list[Clip]:
+    return load_fleurs(root or (raw_root() / "fleurs_en"), prefix="fleurs_en", source="fleurs_en")

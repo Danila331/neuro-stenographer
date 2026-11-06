@@ -15,7 +15,7 @@ import soundfile as sf
 import soxr
 
 from . import audio as A
-from .build_synth import overlap_fraction, pick_condition, render_condition, scenario_for
+from .build_synth import overlap_fraction, overlap_transitions, pick_condition, render_condition, scenario_for
 from .common import SR, DatasetWriter, raw_root, rng_for, stable_split
 from .synth import (GAP_PROFILES, DialogPlan, Seg, apply_condition, finalize_level, load_noise_bank, prepare_seg,
                     profile_for, sample_gap)
@@ -131,11 +131,22 @@ def build(n: int = 40, seed: int = 0, name: str = NAME, verbose: bool = True, us
     voices = Voices(use_say=use_say)
     babble = []
     nb = None
-    w = DatasetWriter(name, extra_cols=["scenario", "condition_detail", "overlap_frac", "voices", "script", "license"])
+    w = DatasetWriter(name, extra_cols=["scenario", "condition_detail", "overlap_frac", "overlap_trans", "voices", "script", "license"])
     cache: dict = {}
     for idx in range(n):
         sc = scs[idx % len(scs)]
         variant = idx // len(scs)
+        split_key = sc.id
+        if variant >= 1:
+            # длинная «сессия»: сценарий + следующий с тем же числом говорящих (≈ 1–3 мин)
+            j = (idx + 1) % len(scs)
+            for k in range(len(scs)):
+                nxt = scs[(idx + 1 + k) % len(scs)]
+                if nxt.n_spk == sc.n_spk and nxt.id != sc.id:
+                    break
+            sc = Scenario(id=f"{sc.id}+{nxt.id}", title=f"{sc.title} / {nxt.title}", n_spk=sc.n_spk,
+                          lines=sc.lines + nxt.lines)
+            split_key = "test" if "test" in (stable_split(sc.id.split("+")[0]), stable_split(nxt.id)) else "dev"
         rng = rng_for(seed, name, idx)
         scenario = scenario_for(idx + variant)
         cond = pick_condition(rng, scenario)
@@ -152,7 +163,7 @@ def build(n: int = 40, seed: int = 0, name: str = NAME, verbose: bool = True, us
             key = (spk_voice[ln.spk], ln.text, round(spk_ls[ln.spk], 3), round(spk_pitch[ln.spk], 3), variant)
             if key not in cache:
                 cache[key] = voices.synth(spk_voice[ln.spk], ln.text, spk_ls[ln.spk], float(rng.uniform(0.5, 0.85)), spk_pitch[ln.spk])
-            seg = prepare_seg(cache[key], f"speaker_{ln.spk}", ln.text, src="tts", speed=speed)
+            seg = prepare_seg(cache[key], f"speaker_{ln.spk}", ln.text, src="tts", speed=speed, min_ms=80)
             if seg is None:
                 raise RuntimeError(f"empty TTS for {ln.text!r}")
             segs.append(seg)
@@ -168,11 +179,11 @@ def build(n: int = 40, seed: int = 0, name: str = NAME, verbose: bool = True, us
         elif cond == "phone":
             mix = apply_condition(mix, [], "noise+phone" if rng.random() < 0.3 else "phone", rng, nb, detail)
         mix = finalize_level(mix)
-        did = f"cats_{sc.id}_v{variant}_{scenario}_{cond}"
+        did = f"cats_{sc.id.replace('+', '-')}_v{variant}_{scenario}_{cond}"
         w.add(did, mix, utts, num_speakers=len({u["speaker_id"] for u in utts}), source="tts", condition=cond,
-              split=stable_split(sc.id), scenario=scenario, condition_detail=json.dumps(detail, ensure_ascii=False),
+              split=(split_key if split_key in ('dev', 'test') else stable_split(split_key)), scenario=scenario, condition_detail=json.dumps(detail, ensure_ascii=False),
               overlap_frac=overlap_fraction(utts, len(mix) * 1000 // SR),
-              voices=";".join(f"{k}:{spk_voice[k]}@p{spk_pitch[k]:.2f}" for k in spk_voice), script=sc.id,
+              overlap_trans=overlap_transitions(utts), voices=";".join(f"{k}:{spk_voice[k]}@p{spk_pitch[k]:.2f}" for k in spk_voice), script=sc.id,
               license="piper-voices ru_RU (HF rhasspy/piper-voices)" + ("; macOS say Milena (local only)" if "milena" in spk_voice.values() else ""))
         if verbose:
             print(f"[tts] {did} spk={sc.n_spk} dur={len(mix)/SR:.0f}s utts={len(utts)} voices={spk_voice}", flush=True)

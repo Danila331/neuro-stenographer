@@ -42,6 +42,13 @@ def overlap_fraction(utts: list[dict], duration_ms: int) -> float:
     return round(ov / max(1, duration_ms), 4)
 
 
+def overlap_transitions(utts: list[dict]) -> float:
+    """Доля смен говорящего, при которых следующая реплика начинается до конца предыдущей."""
+    u = sorted(utts, key=lambda x: (x["start_ms"], x["end_ms"]))
+    sw = [(a, b) for a, b in zip(u, u[1:]) if a["speaker_id"] != b["speaker_id"]]
+    return round(sum(b["start_ms"] < a["end_ms"] for a, b in sw) / len(sw), 3) if sw else 0.0
+
+
 def render_condition(plan, speakers: list[str], cond: str, rng: np.random.Generator, profile: str):
     """Рендер с учётом условий, влияющих на геометрию (reverb / farfield); возвращает (mix, utts, detail)."""
     detail: dict = {"profile": profile}
@@ -72,8 +79,8 @@ def render_condition(plan, speakers: list[str], cond: str, rng: np.random.Genera
     return mix, utts, detail
 
 
-def pick_condition(rng: np.random.Generator, scenario: str = "meeting") -> str:
-    names, p = zip(*COND_WEIGHTS[scenario].items())
+def pick_condition(rng: np.random.Generator, scenario: str = "meeting", weights: dict | None = None) -> str:
+    names, p = zip(*(weights or COND_WEIGHTS)[scenario].items())
     return str(rng.choice(names, p=np.array(p, dtype=float) / sum(p)))
 
 
@@ -88,17 +95,57 @@ def speaker_pools(clips: list[C.Clip], min_clips: int, max_words: int = 28, min_
     return {s: v for s, v in by.items() if len(v) >= min_clips}
 
 
-def build(n: int = 24, seed: int = 0, name: str = NAME, max_dur_s: float = 300.0, min_dur_s: float = 60.0,
-          verbose: bool = True):
-    clips = C.load_voxforge() + C.load_ruls()
-    pools_all = speaker_pools(clips, min_clips=8)
+# EN: по заданию — clean, noise, farfield (+ phone для call), сценарии call/meeting
+COND_WEIGHTS_EN = {
+    "meeting": {"clean": 1, "noise": 1, "farfield": 1.5, "overlap": 0.5},
+    "call": {"clean": 1, "noise": 1, "phone": 1.5, "overlap": 0.5},
+}
+
+
+def lang_of_speaker(spk: str) -> str:
+    return "en" if spk.startswith("ls_") or spk.startswith("fleurs_en") else "ru"
+
+
+def speaker_license(spk: str) -> str:
+    if spk.startswith("vf_"):
+        return "GPL-3.0 VoxForge"
+    if spk.startswith("ruls_"):
+        return "PD LibriVox/RuLS"
+    if spk.startswith("ls_"):
+        return "CC-BY-4.0 LibriSpeech"
+    return "unknown"
+
+
+def default_chooser(pools_all, long_prefix=("ruls_", "ls_")):
+    spk_ids = sorted(pools_all)
+    long_spk = [s for s in spk_ids if s.startswith(long_prefix)]
+    cap_of = lambda s: 14 if s.startswith("vf_") else 40  # noqa: E731
+
+    def choose(rng, n_spk, target):
+        chosen: list[str] = []
+        if target > 140 and long_spk and not all(s.startswith(long_prefix) for s in spk_ids) :
+            chosen.append(str(rng.choice(long_spk)))
+        while len(chosen) < n_spk:
+            s = str(rng.choice(spk_ids))
+            if s not in chosen:
+                chosen.append(s)
+        return chosen
+    return choose, cap_of
+
+
+def build_dialogs(clips: list[C.Clip], n: int, seed: int, name: str, id_prefix: str, *, lang: str = "ru",
+                  cond_weights: dict | None = None, n_spk_p=(0.5, 0.3, 0.2), min_dur_s: float = 60.0,
+                  max_dur_s: float = 300.0, chooser=None, mixed: bool = False, verbose: bool = True,
+                  min_clips: int = 8, fixed_n_spk: list[int] | None = None):
+    pools_all = speaker_pools(clips, min_clips=min_clips, min_words=2)
     if len(pools_all) < 4:
         raise RuntimeError(f"too few speakers with enough clips: {len(pools_all)}")
     spk_ids = sorted(pools_all)
-    long_spk = [s for s in spk_ids if s.startswith("ruls_")]
+    choose, cap_of = default_chooser(pools_all)
+    if chooser is not None:
+        choose = chooser(pools_all)
 
-    # babble-пул: реплики случайных дикторов
-    brng = rng_for(seed, "babble")
+    brng = rng_for(seed, name, "babble")
     babble = []
     for s in list(brng.choice(spk_ids, size=min(12, len(spk_ids)), replace=False)):
         c = pools_all[s][int(brng.integers(len(pools_all[s])))]
@@ -110,33 +157,25 @@ def build(n: int = 24, seed: int = 0, name: str = NAME, max_dur_s: float = 300.0
             pass
     nb = load_noise_bank(babble)
 
-    w = DatasetWriter(name, extra_cols=["scenario", "condition_detail", "overlap_frac", "speakers_src", "license"])
+    extra = ["scenario", "condition_detail", "overlap_frac", "overlap_trans", "speakers_src", "license"] + (["lang_segments"] if mixed else [])
+    w = DatasetWriter(name, extra_cols=extra)
     made, attempts = 0, 0
     while made < n and attempts < n * 6:
         idx = made
         attempts += 1
         rng = rng_for(seed, name, idx, attempts)
         scenario = scenario_for(idx)
-        cond = pick_condition(rng, scenario)
+        cond = pick_condition(rng, scenario, cond_weights)
         speed = float(rng.uniform(1.1, 1.25)) if scenario == "call" else 1.0
-        n_spk = int(rng.choice([2, 3, 4], p=[0.5, 0.3, 0.2]))
+        n_spk = int(fixed_n_spk[idx % len(fixed_n_spk)]) if fixed_n_spk else int(rng.choice([2, 3, 4], p=np.array(n_spk_p) / sum(n_spk_p)))
         target = float(rng.uniform(min_dur_s, max_dur_s))
-        # выбор дикторов: для длинных диалогов обязательно хотя бы один диктор с большим пулом (RuLS)
-        chosen: list[str] = []
-        if target > 140 and long_spk:
-            chosen.append(str(rng.choice(long_spk)))
-        while len(chosen) < n_spk:
-            s = str(rng.choice(spk_ids))
-            # разные дикторы: исключаем один VoxForge-username
-            if s not in chosen:
-                chosen.append(s)
-        # перемешиваем, чтобы первым говорил не всегда «длинный» диктор
+        chosen = choose(rng, n_spk, target)
         rng.shuffle(chosen)
         pools: dict[str, list[Seg]] = {}
         for s in chosen:
             cl = list(pools_all[s])
             rng.shuffle(cl)
-            cap = 14 if s.startswith("vf_") else 40
+            cap = cap_of(s)
             segs = []
             for c in cl[: cap * 2]:
                 try:
@@ -162,15 +201,51 @@ def build(n: int = 24, seed: int = 0, name: str = NAME, max_dur_s: float = 300.0
             both = rng.random() < 0.3
             mix = apply_condition(mix, [], "noise+phone" if both else "phone", rng, nb, detail)
         mix = finalize_level(mix)
-        did = f"synth_{idx:04d}_{scenario}_{cond}"
-        # реальные номера дикторов для статистики
-        srcs = sorted({s for s in chosen})
-        lic = sorted({("GPL-3.0 VoxForge" if s.startswith("vf_") else "PD LibriVox/RuLS") for s in chosen})
+        did = f"{id_prefix}_{idx:04d}_{scenario}_{cond}"
+        row_extra = {}
+        if mixed:
+            row_extra["lang_segments"] = json.dumps(
+                [{"speaker": u["speaker_id"], "start_ms": u["start_ms"], "end_ms": u["end_ms"], "lang": lang_of_speaker(u["speaker_id"])}
+                 for u in utts], ensure_ascii=False)
+        # speaker_id в utts — исходные ключи дикторов; DatasetWriter переименует в speaker_N
         w.add(did, mix, utts, num_speakers=len({u["speaker_id"] for u in utts}), source="real_speech_synth",
               condition=cond, split=stable_split(did), scenario=scenario, condition_detail=json.dumps(detail, ensure_ascii=False),
-              overlap_frac=overlap_fraction(utts, len(mix) * 1000 // SR), speakers_src=";".join(srcs),
-              license="|".join(lic))
+              overlap_frac=overlap_fraction(utts, len(mix) * 1000 // SR), overlap_trans=overlap_transitions(utts), speakers_src=";".join(sorted(set(chosen))),
+              license="|".join(sorted({speaker_license(s) for s in chosen})), lang=lang, **row_extra)
         made += 1
         if verbose:
-            print(f"[synth] {did} spk={len(chosen)} dur={len(mix)/SR:.0f}s utts={len(utts)} detail={detail}", flush=True)
+            print(f"[{name}] {did} spk={len(chosen)} dur={len(mix)/SR:.0f}s utts={len(utts)} detail={detail}", flush=True)
     return w.finalize()
+
+
+def build(n: int = 36, seed: int = 0, name: str = NAME, max_dur_s: float = 300.0, min_dur_s: float = 60.0,
+          verbose: bool = True):
+    clips = C.load_voxforge() + C.load_ruls()
+    return build_dialogs(clips, n, seed, name, "synth", lang="ru", min_dur_s=min_dur_s, max_dur_s=max_dur_s, verbose=verbose)
+
+
+def build_en(n: int = 14, seed: int = 0, name: str = "en-dialog-synth", verbose: bool = True):
+    clips = C.load_librispeech()
+    return build_dialogs(clips, n, seed, name, "ensynth", lang="en", cond_weights=COND_WEIGHTS_EN, n_spk_p=(0.6, 0.4, 0.0),
+                         min_dur_s=60.0, max_dur_s=240.0, verbose=verbose, min_clips=10)
+
+
+def build_mixed(n: int = 5, seed: int = 0, name: str = "ru-en-mixed", verbose: bool = True):
+    """Русский диалог с реальными английскими репликами (отдельные англоязычные дикторы) — проверка определения языка."""
+    clips = C.load_voxforge() + C.load_ruls() + C.load_librispeech()
+
+    def chooser(pools_all):
+        ru = sorted(s for s in pools_all if lang_of_speaker(s) == "ru")
+        en = sorted(s for s in pools_all if lang_of_speaker(s) == "en")
+
+        def choose(rng, n_spk, target):
+            k_en = 1 if n_spk <= 3 else 2
+            out = [str(x) for x in rng.choice(ru, size=n_spk - k_en, replace=False)] + \
+                  [str(x) for x in rng.choice(en, size=k_en, replace=False)]
+            return out
+        return choose
+
+    return build_dialogs(clips, n, seed, name, "mix", lang="ru+en", cond_weights={
+        "meeting": {"clean": 1, "noise": 1, "farfield": 1.5}, "call": {"clean": 1, "noise": 1, "phone": 1.5}},
+        chooser=chooser, mixed=True, min_dur_s=60.0, max_dur_s=150.0, fixed_n_spk=[3, 3, 4, 3, 4],
+        verbose=verbose, min_clips=10)

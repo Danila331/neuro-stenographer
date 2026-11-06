@@ -19,7 +19,7 @@
 |---|---|---|
 | `ru-asr-dev` | одиночные фразы с эталонным текстом для сравнения ASR (+ искажённые варианты) | FLEURS ru, VoxForge ru, Golos (crowd, farfield), RuLS |
 | `ru-dialog-synth` | диалоги 2–4 **реальных** дикторов (1–5 мин), собранные по модели очерёдности | VoxForge ru (диктор = username/сессия), RuLS (диктор = reader id) |
-| `ru-dialog-tts-cats` | 36 сценариев «котиков» (Котовица, заседание, протокол), озвученные локальным TTS. **Слабый прокси**: голоса слишком чистые и различимые | Piper ru_RU (denis, dmitri, irina, ruslan) + macOS `say` Milena (если есть) |
+| `ru-dialog-tts-cats` | 40 сценариев «котиков» (Котовица, заседание, протокол), озвученные локальным TTS. **Слабый прокси**: голоса слишком чистые и различимые | Piper ru_RU (denis, dmitri, irina, ruslan) + macOS `say` Milena (если есть) |
 | `real` | структура и инструменты для реальных записей пользователя (см. `real/README.md`) | ваши записи |
 
 ### Колонки manifest (сверх ARCHITECTURE §2)
@@ -32,7 +32,7 @@
 | `overlap_frac` | dialog-наборы | доля длительности записи, где одновременно звучат ≥ 2 реплик (по эталону) |
 | `license` | все | лицензии исходных данных |
 | `speakers_src` / `voices` / `script` | synth / tts | исходные дикторы / голоса TTS и питч / id сценария |
-| `ref_style`, `speaker`, `gender`, `orig_id` | ru-asr-dev | `punct_case` (эталон с пунктуацией и регистром: FLEURS, VoxForge, RuLS) или `norm` (нижний регистр без пунктуации: Golos); исходный id |
+| `ref_style`, `speaker`, `gender`, `orig_id` | ru-asr-dev | `punct_case` (пунктуация и регистр: FLEURS, VoxForge, RuLS) / `lower_nopunct` (Golos) / `upper_nopunct` (LibriSpeech); исходный id |
 | `annotated`, `notes` | real | размечена ли запись |
 
 ### Условия (`condition`)

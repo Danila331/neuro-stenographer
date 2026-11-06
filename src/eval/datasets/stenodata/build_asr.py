@@ -38,11 +38,32 @@ def build(n: int = 600, seed: int = 0, name: str = NAME, verbose: bool = True):
                "golos_crowd": lambda: [c for c in C.load_golos() if c.source == "golos_crowd"],
                "golos_farfield": lambda: [c for c in C.load_golos() if c.source == "golos_farfield"],
                "ruls": C.load_ruls}
+    return _build(n, seed, name, QUOTA, loaders, "ru", verbose)
+
+
+EN_QUOTA = {"librispeech_test-clean": 0.34, "librispeech_test-other": 0.33, "fleurs_en": 0.33}
+EN_COND = {"librispeech_test-clean": ("clean", "read audiobook, LibriSpeech test-clean"),
+           "librispeech_test-other": ("clean", "read audiobook, LibriSpeech test-other (harder speakers/recordings)"),
+           "fleurs_en": ("clean", "read, FLEURS en_us")}
+EN_DUR = {"librispeech_test-clean": (2.0, 20.0), "librispeech_test-other": (2.0, 20.0), "fleurs_en": (3.0, 20.0)}
+
+
+def build_en(n: int = 220, seed: int = 0, name: str = "en-asr-dev", verbose: bool = True):
+    ls = C.load_librispeech()
+    loaders = {"librispeech_test-clean": lambda: [c for c in ls if c.source == "librispeech_test-clean"],
+               "librispeech_test-other": lambda: [c for c in ls if c.source == "librispeech_test-other"],
+               "fleurs_en": C.load_fleurs_en}
+    SRC_COND.update(EN_COND)
+    DUR_RANGE.update(EN_DUR)
+    return _build(n, seed, name, EN_QUOTA, loaders, "en", verbose)
+
+
+def _build(n, seed, name, quota, loaders, lang, verbose):
     w = DatasetWriter(name, extra_cols=["ref_style", "speaker", "gender", "orig_id", "condition_detail", "license"])
     nb = None
     n_total = 0
     base_rows = []
-    for src, frac in QUOTA.items():
+    for src, frac in quota.items():
         try:
             clips = loaders[src]()
         except FileNotFoundError:
@@ -58,7 +79,7 @@ def build(n: int = 600, seed: int = 0, name: str = NAME, verbose: bool = True):
         for i in order:
             c = clips[int(i)]
             # не более 3 фраз на одного диктора (разнообразие)
-            if c.speaker and seen_spk[c.speaker] >= (3 if src == "voxforge" else 40):
+            if c.speaker and seen_spk[c.speaker] >= (3 if src == "voxforge" else (4 if src.startswith("librispeech") else 40)):
                 continue
             nwords = len(c.text.split())
             if nwords < 2 and src not in ("golos_crowd", "golos_farfield"):
@@ -78,9 +99,9 @@ def build(n: int = 600, seed: int = 0, name: str = NAME, verbose: bool = True):
             utt = [{"speaker_id": "speaker_1", "start_ms": int(s0 * 1000 / SR), "end_ms": int(e0 * 1000 / SR), "text": c.text}]
             if utt[0]["end_ms"] <= utt[0]["start_ms"]:
                 continue
-            w.add(did, x, utt, num_speakers=1, source=src, condition=cond, split=stable_split(did),
+            w.add(did, x, utt, num_speakers=1, source=src, condition=cond, split=stable_split(did), lang=lang,
                   ref_style=c.ref_style, speaker=c.speaker or "", gender=c.gender or "", orig_id=c.id,
-                  condition_detail=json.dumps({"note": cdetail}, ensure_ascii=False), license=C.LICENSES[src])
+                  condition_detail=json.dumps({"note": cdetail}, ensure_ascii=False), license=C.LICENSES.get(src, C.LICENSES.get(src.split("_")[0], "")))
             base_rows.append((c, x, s0, e0))
             if c.speaker:
                 seen_spk[c.speaker] += 1
@@ -124,9 +145,9 @@ def build(n: int = 600, seed: int = 0, name: str = NAME, verbose: bool = True):
         did = f"{c.id}__{kind}"
         utt = [{"speaker_id": "speaker_1", "start_ms": int((s0 + off) * 1000 / SR), "end_ms": int((e0 + off) * 1000 / SR),
                 "text": c.text}]
-        w.add(did, y, utt, num_speakers=1, source=c.source, condition=kind, split=stable_split(c.id),
+        w.add(did, y, utt, num_speakers=1, source=c.source, condition=kind, split=stable_split(c.id), lang=lang,
               ref_style=c.ref_style, speaker=c.speaker or "", gender=c.gender or "", orig_id=c.id,
-              condition_detail=json.dumps(detail, ensure_ascii=False), license=C.LICENSES[c.source])
+              condition_detail=json.dumps(detail, ensure_ascii=False), license=C.LICENSES.get(c.source, C.LICENSES.get(c.source.split("_")[0], "")))
     if verbose:
         print(f"[asr] base={len(base_rows)} variants={len(pick)}")
     return w.finalize()

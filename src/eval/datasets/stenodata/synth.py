@@ -30,9 +30,9 @@ class Seg:
 
 
 def prepare_seg(x: np.ndarray, spk: str, text: str, src: str = "", cid: str = "", kind: str = "turn",
-                speed: float = 1.0) -> Seg | None:
+                speed: float = 1.0, min_ms: int = 250) -> Seg | None:
     y, _, _ = A.trim_silence(x)
-    if len(y) < int(0.25 * SR):
+    if len(y) < int(min_ms * SR / 1000):
         return None
     if abs(speed - 1.0) > 1e-3:
         y = A.time_stretch(y, speed)  # быстрый темп (call), тон сохраняется

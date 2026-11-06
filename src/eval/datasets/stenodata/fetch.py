@@ -229,22 +229,43 @@ def fetch_esc50():
     return _atomic("esc50", build)
 
 
-def fetch_fleurs():
+def _fetch_fleurs(lang_dir: str, name: str, splits=("dev", "test")):
     def build(tmp: Path):
-        base = f"{HF}/datasets/google/fleurs/resolve/main/data/ru_ru"
-        for name in ["dev.tsv", "test.tsv", "audio/dev.tar.gz", "audio/test.tar.gz"]:
-            _download(f"{base}/{name}", tmp / name)
-        for sp in ["dev", "test"]:
-            d = tmp / "audio" / sp
-            with tarfile.open(tmp / "audio" / f"{sp}.tar.gz") as tf:
+        base = f"{HF}/datasets/google/fleurs/resolve/main/data/{lang_dir}"
+        for sp in splits:
+            for rel in (f"{sp}.tsv", f"audio/{sp}.tar.gz"):
+                _download(f"{base}/{rel}", tmp / rel)
+        for sp in splits:
+            tgz = tmp / "audio" / f"{sp}.tar.gz"
+            with tarfile.open(tgz) as tf:
                 for m in tf:
                     dst = (tmp / "audio" / m.name).resolve()
                     if m.isfile() and (tmp / "audio").resolve() in dst.parents:
                         dst.parent.mkdir(parents=True, exist_ok=True)
                         dst.write_bytes(tf.extractfile(m).read())
-            (tmp / "audio" / f"{sp}.tar.gz").unlink()
+            tgz.unlink()
         _download(f"{HF}/datasets/google/fleurs/resolve/main/README.md", tmp / "README.md")
-    return _atomic("fleurs", build)
+    return _atomic(name, build)
+
+
+def fetch_fleurs():
+    return _fetch_fleurs("ru_ru", "fleurs", splits=("dev",))
+
+
+def fetch_fleurs_en():
+    return _fetch_fleurs("en_us", "fleurs_en", splits=("dev",))
+
+
+LS_URLS = {"test-clean": "https://www.openslr.org/resources/12/test-clean.tar.gz",
+           "test-other": "https://www.openslr.org/resources/12/test-other.tar.gz"}
+
+
+def fetch_librispeech():
+    """LibriSpeech test-clean + test-other (OpenSLR SLR12, CC BY 4.0): flac + транскрипты, ID дикторов в путях."""
+    def build(tmp: Path):
+        for sub, url in LS_URLS.items():
+            stream_tar(url, tmp, keep=lambda n: n.endswith((".flac", ".txt")), stop=lambda n: False, label=sub)
+    return _atomic("librispeech", build)
 
 
 def fetch_piper():
@@ -307,7 +328,7 @@ def fetch_voxforge(max_subs: int = 420, max_anon: int = 120):
     return _atomic("voxforge", build)
 
 
-ALL = {"ruls": fetch_ruls, "voxforge": fetch_voxforge, "fleurs": fetch_fleurs, "golos": fetch_golos, "musan": fetch_musan,
+ALL = {"ruls": fetch_ruls, "voxforge": fetch_voxforge, "fleurs": fetch_fleurs, "fleurs_en": fetch_fleurs_en, "librispeech": fetch_librispeech, "golos": fetch_golos, "musan": fetch_musan,
        "esc50": fetch_esc50, "piper": fetch_piper}
 
 

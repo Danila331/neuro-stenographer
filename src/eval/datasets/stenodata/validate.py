@@ -96,7 +96,7 @@ def main(argv=None):
     names = list(argv) if argv else (sys.argv[1:] if argv is None else []) or [n for n in OUR_DATASETS if (data_root() / n / "manifest.csv").exists()]
     bad = 0
     for n in names:
-        root = Path(n) if Path(n).exists() else data_root() / n
+        root = (data_root() / n) if (data_root() / n).exists() else Path(n)
         errs = validate_dataset(root)
         print(f"{root.name}: {'OK' if not errs else str(len(errs)) + ' problems'}")
         for e in errs[:30]:

@@ -11,7 +11,7 @@ import numpy as np
 import soundfile as sf
 
 SR = 16_000
-OUR_DATASETS = ["ru-asr-dev", "ru-dialog-synth", "ru-dialog-tts-cats", "real"]
+OUR_DATASETS = ["ru-asr-dev", "ru-dialog-synth", "ru-dialog-tts-cats", "en-asr-dev", "en-dialog-synth", "ru-en-mixed", "real"]
 MANIFEST_COLS = ["id", "audio", "ref", "duration_ms", "num_speakers", "lang", "source", "condition", "split"]
 
 

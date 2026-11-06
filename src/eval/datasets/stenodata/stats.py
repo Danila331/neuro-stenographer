@@ -20,6 +20,7 @@ def dataset_stats(root: Path) -> dict:
     by_scen = defaultdict(lambda: [0, 0])
     spk = Counter()
     ov_ms = 0.0
+    ot_sum, ot_n = defaultdict(float), defaultdict(int)
     n_utts, speech_ms = 0, 0
     words = 0
     for r in rows:
@@ -31,6 +32,9 @@ def dataset_stats(root: Path) -> dict:
             by_scen[r["scenario"]][0] += 1
             by_scen[r["scenario"]][1] += d
         spk[r["num_speakers"]] += 1
+        if r.get("overlap_trans"):
+            ot_sum[r.get("scenario", "")] += float(r["overlap_trans"])
+            ot_n[r.get("scenario", "")] += 1
         if r.get("overlap_frac"):
             ov_ms += float(r["overlap_frac"]) * d
         obj = json.loads((root / r["ref"]).read_text(encoding="utf-8"))
@@ -40,6 +44,7 @@ def dataset_stats(root: Path) -> dict:
             words += len(u["text"].split())
     return dict(name=root.name, n=len(rows), hours=tot_ms / 3.6e6, by_cond=dict(by_cond), by_src=dict(by_src),
                 by_split=dict(by_split), by_scen=dict(by_scen), spk=dict(sorted(spk.items())), overlap_ratio=(ov_ms / tot_ms if tot_ms else 0.0),
+                overlap_trans={k: ot_sum[k] / ot_n[k] for k in ot_n},
                 n_utts=n_utts, speech_hours=speech_ms / 3.6e6, words=words)
 
 
@@ -55,7 +60,8 @@ def to_markdown(s: dict) -> str:
           f"- файлов: **{s['n']}**, суммарно **{s['hours']:.2f} ч**; реплик: {s['n_utts']}, слов: {s['words']}, "
           f"речи по ref: {s['speech_hours']:.2f} ч",
           f"- число говорящих (файлов): {s['spk']}",
-          f"- доля времени с перекрытием речи: {100*s['overlap_ratio']:.1f} %",
+          f"- доля времени с перекрытием речи: {100*s['overlap_ratio']:.1f} %"
+          + (("; доля смен говорящего с перекрытием: " + ", ".join(f"{k or 'все'} {100*v:.0f} %" for k, v in s['overlap_trans'].items())) if s.get('overlap_trans') else ""),
           "", fmt_table("condition", s["by_cond"]), "", fmt_table("source", s["by_src"]), "",
           fmt_table("split", s["by_split"]), ""]
     if s.get("by_scen"):
