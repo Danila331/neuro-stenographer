@@ -10,11 +10,12 @@
       "snr_threshold_db": 12.0
     },
     "normalize_gain": {
-      "enabled": true,
+      "enabled": false,
       "mode": "peak",
       "peak_dbfs": -1.0,
       "max_gain_db": 40.0,
-      "skip_if_peak_below_dbfs": -85.0
+      "skip_if_peak_below_dbfs": -85.0,
+      "_pending": "Выключено: в сквозном пайплайне усиливает фон и ухудшает VAD (synth: 40.2→46.8 %). Решение по совместному перебору с vad.threshold (refpipe)."
     }
   },
   "vad": {
@@ -33,7 +34,7 @@
     "hotwords_file": null,
     "hotwords_score": 1.5,
     "chunk": {
-      "max_s": 20.0,
+      "max_s": 25.0,
       "min_s": 1.0,
       "overlap_ms": 0
     },
