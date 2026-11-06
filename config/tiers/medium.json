@@ -1,5 +1,5 @@
 {
-  "_note": "Стартовые кандидаты. Значения моделей/порогов уточняются по замерам (docs/TEST_RESULTS.md). Пути — относительно корня моделей.",
+  "_note": "ASR ru: GigaAM v3 CTC int8 — лучший WER (FLEURS 2.75%, ru-asr-dev 6.57%). asr_en: Parakeet-TDT-110m-en (FLEURS en 6.64%). LID: whisper-tiny, 100% ru/en на 10 с. Порог диаризации 0.85 — предварительно (0.5–0.6 дробит спикеров), подтвердить diar-bench. Скорость/RAM ещё не измерены на спокойной машине. Пути — относительно корня моделей.",
   "tier": "medium",
   "num_threads": 4,
   "audio": {
@@ -19,8 +19,8 @@
     "max_speech_s": 25.0
   },
   "asr": {
-    "engine": "gigaam_rnnt",
-    "model_dir": "asr/gigaam-v3-rnnt-int8",
+    "engine": "gigaam_ctc",
+    "model_dir": "asr/gigaam-v3-ctc-int8",
     "decoding": "greedy_search",
     "max_active_paths": 4,
     "hotwords_file": null,
@@ -41,7 +41,7 @@
     "embedding": "diar/embedding/model.onnx",
     "clustering": {
       "method": "fast_clustering",
-      "threshold": 0.6,
+      "threshold": 0.85,
       "num_speakers": null,
       "max_speakers": 8
     },
@@ -77,8 +77,18 @@
   },
   "language": {
     "mode": "auto",
-    "lid_model": null,
+    "lid_model": "lid/whisper-tiny-int8",
     "lid_seconds": 10
   },
-  "asr_en": null
+  "asr_en": {
+    "engine": "nemo_tdt",
+    "model_dir": "asr/parakeet-tdt-110m-en-int8",
+    "decoding": "greedy_search",
+    "chunk": {
+      "max_s": 25.0,
+      "min_s": 1.0,
+      "overlap_ms": 0
+    },
+    "language": "en"
+  }
 }
