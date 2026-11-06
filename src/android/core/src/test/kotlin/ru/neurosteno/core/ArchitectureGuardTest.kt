@@ -43,7 +43,9 @@ class ArchitectureGuardTest {
         for (m in processingModules) {
             // каталог с исходниками llama.cpp скачивается скриптом и в проверку не входит
             sources(m).filter { !it.path.contains("/cpp/llama.cpp/") && it.name != "ArchitectureGuardTest.kt" }.forEach { f ->
-                codeLines(f).forEach { (n, line) ->
+                codeLines(f).forEach { (n, rawLine) ->
+                    // пространства имён XML (xmlns) -- не сетевой код
+                    val line = rawLine.replace(Regex("""xmlns(:\w+)?="[^"]*""""), "")
                     forbiddenSourceTokens.filter { line.contains(it) }.forEach {
                         violations += "$m: ${f.relativeTo(TestPaths.androidRoot)}:$n содержит '$it'"
                     }
