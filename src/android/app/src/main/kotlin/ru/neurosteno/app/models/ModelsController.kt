@@ -108,7 +108,10 @@ class ModelsController(private val context: Context, private val graph: AppGraph
                 recommended = cat?.recommended == true,
                 download = dl,
             )
-        }.sortedWith(compareByDescending<ModelSetRow> { it.active }.thenByDescending { it.installed }.thenBy { it.id })
+        }.sortedWith(
+            compareByDescending<ModelSetRow> { it.active }.thenByDescending { it.installed }
+                .thenBy { r -> catalog.sets.indexOfFirst { it.id == r.id }.let { if (it < 0) Int.MAX_VALUE else it } },
+        )
     }
 
     private fun downloadState(id: String, infos: List<WorkInfo>, p: ModelDownloadProgress.Item?): DownloadUi {

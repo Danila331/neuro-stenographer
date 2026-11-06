@@ -12,12 +12,12 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 import ru.neurosteno.app.NeuroApp
 import ru.neurosteno.app.R
 import ru.neurosteno.core.models.InsufficientSpaceException
-import kotlin.coroutines.coroutineContext
 
 /**
  * Загрузка набора моделей в WorkManager (запускается только действием пользователя). Прогресс -- через `setProgress`
@@ -30,7 +30,7 @@ class ModelDownloadWorker(appContext: Context, params: WorkerParameters) : Corou
         val graph = (applicationContext as NeuroApp).graph
         val set = graph.catalog.set(setId) ?: return Result.failure(error("Набора «$setId» нет в каталоге"))
         val installer = SetInstaller(graph.modelStore, graph.catalog)
-        val job = coroutineContext.job
+        val job = currentCoroutineContext().job
         var lastPublish = 0L
         runCatching { setForeground(foregroundInfo(set.title, 0, 0)) }
         return withContext(Dispatchers.IO) {
@@ -59,6 +59,13 @@ class ModelDownloadWorker(appContext: Context, params: WorkerParameters) : Corou
             } catch (e: java.io.IOException) {
                 ModelDownloadProgress.clear(setId)
                 if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure(error(e.message ?: "Ошибка сети"))
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                ModelDownloadProgress.clear(setId)
+                throw e
+            } catch (e: Throwable) {
+                ModelDownloadProgress.clear(setId)
+                android.util.Log.e("Neurosteno", "model download failed", e)
+                Result.failure(error("Ошибка загрузки: ${e.message ?: e.javaClass.simpleName}"))
             }
         }
     }

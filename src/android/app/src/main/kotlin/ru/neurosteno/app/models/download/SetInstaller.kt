@@ -63,7 +63,7 @@ class SetInstaller(
             val target = File(staging, f.path)
             if (!isVerified(target, f)) {
                 downloader.download(f.url!!, target, f.size, isCancelled) { report(it, f.path) }
-                verifyAndMark(target, f)
+                verifyAndMark(target, f) { report(f.size, it) }
             }
             done += f.size
             report(0, f.path)
@@ -79,6 +79,7 @@ class SetInstaller(
                     archiveFile.delete()
                     throw DownloadIntegrityException("Контрольная сумма архива $archiveId не совпала")
                 }
+                report(a.size, "#Распаковка архива")
                 extract(a.stripComponents, archiveFile, staging, members, isCancelled)
                 archiveFile.delete()
             }
@@ -103,7 +104,8 @@ class SetInstaller(
     private fun isVerified(file: File, f: CatalogFile): Boolean =
         file.isFile && file.length() == f.size && File(file.path + OK_SUFFIX).isFile
 
-    private fun verifyAndMark(file: File, f: CatalogFile) {
+    private fun verifyAndMark(file: File, f: CatalogFile, report: ((String) -> Unit)? = null) {
+        report?.invoke("#Проверка контрольной суммы")
         if (file.length() != f.size) {
             file.delete()
             throw DownloadIntegrityException("Размер ${f.path}: ожидалось ${f.size}, получено ${file.length()}")

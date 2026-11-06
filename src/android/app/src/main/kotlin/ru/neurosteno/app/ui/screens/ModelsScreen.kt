@@ -109,7 +109,8 @@ fun ModelSetCard(row: ModelSetRow, bundledSetId: String?, actions: ModelActions,
                     LinearProgressIndicator(progress = { frac }, modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Загрузка набора ${row.title}: ${Format.percent(frac)}" })
                     val eta = if (d.speedBps > 0) " · осталось ~${Format.duration((d.totalBytes - d.doneBytes) * 1000 / d.speedBps)}" else ""
                     val speed = if (d.speedBps > 0) " · ${Format.bytes(d.speedBps)}/с" else ""
-                    Text("Загружено ${Format.bytes(d.doneBytes)} из ${Format.bytes(d.totalBytes)} (${Format.percent(frac)})$speed$eta", style = MaterialTheme.typography.bodySmall)
+                    val phase = if (d.file.startsWith("#")) d.file.drop(1) + "… " else ""
+                    Text("$phase" + "Загружено ${Format.bytes(d.doneBytes)} из ${Format.bytes(d.totalBytes)} (${Format.percent(frac)})$speed$eta", style = MaterialTheme.typography.bodySmall)
                     OutlinedButton(onClick = { actions.cancel(row.id) }) { Text("Отменить") }
                 }
                 DownloadUi.Queued -> {
