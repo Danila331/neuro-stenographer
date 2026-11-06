@@ -43,25 +43,27 @@ def cmd_run(a) -> int:
     if not items:
         print("no input files", file=sys.stderr)
         return 2
-    pipe = Pipeline(cfg, models)
+    pipe = Pipeline(cfg, models, Path(a.cache) if a.cache else None)
     (out / "config.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"tier={cfg['tier']} config_hash={config_hash(cfg)[:12]} threads={cfg['num_threads']} "
           f"load={pipe.load_ms}ms files={len(items)}", flush=True)
     failed = 0
-    for fid, path, ns in items:
-        try:
-            res = pipe.process_file(path, ns)
-        except Exception as e:  # noqa: BLE001 -- a failing file must not stop a dataset run
-            failed += 1
-            logging.exception("failed: %s", fid)
-            print(f"[FAIL] {fid}: {e}", file=sys.stderr)
-            continue
-        write_outputs(out, fid, res, pipe.meta(res))
-        sp = len({u.speaker for u in res.utterances})
-        print(f"{fid}: {res.duration_ms / 1000:.1f}s -> {len(res.utterances)} utt, {sp} spk, "
-              f"{res.processing_ms} ms (RTF {res.processing_ms / max(1, res.duration_ms):.3f}, "
-              f"peak {res.peak_rss_mb:.0f} MB, lang={res.info.get('language')}) {res.stage_ms}", flush=True)
-    pipe.close()
+    try:
+        for fid, path, ns in items:
+            try:
+                res = pipe.process_file(path, ns)
+            except Exception as e:  # noqa: BLE001 -- a failing file must not stop a dataset run
+                failed += 1
+                logging.exception("failed: %s", fid)
+                print(f"[FAIL] {fid}: {e}", file=sys.stderr)
+                continue
+            write_outputs(out, fid, res, pipe.meta(res))
+            sp = len({u.speaker for u in res.utterances})
+            print(f"{fid}: {res.duration_ms / 1000:.1f}s -> {len(res.utterances)} utt, {sp} spk, "
+                  f"{res.processing_ms} ms (RTF {res.processing_ms / max(1, res.duration_ms):.3f}, "
+                  f"peak {res.peak_rss_mb:.0f} MB, lang={res.info.get('language')}) {res.stage_ms}", flush=True)
+    finally:
+        pipe.close()
     return 1 if failed else 0
 
 
@@ -77,6 +79,9 @@ def main(argv=None) -> int:
     r.add_argument("--ids", nargs="*", default=None, help="only these manifest ids")
     r.add_argument("--num-speakers", type=int, default=None, help="force the number of speakers")
     r.add_argument("--oracle-num-speakers", action="store_true", help="use num_speakers from the manifest")
+    r.add_argument("--cache", default=None, metavar="DIR",
+                   help="cache ASR/diarization outputs there (keyed by audio+relevant config): sweeps of "
+                        "align.* / punctuation.* / clustering.* then skip the models; meta marks cached_stages")
     r.add_argument("--language", choices=["auto", "ru", "en"], default=None,
                    help="language.mode: auto (LID on the first ~10 s of speech), ru, en")
     r.add_argument("--num-threads", type=int, default=None, help="override config num_threads")

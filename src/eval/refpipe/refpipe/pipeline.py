@@ -7,6 +7,8 @@ each sherpa object gets `num_threads` from the config.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import platform
 import threading
@@ -21,7 +23,7 @@ from . import __version__
 from .align import AlignParams, align
 from .asr import AsrEngine
 from .audio import decode_audio, denoise, estimate_snr_db
-from .config import DEFAULTS, config_hash, deep_merge
+from .config import DEFAULTS, canonical, config_hash, deep_merge
 from .diar import Diarizer, SubprocessDiarizer
 from .lid import LanguageId
 from .punct import make_punctuator
@@ -84,8 +86,11 @@ def _ms(t0: float) -> int:
 
 
 class Pipeline:
-    def __init__(self, cfg: dict, models_root: Path):
+    def __init__(self, cfg: dict, models_root: Path, cache_dir: Path | None = None):
         self.cfg, self.root = cfg, Path(models_root)
+        self.cache_dir = Path(cache_dir) if cache_dir else None
+        if self.cache_dir:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.threads = int(cfg["num_threads"])
         t0 = time.perf_counter()
         self.vad = SileroVad(cfg["vad"], self.root, 1)
@@ -118,6 +123,27 @@ class Pipeline:
         self.rss_after_load_mb = tree_rss_mb()
         self.cfg_hash = config_hash(cfg)
 
+    # -- optional stage cache (--cache): ASR and diarization outputs keyed by audio bytes + the config
+    #    that influences them, so align/punctuation/threshold sweeps do not recompute the models.
+    def _ckey(self, stage: str, audio_key: str | None, parts: dict) -> Path | None:
+        if not (self.cache_dir and audio_key):
+            return None
+        h = hashlib.sha256((audio_key + stage + canonical(parts)).encode()).hexdigest()[:24]
+        return self.cache_dir / f"{stage}-{h}.json"
+
+    @staticmethod
+    def _cload(p: Path | None):
+        if p and p.is_file():
+            return json.loads(p.read_text(encoding="utf-8"))
+        return None
+
+    @staticmethod
+    def _csave(p: Path | None, obj) -> None:
+        if p:
+            tmp = p.with_name(p.name + ".tmp")
+            tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
+            tmp.replace(p)
+
     def models(self) -> dict[str, str]:
         c = self.cfg
         m = {"vad": c["vad"]["model"], "asr": c["asr"]["model_dir"],
@@ -138,14 +164,15 @@ class Pipeline:
         t0 = time.perf_counter()
         x = decode_audio(path, SR)
         decode_ms = _ms(t0)
-        return self.process_audio(x, num_speakers, decode_ms=decode_ms, t_start=t0)
+        key = hashlib.sha256(Path(path).read_bytes()).hexdigest()[:20] if self.cache_dir else None
+        return self.process_audio(x, num_speakers, decode_ms=decode_ms, t_start=t0, audio_key=key)
 
     def process_audio(self, x: np.ndarray, num_speakers: int | None = None, decode_ms: int = 0,
-                      t_start: float | None = None) -> Result:
+                      t_start: float | None = None, audio_key: str | None = None) -> Result:
         sampler = RssSampler()
         sampler.start()
         try:
-            res = self._process_audio(x, num_speakers, decode_ms, t_start)
+            res = self._process_audio(x, num_speakers, decode_ms, t_start, audio_key)
         finally:
             peak = sampler.finish()
         res.peak_rss_mb = round(peak, 1)
@@ -156,7 +183,7 @@ class Pipeline:
             self.diar.close()
 
     def _process_audio(self, x: np.ndarray, num_speakers: int | None, decode_ms: int,
-                       t_start: float | None) -> Result:
+                       t_start: float | None, audio_key: str | None = None) -> Result:
         t_start = t_start if t_start is not None else time.perf_counter()
         cfg = self.cfg
         stage: dict[str, int] = {"decode": decode_ms}
@@ -176,7 +203,21 @@ class Pipeline:
                 info["denoised"] = True
         stage["denoise"] = _ms(t)
 
+        c = cfg
+        asr_parts = {k: c.get(k) for k in ("vad", "asr", "asr_en", "language")}
+        asr_parts["denoise"] = c["audio"]["denoise"]
+        asr_parts["keep_punct"] = self.keep_punct
+        asr_cache = self._ckey("asr", audio_key, asr_parts)
+        diar_cache = self._ckey("diar", audio_key, {"d": c["diarization"], "n": num_speakers,
+                                                    "denoise": c["audio"]["denoise"]})
+
         def run_asr():
+            hit = self._cload(asr_cache)
+            if hit:
+                info["language"] = hit["language"]
+                info.setdefault("cached_stages", []).append("asr")
+                return ([TimeSpan(*t) for t in hit["speech"]], [TimeSpan(*t) for t in hit["chunks"]],
+                        [Word(*w) for w in hit["words"]], 0, 0, 0, 0)
             t1 = time.perf_counter()
             speech, chunks = speech_chunks(x, cfg, self.vad)
             vad_ms = _ms(t1)
@@ -203,11 +244,19 @@ class Pipeline:
                 t3 = time.perf_counter()
                 words, info["second_pass_chunks"] = self.second.apply(x, chunks, words, self.keep_punct)
                 sp_ms = _ms(t3)
+            self._csave(asr_cache, {"language": lang, "speech": [[s.start_ms, s.end_ms] for s in speech],
+                                    "chunks": [[s.start_ms, s.end_ms] for s in chunks],
+                                    "words": [[w.text, w.start_ms, w.end_ms, w.confidence] for w in words]})
             return speech, chunks, words, vad_ms, asr_ms, sp_ms, lid_ms
 
         def run_diar():
+            hit = self._cload(diar_cache)
+            if hit is not None:
+                info.setdefault("cached_stages", []).append("diarization")
+                return [SpeakerTurn(*t) for t in hit], 0
             t1 = time.perf_counter()
             turns = self.diar.diarize(x, num_speakers) if self.diar else []
+            self._csave(diar_cache, [[t.speaker, t.start_ms, t.end_ms] for t in turns])
             return turns, _ms(t1)
 
         tw = time.perf_counter()

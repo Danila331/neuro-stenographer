@@ -42,13 +42,14 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
             --override diarization.clustering.threshold=0.7 --override vad.threshold=0.3 [--oracle-num-speakers]
 ```
 `--input`: файл, папка с аудио или корень датасета (`manifest.csv`, §2). `--num-speakers N` форсирует число
-говорящих; `--oracle-num-speakers` берёт его из manifest; `--num-threads`; `--override a.b.c=json` (повторяется;
+говорящих; `--oracle-num-speakers` берёт его из manifest; `--num-threads`; `--language auto|ru|en`; `--cache DIR` (кэш ASR/диаризации: перебор `align.*`/`punctuation.*` без пересчёта
+моделей; в meta — `cached_stages`, время такого прогона не годится для RTF); `--override a.b.c=json` (повторяется;
 `null`, числа, строки). Без `--models` берётся общий кэш `.cache/models` главного репозитория.
 
 Выход (`<run_dir>/`):
 * `<id>.json` — строго §1 (кириллица без `\u`, компактный JSON);
 * `<id>.meta.json` — `processing_ms`, `stage_ms{decode,denoise,vad,asr,diarization,asr_diar_wall,align,punctuation}`,
-  `model_load_ms`, `rtf`, `tier`, `config_hash` (sha256 канонизированного конфига *после* override, без ключей `_*`),
+  `model_load_ms`, `peak_rss_mb` (пик RSS дерева процессов за файл, вместе с загруженными моделями), `rtf`, `tier`, `config_hash` (sha256 канонизированного конфига *после* override, без ключей `_*`),
   `models`, `num_threads`, `device`, `platform`, `info` (SNR, число отброшенных guard'ом ответов LLM ...);
 * `<id>.full.json` — расширенный: реплики со словами (`text,start_ms,end_ms,confidence`), `turns`, `speech`, `chunks`
   (`stenoeval` берёт из него пословные времена);
@@ -64,6 +65,9 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
   приводится к длине входа.
 * **VAD** — `SileroVadModelConfig(threshold, min_silence, min_speech, window=512, max_speech)`; окно подаётся по 512
   сэмплов, в конце `flush()`. Затем `pad_ms` с обеих сторон и склейка пересекающихся интервалов.
+* **LanguageId** (`lid.py`) — `language.mode`: `auto` (Whisper-LID по первым `language.lid_seconds`≈10 с речи;
+  `en` -> `asr_en`, всё остальное -> `ru`), `ru`, `en`. Без `language.lid_model` или `asr_en` — всегда `ru`. `asr_en` — та же
+  структура, что `asr` (недостающие поля берутся из дефолтов).
 * **Чанки ASR** — жадно: добавляем следующий интервал, пока `last.end - first.start <= chunk.max_s`; чанк — непрерывный
   срез аудио (паузы внутри остаются). Слишком длинный интервал режется по самому тихому 20-мс кадру во второй половине
   допустимого окна. Чанк короче `chunk.min_s` дополняется нулями. `overlap_ms` пока не поддерживается (0).
@@ -81,7 +85,9 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
   слова сопоставляются с первым проходом дифом (`second_pass.py`), времена одинаковых слов сохраняются.
 * **Диаризация** — `OfflineSpeakerDiarization`; число говорящих: `--num-speakers` > `clustering.num_speakers` > порог
   `clustering.threshold`; если кластеров больше `max_speakers`, повторная кластеризация с `num_clusters=max_speakers`.
-  ASR и диаризация работают параллельно (по `num_threads` на каждую).
+  ASR и диаризация работают параллельно (по `num_threads` на каждую). Диаризация вынесена в **подпроцесс**: биндинг
+  `OfflineSpeakerDiarization.process` держит GIL (проверено), и в потоке она сериализовала бы ASR. Доп. параметр
+  `diarization.window_shift_ratio` (шаг окна pyannote/окно, по умолчанию 0.1; 0.5 примерно в 3-5 раз быстрее).
 * **Aligner** (`align.py`) — строго §5, все неоднозначности зафиксированы в docstring; кейсы `tests/align_cases.json`
   (слова + turns + параметры -> ожидаемые реплики, 23 случая) — их же должен проходить Kotlin-порт.
 * **Punctuator** (`punct.py`) — `none` (слова lower без пунктуации), `asr_native` (слова с пунктуацией от
