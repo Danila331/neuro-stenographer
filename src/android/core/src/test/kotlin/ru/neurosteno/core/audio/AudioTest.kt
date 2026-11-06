@@ -123,4 +123,23 @@ class AudioTest {
         assertThrows<IllegalArgumentException> { WavDecoder.decode(ByteArray(100)) }
         assertThrows<IllegalArgumentException> { WavDecoder.decode("RIFF....WAVE".toByteArray()) }
     }
+
+    @Test
+    fun `streaming resampler gives identical output for any block split`() {
+        val src = sine(1000.0, 44_100, 2.0) + sine(3000.0, 44_100, 1.0, 0.2)
+        val whole = Resampler.resample(src, 44_100, 16_000)
+        val rnd = java.util.Random(7)
+        val s = ResamplerStream(44_100, 16_000)
+        val parts = ArrayList<FloatArray>()
+        var pos = 0
+        while (pos < src.size) {
+            val n = minOf(src.size - pos, 1 + rnd.nextInt(5000))
+            parts += s.push(src.copyOfRange(pos, pos + n))
+            pos += n
+        }
+        parts += s.finish()
+        val joined = parts.fold(FloatArray(0)) { a, b -> a + b }
+        assertEquals(whole.size, joined.size)
+        for (i in whole.indices) assertEquals(whole[i], joined[i], 1e-6f)
+    }
 }
