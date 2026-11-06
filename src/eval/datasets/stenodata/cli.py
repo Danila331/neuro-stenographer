@@ -13,7 +13,7 @@ def main(argv=None):
     f = sub.add_parser("fetch", help="скачать исходные корпусы в .cache/data/.raw")
     f.add_argument("sources", nargs="*")
     b = sub.add_parser("build", help="собрать датасеты")
-    b.add_argument("which", nargs="*", default=["all"], choices=["all", "asr", "synth", "tts", "en-asr", "en-synth", "mixed"],
+    b.add_argument("which", nargs="*", default=["all"], choices=["all", "asr", "synth", "tts", "en-asr", "en-synth", "mixed", "real"],
                    help="all = ru-asr-dev, ru-dialog-synth, ru-dialog-tts-cats, en-asr-dev, en-dialog-synth, ru-en-mixed")
     b.add_argument("--seed", type=int, default=0)
     b.add_argument("--n-asr", type=int, default=600, help="число базовых фраз ru-asr-dev (+~18%% искажённых вариантов)")
@@ -37,7 +37,10 @@ def main(argv=None):
     if a.cmd == "stats":
         from . import stats
         return stats.main(a.names + (["--update-readme"] if a.update_readme else []))
-    which = {"asr", "synth", "tts", "en-asr", "en-synth", "mixed"} if "all" in a.which else set(a.which)
+    which = {"asr", "synth", "tts", "en-asr", "en-synth", "mixed", "real"} if "all" in a.which else set(a.which)
+    if "real" in which:
+        from . import real
+        print("->", real.init_real())
     if "asr" in which:
         from . import build_asr
         print("->", build_asr.build(n=a.n_asr, seed=a.seed))

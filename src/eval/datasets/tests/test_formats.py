@@ -159,7 +159,7 @@ def test_gap_distribution_overlap_share():
     assert 0.2 < (g < 0).mean() < 0.3 and np.median(g[g > 0]) < 350
 
 
-@pytest.mark.parametrize("name", ["ru-asr-dev", "ru-dialog-synth", "ru-dialog-tts-cats", "real"])
+@pytest.mark.parametrize("name", ["ru-asr-dev", "ru-dialog-synth", "ru-dialog-tts-cats", "en-asr-dev", "en-dialog-synth", "ru-en-mixed", "real"])
 def test_built_datasets_in_cache(name):
     """Проверка собранных датасетов в общем кэше (пропускается, если ещё не собраны)."""
     root = data_root() / name

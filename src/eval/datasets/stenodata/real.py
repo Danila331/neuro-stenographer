@@ -161,3 +161,20 @@ def compile_ref(rid: str, name: str = "real") -> Path:
     row["num_speakers"] = str(len({u["speaker_id"] for u in ref["transcript"]}))
     _write_manifest(root / "manifest.csv", rows)
     return root / "ref" / f"{rid}.json"
+
+
+def init_real(name: str = "real") -> Path:
+    """Скелет датасета real (пустой manifest + памятка); существующее не трогает."""
+    root = real_dir(name)
+    for d in ("audio", "audio_orig", "ref", "annotation"):
+        (root / d).mkdir(parents=True, exist_ok=True)
+    if not (root / "manifest.csv").exists():
+        _write_manifest(root / "manifest.csv", [])
+    readme = root / "README.txt"
+    if not readme.exists():
+        readme.write_text(
+            "Реальные записи пользователя (condition=real).\n"
+            "Требования к записи, импорт и разметка: src/eval/datasets/real/README.md\n"
+            "  python real/import_audio.py FILE... ; python real/make_draft_ref.py HYP.json ID ; python real/compile_ref.py ID\n",
+            encoding="utf-8")
+    return root
