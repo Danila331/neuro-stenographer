@@ -10,7 +10,7 @@ from .run_punct import eval_set, OUT
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    fleurs, dialog = eval_set(40, None)
+    fleurs, dialog = eval_set(30, 2)
     for size in ("small", "medium"):
         export_onnx(size)
         for backend in ("torch", "onnx-fp32", "onnx-int8"):

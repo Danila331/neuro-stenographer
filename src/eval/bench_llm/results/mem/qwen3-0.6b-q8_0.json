@@ -1,0 +1,17 @@
+{
+ "model": "qwen3-0.6b-q8_0",
+ "size_mb": 639.446688,
+ "kv": "f16",
+ "ctx": {
+  "2048": {
+   "idle_rss_mb": 1494,
+   "peak_rss_mb": 1522,
+   "prompt_tokens": 1719
+  },
+  "4096": {
+   "idle_rss_mb": 1716,
+   "peak_rss_mb": 1745,
+   "prompt_tokens": 2575
+  }
+ }
+}

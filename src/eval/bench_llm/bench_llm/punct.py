@@ -67,18 +67,19 @@ def parse_compact(words: list[str], out: str) -> list[Tok]:
 
 
 # ---------------------------------------------------------------- prompts
-def build_messages(variant: str, words: list[str]) -> list[dict]:
+def build_messages(variant: str, words: list[str], lang: str = "ru") -> list[dict]:
+    sfx = "" if lang == "ru" else f"_{lang}"
     if variant in ("a", "b"):
-        sys_ = load_text("punct_system.txt")
+        sys_ = load_text(f"punct_system{sfx}.txt")
         msgs = [{"role": "system", "content": sys_}]
-        for ex in load_json("punct_fewshot.json"):
+        for ex in load_json(f"punct_fewshot{sfx}.json"):
             msgs += [{"role": "user", "content": ex["in"]}, {"role": "assistant", "content": ex["out"]}]
         msgs.append({"role": "user", "content": " ".join(words)})
         return msgs
     if variant == "c":
-        sys_ = load_text("punct_compact_system.txt")
+        sys_ = load_text(f"punct_compact_system{sfx}.txt")
         msgs = [{"role": "system", "content": sys_}]
-        for ex in load_json("punct_fewshot.json"):
+        for ex in load_json(f"punct_fewshot{sfx}.json"):
             w = ex["in"].split()
             msgs += [{"role": "user", "content": numbered(w)},
                      {"role": "assistant", "content": compact_out(parse(ex["out"]))}]
@@ -101,8 +102,8 @@ class Rec:
     counts_final: dict | None = None  # filled by caller
 
 
-def run_utt(srv: Server, family: str, variant: str, words: list[str]) -> tuple[list[Tok], dict, bool, str]:
-    prompt = chatml(build_messages(variant, words), family)
+def run_utt(srv: Server, family: str, variant: str, words: list[str], lang: str = "ru") -> tuple[list[Tok], dict, bool, str]:
+    prompt = chatml(build_messages(variant, words, lang), family)
     n_pred = max(32, 4 * len(words) + 16) if variant != "c" else max(32, 3 * len(words))
     if variant == "b":
         r = srv.complete(prompt, n_pred + 24, grammar=words_grammar(words))
@@ -120,13 +121,13 @@ def run_utt(srv: Server, family: str, variant: str, words: list[str]) -> tuple[l
     return fix_sentence_case(toks), r, ok, out
 
 
-def evaluate(srv: Server, model: str, variant: str, utts: list, progress=None) -> dict:
+def evaluate(srv: Server, model: str, variant: str, utts: list, progress=None, lang: str = "ru") -> dict:
     family = CATALOG[model][1]
     recs, counts = [], []
     # warm the prefix cache (first request pays the prefix prefill): report separately
     first = None
     for k, u in enumerate(utts):
-        toks, r, ok, out = run_utt(srv, family, variant, u.words)
+        toks, r, ok, out = run_utt(srv, family, variant, u.words, lang)
         gold = fix_sentence_case(parse(u.text))
         assert [t.w for t in gold] == u.words
         c = score(gold, toks)

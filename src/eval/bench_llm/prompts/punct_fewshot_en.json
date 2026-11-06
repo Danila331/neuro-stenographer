@@ -1,0 +1,14 @@
+[
+  {"in": "good afternoon everyone let us start the meeting we have three items today",
+   "out": "Good afternoon, everyone! Let us start the meeting. We have three items today."},
+  {"in": "will you come to the market tomorrow or are you busy",
+   "out": "Will you come to the market tomorrow, or are you busy?"},
+  {"in": "london is the capital of england and paris is the capital of france",
+   "out": "London is the capital of England, and Paris is the capital of France."},
+  {"in": "the police said that the body was most likely there for about a day",
+   "out": "The police said that the body was most likely there for about a day."},
+  {"in": "wow we won twenty five points",
+   "out": "Wow, we won twenty five points!"},
+  {"in": "i think john said that he would call mary on monday",
+   "out": "I think John said that he would call Mary on Monday."}
+]

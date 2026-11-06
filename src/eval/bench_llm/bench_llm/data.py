@@ -21,8 +21,8 @@ class Utt:
     speaker: int = 0     # 1-based speaker (dialogues)
 
 
-def load_fleurs(split: str, n: int, seed: int = 0, min_words: int = 6, max_words: int = 40) -> list[Utt]:
-    path = DATA / f"fleurs_ru_{split}.tsv"
+def load_fleurs(split: str, n: int, seed: int = 0, min_words: int = 6, max_words: int = 40, lang: str = "ru") -> list[Utt]:
+    path = DATA / f"fleurs_{lang}_{split}.tsv"
     seen, rows = set(), []
     with open(path, encoding="utf-8") as f:
         for r in csv.reader(f, delimiter="\t", quoting=csv.QUOTE_NONE):
@@ -30,8 +30,10 @@ def load_fleurs(split: str, n: int, seed: int = 0, min_words: int = 6, max_words
                 continue
             seen.add(r[0])
             toks = parse(r[2])
+            if lang == "en" and re.search(r"[0-9/]", r[2]):
+                continue  # English: skip digits / slashes (ASR would spell them out)
             if min_words <= len(toks) <= max_words:
-                rows.append(Utt(f"fleurs-{split}-{r[0]}", r[2], [t.w for t in toks]))
+                rows.append(Utt(f"fleurs-{lang}-{split}-{r[0]}", r[2], [t.w for t in toks]))
     rnd = random.Random(seed)
     rnd.shuffle(rows)
     return rows[:n]
