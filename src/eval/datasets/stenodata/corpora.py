@@ -105,7 +105,7 @@ def load_fleurs(root: Path | None = None, prefix: str = "fleurs", source: str = 
                 wav = root / "audio" / sp / fn
                 if not wav.exists():
                     continue
-                clips.append(Clip(id=f"{prefix}_{sp}_{uid}", path=wav, text=raw.strip(), speaker=None, source=source,
+                clips.append(Clip(id=f"{prefix}_{sp}_{Path(fn).stem}", path=wav, text=raw.strip(), speaker=None, source=source,
                                   ref_style="punct_case", gender={"MALE": "M", "FEMALE": "F"}.get(row[6].strip().upper()),
                                   extra={"norm_text": norm.strip()}))
     return clips

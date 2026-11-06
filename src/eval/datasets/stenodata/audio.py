@@ -189,9 +189,9 @@ def phone_channel(x: np.ndarray, codec: str = "opus12") -> np.ndarray:
         mid = td / f"mid.{ext}"
         out = td / "out.wav"
         ff = ffmpeg_exe()
-        r1 = subprocess.run([ff, "-v", "error", "-y", "-i", str(td / "in.wav"), "-ar", "8000", "-ac", "1", *enc, str(mid)],
+        r1 = subprocess.run([ff, "-v", "error", "-threads", "1", "-y", "-i", str(td / "in.wav"), "-ar", "8000", "-ac", "1", *enc, str(mid)],
                             capture_output=True)
-        r2 = subprocess.run([ff, "-v", "error", "-y", "-i", str(mid), "-ar", "8000", "-ac", "1", str(out)], capture_output=True)
+        r2 = subprocess.run([ff, "-v", "error", "-threads", "1", "-y", "-i", str(mid), "-ar", "8000", "-ac", "1", str(out)], capture_output=True)
         if r1.returncode or r2.returncode or not out.exists():
             raise RuntimeError(f"ffmpeg phone codec {codec} failed: {r1.stderr[-300:]!r} {r2.stderr[-300:]!r}")
         z, _ = sf.read(str(out), dtype="float32")
@@ -233,7 +233,7 @@ def hvac_noise(n: int, rng: np.random.Generator) -> np.ndarray:
 def time_stretch(x: np.ndarray, factor: float) -> np.ndarray:
     """Ускорение в `factor` раз без изменения тона (ffmpeg atempo, 0.5..2.0)."""
     factor = float(min(2.0, max(0.5, factor)))
-    r = subprocess.run([ffmpeg_exe(), "-v", "error", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "pipe:0",
+    r = subprocess.run([ffmpeg_exe(), "-v", "error", "-threads", "1", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "pipe:0",
                         "-filter:a", f"atempo={factor:.4f}", "-f", "f32le", "-ar", str(SR), "-ac", "1", "pipe:1"],
                        input=x.astype("<f4").tobytes(), capture_output=True)
     if r.returncode != 0 or not r.stdout:

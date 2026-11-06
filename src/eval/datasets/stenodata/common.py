@@ -123,7 +123,20 @@ class DatasetWriter:
         row.update(extra)
         self.rows.append(row)
 
+    DESCR = {
+        "ru-asr-dev": "Одиночные русские фразы (FLEURS, VoxForge, Golos crowd/farfield, RuLS) + искажённые варианты (id__noise/__phone/__reverb).",
+        "ru-dialog-synth": "Диалоги 2-4 реальных дикторов (VoxForge/RuLS), модель очерёдности, условия clean/noise/reverb/phone/overlap/farfield, сценарии meeting/call.",
+        "ru-dialog-tts-cats": "Сценарии «котиков» (Котовица), озвученные TTS (Piper/say), те же условия и сценарии. Слабый прокси.",
+        "en-asr-dev": "Одиночные английские фразы (LibriSpeech test-clean/test-other, FLEURS en) + искажённые варианты.",
+        "en-dialog-synth": "Английские диалоги 2-3 реальных дикторов (LibriSpeech), условия clean/noise/farfield/phone/overlap, сценарии meeting/call.",
+        "ru-en-mixed": "Русские диалоги с реальными англоязычными дикторами (колонка lang_segments) — проверка определения языка.",
+    }
+
     def finalize(self, readme: str | None = None):
+        if readme is None:
+            readme = (f"{self.name}\n\n{self.DESCR.get(self.name, '')}\n\nФормат: docs/ARCHITECTURE.md §2 (manifest.csv, audio/, ref/). "
+                      "Собрано stenodata (src/eval/datasets, README.md там же): описание условий, лицензий и слабостей. "
+                      "split=test не использовать при подборе параметров.\n")
         with open(self.tmp / "manifest.csv", "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=self.cols, extrasaction="ignore")
             w.writeheader()

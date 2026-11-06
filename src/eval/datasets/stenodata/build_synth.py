@@ -79,6 +79,29 @@ def render_condition(plan, speakers: list[str], cond: str, rng: np.random.Genera
     return mix, utts, detail
 
 
+def plan_conditions(seed: int, name: str, scenarios: list[str], weights: dict | None = None) -> list[str]:
+    """Детерминированное сбалансированное распределение условий по файлам внутри каждого сценария
+    (метод наибольших остатков по весам), затем перемешивание."""
+    weights = weights or COND_WEIGHTS
+    out = [""] * len(scenarios)
+    for sc in sorted(set(scenarios)):
+        pos = [i for i, x in enumerate(scenarios) if x == sc]
+        names = list(weights[sc])
+        w = np.array([weights[sc][k] for k in names], dtype=float)
+        w /= w.sum()
+        raw = w * len(pos)
+        cnt = np.floor(raw).astype(int)
+        order = np.argsort(-(raw - cnt), kind="stable")
+        for k in order[: len(pos) - cnt.sum()]:
+            cnt[k] += 1
+        seq = [nm for nm, c in zip(names, cnt) for _ in range(int(c))]
+        rng = rng_for(seed, name, "cond", sc)
+        rng.shuffle(seq)
+        for i, c in zip(pos, seq):
+            out[i] = c
+    return out
+
+
 def pick_condition(rng: np.random.Generator, scenario: str = "meeting", weights: dict | None = None) -> str:
     names, p = zip(*(weights or COND_WEIGHTS)[scenario].items())
     return str(rng.choice(names, p=np.array(p, dtype=float) / sum(p)))
@@ -159,13 +182,14 @@ def build_dialogs(clips: list[C.Clip], n: int, seed: int, name: str, id_prefix: 
 
     extra = ["scenario", "condition_detail", "overlap_frac", "overlap_trans", "speakers_src", "license"] + (["lang_segments"] if mixed else [])
     w = DatasetWriter(name, extra_cols=extra)
+    conds = plan_conditions(seed, name, [scenario_for(i) for i in range(n)], cond_weights)
     made, attempts = 0, 0
     while made < n and attempts < n * 6:
         idx = made
         attempts += 1
         rng = rng_for(seed, name, idx, attempts)
         scenario = scenario_for(idx)
-        cond = pick_condition(rng, scenario, cond_weights)
+        cond = conds[idx]
         speed = float(rng.uniform(1.1, 1.25)) if scenario == "call" else 1.0
         n_spk = int(fixed_n_spk[idx % len(fixed_n_spk)]) if fixed_n_spk else int(rng.choice([2, 3, 4], p=np.array(n_spk_p) / sum(n_spk_p)))
         target = float(rng.uniform(min_dur_s, max_dur_s))

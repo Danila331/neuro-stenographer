@@ -75,11 +75,15 @@ def _build(n, seed, name, quota, loaders, lang, verbose):
         order = rng.permutation(len(clips))
         want = max(1, int(round(n * frac)))
         got, seen_spk = 0, defaultdict(int)
+        seen_text: set = set()
         lo, hi = DUR_RANGE[src]
         for i in order:
             c = clips[int(i)]
             # не более 3 фраз на одного диктора (разнообразие)
             if c.speaker and seen_spk[c.speaker] >= (3 if src == "voxforge" else (4 if src.startswith("librispeech") else 40)):
+                continue
+            key = " ".join(c.text.lower().split())
+            if key in seen_text:      # одинаковые тексты (FLEURS: одно предложение читают несколько дикторов) — один раз
                 continue
             nwords = len(c.text.split())
             if nwords < 2 and src not in ("golos_crowd", "golos_farfield"):
@@ -102,6 +106,7 @@ def _build(n, seed, name, quota, loaders, lang, verbose):
             w.add(did, x, utt, num_speakers=1, source=src, condition=cond, split=stable_split(did), lang=lang,
                   ref_style=c.ref_style, speaker=c.speaker or "", gender=c.gender or "", orig_id=c.id,
                   condition_detail=json.dumps({"note": cdetail}, ensure_ascii=False), license=C.LICENSES.get(src, C.LICENSES.get(src.split("_")[0], "")))
+            seen_text.add(key)
             base_rows.append((c, x, s0, e0))
             if c.speaker:
                 seen_spk[c.speaker] += 1

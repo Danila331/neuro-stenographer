@@ -15,7 +15,7 @@ import soundfile as sf
 import soxr
 
 from . import audio as A
-from .build_synth import overlap_fraction, overlap_transitions, pick_condition, render_condition, scenario_for
+from .build_synth import overlap_fraction, overlap_transitions, plan_conditions, render_condition, scenario_for
 from .common import SR, DatasetWriter, raw_root, rng_for, stable_split
 from .synth import (GAP_PROFILES, DialogPlan, Seg, apply_condition, finalize_level, load_noise_bank, prepare_seg,
                     profile_for, sample_gap)
@@ -73,11 +73,24 @@ class Voices:
         self.piper = {}
         for onnx in sorted(root.glob("*.onnx")):
             name = onnx.name.split("-")[1]  # ru_RU-denis-medium.onnx -> denis
-            self.piper[name] = PiperVoice.load(str(onnx), str(onnx) + ".json")
+            self.piper[name] = self._load_one(PiperVoice, onnx)
         self.say = use_say and sys.platform == "darwin" and shutil.which("say") is not None
         self.names = sorted(self.piper) + (["milena"] if self.say else [])
         if not self.names:
             raise RuntimeError("no TTS voices found; run `python -m stenodata.fetch piper`")
+
+    @staticmethod
+    def _load_one(PiperVoice, onnx: Path):
+        """Piper с одним потоком onnxruntime (общий лимит ≤3 потоков на сборку)."""
+        import onnxruntime as ort
+        from piper.config import PiperConfig
+        so = ort.SessionOptions()
+        so.intra_op_num_threads = 1
+        so.inter_op_num_threads = 1
+        cfg = json.loads(Path(str(onnx) + ".json").read_text(encoding="utf-8"))
+        v = PiperVoice(session=ort.InferenceSession(str(onnx), sess_options=so, providers=["CPUExecutionProvider"]),
+                       config=PiperConfig.from_dict(cfg))
+        return v
 
     def synth(self, voice: str, text: str, length_scale: float = 1.0, noise_scale: float = 0.667, pitch: float = 1.0):
         if voice == "milena":
@@ -111,8 +124,6 @@ def build_plan(sc: Scenario, segs: list[Seg], rng: np.random.Generator, cond: st
         prev = segs[i - 1]
         same = sc.lines[i - 1].spk == ln.spk
         mode = ln.mode
-        if call and mode == "normal" and not same and rng.random() < 0.2:
-            mode = "interrupt"     # в звонках перебиваний больше (суммарно ~25 %)
         if mode == "interrupt" and not same:
             d = int(rng.integers(250, 750 if cond != "overlap" else 1300) * (0.7 if call else 1.0))
             g = -min(d, int(0.6 * min(prev.dur_ms, seg.dur_ms)))
@@ -133,6 +144,7 @@ def build(n: int = 40, seed: int = 0, name: str = NAME, verbose: bool = True, us
     nb = None
     w = DatasetWriter(name, extra_cols=["scenario", "condition_detail", "overlap_frac", "overlap_trans", "voices", "script", "license"])
     cache: dict = {}
+    conds = plan_conditions(seed, name, [scenario_for(i + i // len(scs)) for i in range(n)])
     for idx in range(n):
         sc = scs[idx % len(scs)]
         variant = idx // len(scs)
@@ -149,7 +161,7 @@ def build(n: int = 40, seed: int = 0, name: str = NAME, verbose: bool = True, us
             split_key = "test" if "test" in (stable_split(sc.id.split("+")[0]), stable_split(nxt.id)) else "dev"
         rng = rng_for(seed, name, idx)
         scenario = scenario_for(idx + variant)
-        cond = pick_condition(rng, scenario)
+        cond = conds[idx]
         speed = float(rng.uniform(1.1, 1.25)) if scenario == "call" else 1.0
         # голоса: разные базовые голоса на разных говорящих
         vs = [str(v) for v in rng.permutation(voices.names)]
@@ -163,9 +175,9 @@ def build(n: int = 40, seed: int = 0, name: str = NAME, verbose: bool = True, us
             key = (spk_voice[ln.spk], ln.text, round(spk_ls[ln.spk], 3), round(spk_pitch[ln.spk], 3), variant)
             if key not in cache:
                 cache[key] = voices.synth(spk_voice[ln.spk], ln.text, spk_ls[ln.spk], float(rng.uniform(0.5, 0.85)), spk_pitch[ln.spk])
-            seg = prepare_seg(cache[key], f"speaker_{ln.spk}", ln.text, src="tts", speed=speed, min_ms=80)
+            seg = prepare_seg(cache[key], f"speaker_{ln.spk}", ln.text, src="tts", speed=speed, min_ms=30)
             if seg is None:
-                raise RuntimeError(f"empty TTS for {ln.text!r}")
+                raise RuntimeError(f"empty TTS for {ln.text!r} (voice {spk_voice[ln.spk]})")
             segs.append(seg)
         plan = build_plan(sc, segs, rng, cond, scenario)
         speakers = [f"speaker_{k}" for k in spk_voice]

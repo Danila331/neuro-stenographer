@@ -52,7 +52,7 @@ def decode_to_16k(src: Path, dst: Path) -> None:
         ff = None
     dst.parent.mkdir(parents=True, exist_ok=True)
     if ff:
-        r = subprocess.run([ff, "-v", "error", "-y", "-i", str(src), "-vn", "-ac", "1", "-ar", str(SR),
+        r = subprocess.run([ff, "-v", "error", "-threads", "1", "-y", "-i", str(src), "-vn", "-ac", "1", "-ar", str(SR),
                             "-c:a", "pcm_s16le", str(dst)], capture_output=True)
         if r.returncode == 0 and dst.exists():
             return
