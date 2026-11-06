@@ -196,3 +196,24 @@ data class AsrModelFiles(
         }
     }
 }
+
+/** Операции над речевыми интервалами VAD. */
+object SpanOps {
+    /** Расширяет каждый интервал на [padMs] с обеих сторон (в пределах [0, durationMs]) и склеивает пересёкшиеся. */
+    fun padAndMerge(spans: List<TimeSpan>, padMs: Long, durationMs: Long): List<TimeSpan> {
+        val padded = spans.filter { it.endMs > it.startMs }
+            .map { TimeSpan(max(0L, it.startMs - padMs), min(durationMs, it.endMs + padMs)) }
+            .filter { it.endMs > it.startMs }
+            .sortedBy { it.startMs }
+        val out = ArrayList<TimeSpan>()
+        for (s in padded) {
+            val last = out.lastOrNull()
+            if (last != null && s.startMs <= last.endMs) out[out.size - 1] = TimeSpan(last.startMs, max(last.endMs, s.endMs))
+            else out += s
+        }
+        return out
+    }
+
+    /** Суммарная длительность. */
+    fun totalMs(spans: List<TimeSpan>): Long = spans.sumOf { it.endMs - it.startMs }
+}

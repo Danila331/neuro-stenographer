@@ -101,4 +101,12 @@ class AsrSupportTest {
         assertThrows<IllegalArgumentException> { AsrModelFiles.resolve("gigaam_ctc", listOf("model.onnx")) }
         assertThrows<IllegalArgumentException> { AsrModelFiles.resolve("gigaam_rnnt", listOf("encoder.onnx", "tokens.txt")) }
     }
+
+    @Test
+    fun `pad and merge`() {
+        val r = SpanOps.padAndMerge(listOf(TimeSpan(1000, 2000), TimeSpan(2200, 3000), TimeSpan(9900, 10_000)), 150, 10_000)
+        assertEquals(listOf(TimeSpan(850, 3150), TimeSpan(9750, 10_000)), r)
+        assertEquals(listOf(TimeSpan(0, 250)), SpanOps.padAndMerge(listOf(TimeSpan(0, 100)), 150, 10_000))
+        assertEquals(3150L + 0, SpanOps.totalMs(listOf(TimeSpan(0, 3150))))
+    }
 }
