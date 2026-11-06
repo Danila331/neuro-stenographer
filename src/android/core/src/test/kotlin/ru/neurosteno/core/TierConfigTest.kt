@@ -82,4 +82,35 @@ class TierConfigTest {
         assertEquals(1500L, s.align.maxGapMs)
         assertTrue(s.models.containsKey("asr"))
     }
+
+    @Test
+    fun `language section and asr_en are optional - missing means ru only`() {
+        val c = TierConfig.parse(load("medium"))
+        assertEquals("ru", c.language.effectiveMode)
+        assertNull(c.asrEn)
+        val s = PipelineSettings.from(c, "1")
+        assertEquals(setOf("ru"), s.supportedLanguages)
+    }
+
+    @Test
+    fun `language auto with asr_en and lid model`() {
+        val c = TierConfig.parse(
+            """{"tier":"medium","language":{"mode":"AUTO","lid_model":"lid/model.onnx"},
+               "asr_en":{"engine":"whisper","model_dir":"asr/whisper-small.en"}}""",
+        )
+        assertEquals("auto", c.language.effectiveMode)
+        assertEquals("asr/whisper-small.en", c.asrEn!!.modelDir)
+        assertTrue(c.requiredModelPaths().containsAll(listOf("lid/model.onnx", "asr/whisper-small.en")))
+        val s = PipelineSettings.from(c, "1")
+        assertEquals(setOf("ru", "en"), s.supportedLanguages)
+        assertEquals("auto", s.languageMode)
+        assertEquals("lid/model.onnx", s.models["lid"])
+    }
+
+    @Test
+    fun `unknown language mode means ru and lid model is not required then`() {
+        val c = TierConfig.parse("""{"language":{"mode":"klingon","lid_model":"lid/m.onnx"}}""")
+        assertEquals("ru", c.language.effectiveMode)
+        assertFalse(c.requiredModelPaths().contains("lid/m.onnx"))
+    }
 }

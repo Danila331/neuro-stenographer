@@ -24,6 +24,11 @@ interface Vad : AutoCloseable {
 fun detect(audio: AudioBuffer): List<TimeSpan>
 }
 
+/** Определение языка по речи: "ru" | "en" (любой другой ответ трактуется как "ru"). */
+interface LanguageId : AutoCloseable {
+    fun detect(audio: AudioBuffer, speech: List<TimeSpan>): String
+}
+
 interface AsrEngine : AutoCloseable {
     /** Возвращает слова с АБСОЛЮТНЫМ временем (от начала файла). */
 fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word>

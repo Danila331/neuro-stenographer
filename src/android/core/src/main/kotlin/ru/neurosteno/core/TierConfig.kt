@@ -17,6 +17,9 @@ data class TierConfig(
     val audio: AudioConfig = AudioConfig(),
     val vad: VadConfig = VadConfig(),
     val asr: AsrConfig = AsrConfig(),
+    /** Английская ASR (та же структура, что `asr`); null -> английский не поддерживается в этом варианте. */
+    @SerialName("asr_en") val asrEn: AsrConfig? = null,
+    val language: LanguageConfig = LanguageConfig(),
     val diarization: DiarizationConfig = DiarizationConfig(),
     val align: AlignConfig = AlignConfig(),
     val punctuation: PunctuationConfig = PunctuationConfig(),
@@ -29,6 +32,11 @@ data class TierConfig(
         if (audio.denoise.enabled) audio.denoise.model?.let(::add)
         add(asr.modelDir)
         asr.secondPass?.modelDir?.let(::add)
+        asrEn?.let { en ->
+            add(en.modelDir)
+            en.secondPass?.modelDir?.let(::add)
+        }
+        if (language.effectiveMode == LanguageConfig.AUTO) language.lidModel?.let(::add)
         add(diarization.segmentation)
         add(diarization.embedding)
         punctuation.model?.let(::add)
@@ -54,6 +62,26 @@ data class TierConfig(
         fun hash(text: String): String =
             MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.UTF_8))
                 .joinToString("") { "%02x".format(it) }.take(12)
+    }
+}
+
+@Serializable
+data class LanguageConfig(
+    /** auto | ru | en. Нет секции / неизвестное значение -> ru (как раньше). */
+    val mode: String = RU,
+    @SerialName("lid_model") val lidModel: String? = null,
+) {
+    val effectiveMode: String
+        get() = when (mode.lowercase()) {
+            AUTO -> AUTO
+            EN -> EN
+            else -> RU
+        }
+
+    companion object {
+        const val AUTO = "auto"
+        const val RU = "ru"
+        const val EN = "en"
     }
 }
 

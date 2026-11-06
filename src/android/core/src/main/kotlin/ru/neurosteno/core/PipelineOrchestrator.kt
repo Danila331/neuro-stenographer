@@ -23,26 +23,52 @@ data class PipelineSettings(
     val appVersion: String = "dev",
     /** Роль -> идентификатор модели (для расширенного экспорта/отладки). */
     val models: Map<String, String> = emptyMap(),
+    /** auto | ru | en (см. [LanguageConfig]). */
+    val languageMode: String = LanguageConfig.RU,
+    /** Языки, для которых в этом варианте есть ASR. */
+    val supportedLanguages: Set<String> = setOf(LanguageConfig.RU),
+    /** План ресурсов (память/потоки); null -> без ограничений. */
+    val plan: ResourcePlan? = null,
 ) {
     companion object {
-        fun from(cfg: TierConfig, appVersion: String): PipelineSettings = PipelineSettings(
+        fun from(cfg: TierConfig, appVersion: String, plan: ResourcePlan? = null): PipelineSettings = PipelineSettings(
             tier = cfg.tier,
             align = cfg.align,
             normalization = cfg.normalization,
-            denoiseEnabled = cfg.audio.denoise.enabled,
+            denoiseEnabled = cfg.audio.denoise.enabled && (plan?.denoise ?: true),
             snrThresholdDb = cfg.audio.denoise.snrThresholdDb,
             numSpeakers = cfg.diarization.clustering.numSpeakers,
             appVersion = appVersion,
             models = buildMap {
                 put("vad", cfg.vad.model)
                 put("asr", cfg.asr.modelDir)
+                cfg.asrEn?.let { put("asr_en", it.modelDir) }
+                cfg.language.lidModel?.let { put("lid", it) }
                 put("diarization_segmentation", cfg.diarization.segmentation)
                 put("diarization_embedding", cfg.diarization.embedding)
                 cfg.llm.model?.let { put("llm", it) }
             },
+            languageMode = cfg.language.effectiveMode,
+            supportedLanguages = if (cfg.asrEn != null) setOf(LanguageConfig.RU, LanguageConfig.EN) else setOf(LanguageConfig.RU),
+            plan = plan,
         )
     }
 }
+
+/**
+ * Фабрики движков. Оркестратор САМ создаёт каждый движок непосредственно перед стадией и закрывает
+ * сразу после неё (модели в памяти по очереди): ASR и диаризация выгружаются до создания LLM-пунктуатора.
+ * Фабрика может бросить исключение -- оно обрабатывается так же, как сбой самой стадии.
+ */
+class EngineProviders(
+    val vad: () -> Vad,
+    /** Аргумент -- язык ("ru" | "en"). */
+    val asr: (language: String) -> AsrEngine,
+    val diarizer: () -> Diarizer,
+    val punctuator: (() -> Punctuator)? = null,
+    val denoiser: (() -> Denoiser)? = null,
+    val languageId: (() -> LanguageId)? = null,
+)
 
 fun interface PipelineProgressListener {
     /** [stageFraction] -- прогресс текущей стадии 0..1; [overall] -- общий прогресс 0..1 (монотонный). */
@@ -61,25 +87,21 @@ data class PipelineResult(
 )
 
 /**
- * Пайплайн: decode -> (denoise) -> vad -> [asr || diarization] -> align -> punctuation -> export.
+ * Пайплайн: decode -> (denoise) -> vad -> (lid) -> [asr || diarization] -> align -> punctuation -> export.
  *
- * - Движки принадлежат вызывающему (orchestrator их не закрывает).
+ * - Движки создаются и закрываются самим оркестратором ([EngineProviders]), по очереди (память).
  * - Отмена -- через корутины: движки получают [ProgressListener], который бросает [CancellationException],
  *   как только корутина отменена (движки обязаны вызывать его не реже раза в ~1 с); дополнительно
  *   блокирующие вызовы выполняются в `runInterruptible`.
- * - Деградация вместо падения: сбой denoise -> исходное аудио; VAD -> вся запись как речь;
+ * - Деградация вместо падения: сбой denoise -> исходное аудио; VAD -> вся запись как речь; LID -> ru;
  *   диаризация -> один говорящий; пунктуация -> [TextGuard.finalize]. Сбой decode/ASR -> [PipelineException].
- * - Время каждой стадии (wall-clock, мс) пишется в [TranscriptMeta.stageMs]; ASR и диаризация идут параллельно,
- *   их времена перекрываются, поэтому сумма стадий может превышать `total`.
+ * - Время каждой стадии (wall-clock, мс, вместе с загрузкой модели) пишется в [TranscriptMeta.stageMs];
+ *   ASR и диаризация идут параллельно, их времена перекрываются, поэтому сумма стадий может превышать `total`.
  */
 class PipelineOrchestrator(
     private val decoder: AudioDecoder,
-    private val vad: Vad,
-    private val asr: AsrEngine,
-    private val diarizer: Diarizer,
+    private val engines: EngineProviders,
     private val settings: PipelineSettings,
-    private val punctuator: Punctuator? = null,
-    private val denoiser: Denoiser? = null,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val nanoTime: () -> Long = System::nanoTime,
 ) {
@@ -90,6 +112,7 @@ class PipelineOrchestrator(
         val warnings: MutableList<String> = Collections.synchronizedList(ArrayList())
         val stageMs = Collections.synchronizedMap(LinkedHashMap<String, Long>())
         val t0 = nanoTime()
+        settings.plan?.reasons?.forEach { warnings += "Ресурсы: $it" }
 
         suspend fun <T> timed(stage: Stage, block: suspend () -> T): T {
             val s = nanoTime()
@@ -109,21 +132,17 @@ class PipelineOrchestrator(
         val durationMs = audio.durationMs
         if (audio.samples.isEmpty() || durationMs <= 0) {
             warnings += "Пустое аудио"
-            return finish(emptyList(), durationMs, t0, stageMs, warnings, tracker)
+            return finish(emptyList(), durationMs, LanguageConfig.RU, t0, stageMs, warnings, tracker)
         }
 
         // ---- denoise (только при низком SNR) ----
-        val dn = denoiser
-        if (settings.denoiseEnabled && dn != null) {
-            val snr = SnrEstimator.estimateDb(audio)
-            if (snr < settings.snrThresholdDb) {
-                audio = timed(Stage.DENOISE) {
-                    soft(Stage.DENOISE, warnings, audio) {
-                        blocking(tracker, Stage.DENOISE) { dn.denoise(audio, it) }
-                    }
+        val dnFactory = engines.denoiser
+        if (settings.denoiseEnabled && dnFactory != null && SnrEstimator.estimateDb(audio) < settings.snrThresholdDb) {
+            val source = audio
+            audio = timed(Stage.DENOISE) {
+                soft(Stage.DENOISE, warnings, source) {
+                    blocking(tracker, Stage.DENOISE) { l -> dnFactory().use { it.denoise(source, l) } }
                 }
-            } else {
-                tracker.report(Stage.DENOISE, 1f)
             }
         } else {
             tracker.report(Stage.DENOISE, 1f)
@@ -133,32 +152,37 @@ class PipelineOrchestrator(
         // ---- vad ----
         val speech: List<TimeSpan> = timed(Stage.VAD) {
             soft(Stage.VAD, warnings, listOf(TimeSpan(0, durationMs))) {
-                sanitizeSpans(blocking(tracker, Stage.VAD) { vad.detect(processed) }, durationMs)
+                sanitizeSpans(blocking(tracker, Stage.VAD) { engines.vad().use { it.detect(processed) } }, durationMs)
             }
         }
         if (speech.isEmpty()) {
-            tracker.report(Stage.ASR, 1f); tracker.report(Stage.DIARIZATION, 1f)
-            return finish(emptyList(), durationMs, t0, stageMs, warnings, tracker)
+            for (s in listOf(Stage.LID, Stage.ASR, Stage.DIARIZATION)) tracker.report(s, 1f)
+            return finish(emptyList(), durationMs, LanguageConfig.RU, t0, stageMs, warnings, tracker)
         }
+
+        // ---- language id ----
+        val language = timed(Stage.LID) { chooseLanguage(processed, speech, tracker, warnings) }
 
         // ---- asr || diarization ----
         val (words, turns) = coroutineScope {
             val asrJob = async {
                 timed(Stage.ASR) {
                     fatal(Stage.ASR) {
-                        blocking(tracker, Stage.ASR) { asr.transcribe(processed, speech, it) }
+                        blocking(tracker, Stage.ASR) { l -> engines.asr(language).use { it.transcribe(processed, speech, l) } }
                     }
                 }
             }
             val diarJob = async {
                 timed(Stage.DIARIZATION) {
                     soft(Stage.DIARIZATION, warnings, emptyList()) {
-                        blocking(tracker, Stage.DIARIZATION) { diarizer.diarize(processed, settings.numSpeakers, it) }
+                        blocking(tracker, Stage.DIARIZATION) { l ->
+                            engines.diarizer().use { it.diarize(processed, settings.numSpeakers, l) }
+                        }
                     }
                 }
             }
             asrJob.await() to diarJob.await()
-        }
+        } // здесь ASR и диаризация уже закрыты -- память свободна под LLM
 
         // ---- align ----
         coroutineContext.ensureActive()
@@ -166,17 +190,63 @@ class PipelineOrchestrator(
 
         // ---- punctuation ----
         val punctuated = timed(Stage.PUNCTUATION) {
-            val guarded = GuardedPunctuator(punctuator)
-            blocking(tracker, Stage.PUNCTUATION) { guarded.punctuate(aligned, it) }
-                .map { it.copy(text = TextNormalizer.apply(it.text, settings.normalization)) }
+            val factory = engines.punctuator
+            val allowed = settings.plan?.llmPunctuation ?: true
+            if (factory != null && !allowed) warnings += "Пунктуация LLM отключена планом ресурсов"
+            val punct: Punctuator? = if (factory != null && allowed) {
+                soft<Punctuator?>(Stage.PUNCTUATION, warnings, null) { blocking(tracker, Stage.PUNCTUATION) { factory() } }
+            } else {
+                null
+            }
+            val result = if (factory != null && punct == null) {
+                // пунктуатор предусмотрен, но недоступен (память/ошибка) -- хотя бы заглавная буква и точка
+                aligned.map { it.copy(text = TextGuard.finalize(it.text)) }
+            } else {
+                try {
+                    blocking(tracker, Stage.PUNCTUATION) { l -> GuardedPunctuator(punct).punctuate(aligned, l) }
+                } finally {
+                    runCatching { punct?.close() }
+                }
+            }
+            result.map { it.copy(text = TextNormalizer.apply(it.text, settings.normalization)) }
         }
 
-        return finish(punctuated, durationMs, t0, stageMs, warnings, tracker)
+        return finish(punctuated, durationMs, language, t0, stageMs, warnings, tracker)
+    }
+
+    private suspend fun chooseLanguage(
+        audio: AudioBuffer,
+        speech: List<TimeSpan>,
+        tracker: Tracker,
+        warnings: MutableList<String>,
+    ): String {
+        val mode = settings.languageMode
+        val requested = when (mode) {
+            LanguageConfig.AUTO -> {
+                val lid = engines.languageId
+                if (lid == null) {
+                    LanguageConfig.RU
+                } else {
+                    soft(Stage.LID, warnings, LanguageConfig.RU) {
+                        val raw = blocking(tracker, Stage.LID) { lid().use { it.detect(audio, speech) } }
+                        if (raw.trim().lowercase().startsWith(LanguageConfig.EN)) LanguageConfig.EN else LanguageConfig.RU
+                    }
+                }
+            }
+            LanguageConfig.EN -> LanguageConfig.EN
+            else -> LanguageConfig.RU
+        }
+        if (requested !in settings.supportedLanguages) {
+            warnings += "Язык '$requested' не поддерживается этим вариантом -- используется ru"
+            return LanguageConfig.RU
+        }
+        return requested
     }
 
     private suspend fun finish(
         utterances: List<Utterance>,
         durationMs: Long,
+        language: String,
         t0: Long,
         stageMs: MutableMap<String, Long>,
         warnings: List<String>,
@@ -200,6 +270,7 @@ class PipelineOrchestrator(
             stageMs = ordered,
             models = settings.models,
             appVersion = settings.appVersion,
+            language = language,
         )
         return PipelineResult(Transcript(finalUtterances, meta), json, ArrayList(warnings))
     }
@@ -239,6 +310,19 @@ class PipelineOrchestrator(
             if (e > s) TimeSpan(s, e) else null
         }.sortedBy { it.startMs }
 
+    /** `use`, который не прячет основное исключение закрытием и не падает на close(). */
+    private inline fun <T : AutoCloseable, R> T.use(block: (T) -> R): R {
+        try {
+            return block(this)
+        } finally {
+            try {
+                close()
+            } catch (_: Throwable) {
+                // выгрузка модели не должна ронять обработку
+            }
+        }
+    }
+
     private val Stage.key: String get() = name.lowercase()
 
     /** Потокобезопасный агрегатор прогресса: общий прогресс монотонен. */
@@ -273,7 +357,8 @@ class PipelineOrchestrator(
             Stage.DECODE to 0.05f,
             Stage.DENOISE to 0.05f,
             Stage.VAD to 0.03f,
-            Stage.ASR to 0.55f,
+            Stage.LID to 0.01f,
+            Stage.ASR to 0.54f,
             Stage.DIARIZATION to 0.20f,
             Stage.ALIGN to 0.02f,
             Stage.PUNCTUATION to 0.08f,

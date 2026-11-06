@@ -35,12 +35,14 @@ data class TranscriptMeta(
     val stageMs: Map<String, Long>,
     val models: Map<String, String>,
     val appVersion: String,
+    /** Язык, на котором распознавали ("ru" | "en"). */
+    val language: String = "ru",
 ) {
     /** Real-time factor: время обработки / длительность аудио (0, если длительность неизвестна). */
 val rtf: Double get() = if (audioDurationMs > 0) processingMs.toDouble() / audioDurationMs else 0.0
 }
 
-enum class Stage { DECODE, DENOISE, VAD, ASR, DIARIZATION, ALIGN, PUNCTUATION, EXPORT }
+enum class Stage { DECODE, DENOISE, VAD, LID, ASR, DIARIZATION, ALIGN, PUNCTUATION, EXPORT }
 
 fun interface ProgressListener {
 fun onProgress(stage: Stage, fraction: Float)

@@ -119,6 +119,7 @@ object TranscriptJson {
             put("meta", buildJsonObject {
                 put("app_version", meta.appVersion)
                 put("tier", meta.tier)
+                put("language", meta.language)
                 put("audio_duration_ms", meta.audioDurationMs)
                 put("processing_ms", meta.processingMs)
                 put("rtf", Math.round(meta.rtf * 1000.0) / 1000.0)

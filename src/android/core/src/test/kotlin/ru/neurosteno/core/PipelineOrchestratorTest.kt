@@ -27,7 +27,21 @@ class PipelineOrchestratorTest {
         punct: Punctuator? = null,
         denoiser: Denoiser? = null,
         s: PipelineSettings = settings,
-    ) = PipelineOrchestrator(decoder, vad, asr, diar, s, punct, denoiser, Dispatchers.IO)
+        lid: LanguageId? = null,
+        asrEn: AsrEngine? = null,
+    ) = PipelineOrchestrator(
+        decoder,
+        EngineProviders(
+            vad = { vad },
+            asr = { lang -> if (lang == "en") checkNotNull(asrEn) else asr },
+            diarizer = { diar },
+            punctuator = punct?.let { p -> { p } },
+            denoiser = denoiser?.let { d -> { d } },
+            languageId = lid?.let { l -> { l } },
+        ),
+        s,
+        Dispatchers.IO,
+    )
 
     @Test
     fun `happy path produces spec json with meta and stage times`() = runBlocking {
@@ -195,5 +209,120 @@ class PipelineOrchestratorTest {
             s = settings.copy(normalization = NormalizationConfig(yoToE = true)),
         ).run(input)
         assertEquals("все", r.transcript.utterances.single().text)
+    }
+
+    private class FakeLid(val answer: String? = null, val fail: Throwable? = null) : LanguageId {
+        var calls = 0
+        override fun detect(audio: AudioBuffer, speech: List<TimeSpan>): String {
+            calls++
+            fail?.let { throw it }
+            return answer!!
+        }
+        override fun close() = Unit
+    }
+
+    private val bilingual = settings.copy(languageMode = LanguageConfig.AUTO, supportedLanguages = setOf("ru", "en"))
+
+    @Test
+    fun `auto language picks english asr when lid says en`() = runBlocking {
+        val en = FakeAsr(listOf(Word("hello", 0, 500), Word("world", 600, 1000)))
+        val r = orchestrator(lid = FakeLid("en"), asrEn = en, s = bilingual).run(input)
+        assertEquals("hello world", r.transcript.utterances.single().text)
+        assertEquals("en", r.transcript.meta.language)
+        assertTrue(r.transcript.meta.stageMs.containsKey("lid"))
+    }
+
+    @Test
+    fun `auto language falls back to ru on lid failure or garbage`() = runBlocking {
+        val failed = orchestrator(lid = FakeLid(fail = IllegalStateException("lid")), s = bilingual).run(input)
+        assertEquals("ru", failed.transcript.meta.language)
+        assertEquals("привет мир", failed.transcript.utterances.single().text)
+        assertTrue(failed.warnings.any { it.contains("lid") })
+        val garbage = orchestrator(lid = FakeLid("zh"), s = bilingual).run(input)
+        assertEquals("ru", garbage.transcript.meta.language)
+    }
+
+    @Test
+    fun `fixed language modes skip lid and unsupported language degrades to ru`() = runBlocking {
+        val lid = FakeLid("en")
+        val ru = orchestrator(lid = lid, s = settings.copy(languageMode = "ru")).run(input)
+        assertEquals(0, lid.calls)
+        assertEquals("ru", ru.transcript.meta.language)
+        // en запрошен, но английской ASR нет -> ru + предупреждение
+        val unsupported = orchestrator(s = settings.copy(languageMode = "en")).run(input)
+        assertEquals("ru", unsupported.transcript.meta.language)
+        assertTrue(unsupported.warnings.any { it.contains("не поддерживается") })
+        // en запрошен вручную и поддерживается
+        val en = orchestrator(asrEn = FakeAsr(listOf(Word("ok", 0, 300))), s = settings.copy(languageMode = "en", supportedLanguages = setOf("ru", "en"))).run(input)
+        assertEquals("en", en.transcript.meta.language)
+    }
+
+    @Test
+    fun `engines are closed one by one - asr and diarizer closed before punctuator is created`() = runBlocking {
+        val events = java.util.Collections.synchronizedList(ArrayList<String>())
+        fun <T : AutoCloseable> T.logged(name: String): T = this.also { events += "create:$name" }
+        val asr = object : AsrEngine {
+            override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener) = listOf(Word("привет", 0, 500))
+            override fun close() { events += "close:asr" }
+        }
+        val diar = object : Diarizer {
+            override fun diarize(audio: AudioBuffer, numSpeakers: Int?, progress: ProgressListener) = emptyList<SpeakerTurn>()
+            override fun close() { events += "close:diar" }
+        }
+        val punct = object : Punctuator {
+            override fun punctuate(utterances: List<Utterance>, progress: ProgressListener) = utterances
+            override fun close() { events += "close:punct" }
+        }
+        val vad = object : Vad {
+            override fun detect(audio: AudioBuffer) = listOf(TimeSpan(0, audio.durationMs))
+            override fun close() { events += "close:vad" }
+        }
+        PipelineOrchestrator(
+            FakeDecoder(),
+            EngineProviders(
+                vad = { vad.logged("vad") },
+                asr = { asr.logged("asr") },
+                diarizer = { diar.logged("diar") },
+                punctuator = { punct.logged("punct") },
+            ),
+            settings,
+            Dispatchers.IO,
+        ).run(input)
+        assertTrue(events.indexOf("close:vad") < events.indexOf("create:asr"), "$events")
+        assertTrue(events.indexOf("close:asr") < events.indexOf("create:punct"), "$events")
+        assertTrue(events.indexOf("close:diar") < events.indexOf("create:punct"), "$events")
+        assertEquals("close:punct", events.last())
+    }
+
+    @Test
+    fun `engine is closed even when it fails`() {
+        val closed = java.util.concurrent.atomic.AtomicBoolean(false)
+        val asr = object : AsrEngine {
+            override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word> = error("x")
+            override fun close() { closed.set(true) }
+        }
+        assertThrows<PipelineException> { runBlocking { orchestrator(asr = asr).run(input) } }
+        assertTrue(closed.get())
+    }
+
+    @Test
+    fun `resource plan can switch llm punctuation off without failing`() = runBlocking {
+        val punct = FakePunctuator { it.copy(text = "Привет, мир!") }
+        val plan = ResourcePlan(numThreads = 1, llmPunctuation = false, secondPass = false, denoise = false, reasons = listOf("мало памяти"))
+        val r = orchestrator(punct = punct, s = settings.copy(plan = plan)).run(input)
+        assertEquals("Привет мир.", r.transcript.utterances.single().text) // LLM не вызывался, fallback
+        assertTrue(r.warnings.any { it.contains("мало памяти") })
+    }
+
+    @Test
+    fun `punctuator factory failure is not fatal`() = runBlocking {
+        val r = PipelineOrchestrator(
+            FakeDecoder(),
+            EngineProviders(vad = { FakeVad() }, asr = { FakeAsr() }, diarizer = { FakeDiarizer() }, punctuator = { error("gguf missing") }),
+            settings,
+            Dispatchers.IO,
+        ).run(input)
+        assertEquals("Привет мир.", r.transcript.utterances.single().text)
+        assertTrue(r.warnings.any { it.contains("punctuation") })
     }
 }
