@@ -18,7 +18,8 @@ def _config(dcfg: dict, models_root: Path, num_threads: int, num_clusters: int):
     return so.OfflineSpeakerDiarizationConfig(
         segmentation=so.OfflineSpeakerSegmentationModelConfig(
             pyannote=so.OfflineSpeakerSegmentationPyannoteModelConfig(
-                model=str(models_root / dcfg["segmentation"])),
+                model=str(models_root / dcfg["segmentation"]),
+                window_shift_ratio=float(dcfg.get("window_shift_ratio", 0.1))),
             num_threads=num_threads),
         embedding=so.SpeakerEmbeddingExtractorConfig(
             model=str(models_root / dcfg["embedding"]), num_threads=num_threads),

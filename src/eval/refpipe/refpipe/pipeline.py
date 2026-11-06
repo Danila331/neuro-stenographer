@@ -21,7 +21,7 @@ from . import __version__
 from .align import AlignParams, align
 from .asr import AsrEngine
 from .audio import decode_audio, denoise, estimate_snr_db
-from .config import config_hash
+from .config import DEFAULTS, config_hash, deep_merge
 from .diar import Diarizer, SubprocessDiarizer
 from .lid import LanguageId
 from .punct import make_punctuator
@@ -193,7 +193,7 @@ class Pipeline:
             engine = self.asr
             if lang == "en":
                 if self.asr_en is None:
-                    self.asr_en = AsrEngine(cfg["asr_en"], self.root, self.threads)
+                    self.asr_en = AsrEngine(deep_merge(DEFAULTS["asr"], cfg["asr_en"]), self.root, self.threads)
                     info["asr_en_load_ms"] = _ms(t2)
                 engine = self.asr_en
             words = engine.transcribe(x, chunks, keep_punct=self.keep_punct) if chunks else []

@@ -10,12 +10,14 @@ Word timing (documented because the Kotlin port must do the same):
   * sherpa returns one START timestamp (seconds, 40 ms frame grid for GigaAM) per token and no
     durations for these models.  GigaAM tokens are single characters + ' ' (word boundary).
   * word.start = timestamp of its first non-blank token (+ word_start_offset_ms);
-    word.end   = timestamp of its last token + word_tail_ms (default 40 ms = one encoder frame),
+    word.end   = timestamp of its last token + word_tail_ms (default 40 ms = one encoder frame; for
+                 TDT models such as Parakeet the real token duration is used instead),
                  clipped to the next word's start (so words never overlap) and to the chunk end.
   * absolute time = chunk.start_ms + round(ts * 1000).
   * word confidence = mean exp(log p) of its tokens (None if the model gives no log-probs).
-  * Whisper (no timestamps): words are placed proportionally to their character count over the
-    chunk span [chunk.start, chunk.end] -- coarse, fine for a second-pass text replacement.
+  * Whisper (no token timestamps): `enable_segment_timestamps` gives text segments with start/duration;
+    words are placed proportionally to their character count inside their segment (coarse, ~0.3 s
+    error); without segments, over the whole chunk.
 """
 from __future__ import annotations
 
@@ -48,7 +50,8 @@ def plain_word(t: str) -> str:
 
 
 def build_words(tokens: list[str], ts: list[float], log_probs: list[float] | None, chunk: TimeSpan,
-                tail_ms: int = 40, start_offset_ms: int = 0, keep_punct: bool = False) -> list[Word]:
+                tail_ms: int = 40, start_offset_ms: int = 0, keep_punct: bool = False,
+                durations: list[float] | None = None) -> list[Word]:
     """Pure function: tokens (characters or BPE pieces, ' '/'▁' = word boundary) -> absolute words."""
     n = min(len(tokens), len(ts))
     words: list[dict] = []  # text, start, last, probs
@@ -74,6 +77,7 @@ def build_words(tokens: list[str], ts: list[float], log_probs: list[float] | Non
                 cur = {"text": "", "start": t_ms, "last": t_ms, "probs": []}
             cur["text"] += body
             cur["last"] = t_ms
+            cur["last_dur"] = int(durations[i] * 1000 + 0.5) if durations is not None and i < len(durations) else None
             if log_probs is not None and i < len(log_probs):
                 cur["probs"].append(math.exp(log_probs[i]))
         if t[-1:].isspace() and len(t) > 1:
@@ -90,7 +94,7 @@ def build_words(tokens: list[str], ts: list[float], log_probs: list[float] | Non
             out[-1] = Word(p.text + text, p.start_ms, p.end_ms, p.confidence)
             continue
         start = max(chunk.start_ms, w["start"])
-        end = w["last"] + tail_ms
+        end = w["last"] + (w["last_dur"] if w.get("last_dur") else tail_ms)  # TDT models give real durations
         if k + 1 < len(words):
             end = min(end, max(words[k + 1]["start"], start + 1))
         end = min(max(end, start + 1), max(chunk.end_ms, start + 1))
@@ -149,7 +153,8 @@ class AsrEngine:
                 encoder=_pick(d, "encoder.int8.onnx", "turbo-encoder.int8.onnx", "encoder.onnx"),
                 decoder=_pick(d, "decoder.int8.onnx", "turbo-decoder.int8.onnx", "decoder.onnx"),
                 tokens=_pick(d, "tokens.txt", "turbo-tokens.txt"),
-                language=asr_cfg.get("language", "ru"), task="transcribe", num_threads=num_threads)
+                language=asr_cfg.get("language", "ru"), task="transcribe", num_threads=num_threads,
+                enable_segment_timestamps=True)
         else:
             raise ValueError(f"unknown asr.engine {self.engine!r}")
         self.has_ts = self.engine != "whisper"
@@ -180,7 +185,13 @@ class AsrEngine:
         for chunk, r in self.recognize(x, chunks):
             if self.has_ts and len(r.timestamps) >= len(r.tokens) > 0:
                 lp = list(r.ys_log_probs) if len(r.ys_log_probs) == len(r.tokens) else None
-                words.extend(build_words(list(r.tokens), list(r.timestamps), lp, chunk, tail, off, keep_punct))
+                du = list(r.durations) if len(r.durations) == len(r.tokens) else None
+                words.extend(build_words(list(r.tokens), list(r.timestamps), lp, chunk, tail, off, keep_punct, du))
+            elif self.engine == "whisper" and len(r.segment_texts) and len(r.segment_texts) == len(r.segment_timestamps):
+                for txt, st, du in zip(r.segment_texts, r.segment_timestamps, r.segment_durations):
+                    a = chunk.start_ms + int(st * 1000 + 0.5)
+                    b = min(chunk.end_ms, a + max(1, int(du * 1000 + 0.5)))
+                    words.extend(spread_words(txt, TimeSpan(a, max(b, a + 1)), keep_punct))
             else:
                 words.extend(spread_words(r.text, chunk, keep_punct))
         return words

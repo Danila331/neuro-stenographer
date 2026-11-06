@@ -30,6 +30,7 @@ DEFAULTS: dict[str, Any] = {
         "embedding": "diar/embedding/model.onnx",
         "clustering": {"method": "fast_clustering", "threshold": 0.6, "num_speakers": None, "max_speakers": 8},
         "min_duration_on_s": 0.2, "min_duration_off_s": 0.3,
+        "window_shift_ratio": 0.1,  # extra: pyannote window hop / window (0.1 = sherpa default; 0.5 = ~5x faster)
         "num_threads": None,      # extra: None -> top-level num_threads
         "enabled": True,          # extra: false -> single speaker, no diarization (ablation)
     },

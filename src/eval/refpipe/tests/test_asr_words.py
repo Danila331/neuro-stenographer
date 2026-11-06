@@ -59,3 +59,8 @@ def test_spread_words_covers_chunk_proportionally():
 
 def test_plain_word():
     assert plain_word("Привет,") == "привет" and plain_word("кто-то!") == "кто-то" and plain_word("—") == ""
+
+
+def test_tdt_durations_replace_the_tail():
+    w = build_words(list("да"), [0.0, 0.08], None, TimeSpan(0, 5000), tail_ms=40, durations=[0.08, 0.24])
+    assert (w[0].start_ms, w[0].end_ms) == (0, 320)
