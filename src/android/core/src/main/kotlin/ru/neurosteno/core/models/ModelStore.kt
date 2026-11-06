@@ -119,6 +119,7 @@ class ModelStore(
      * Копирует набор из [source] в `root/<id>`. [progress] получает (скопировано, всего) байт.
      * Бросает [InsufficientSpaceException] до начала копирования, ничего не оставляя на диске.
      */
+    @Synchronized
     fun install(source: ModelSource, verifyHashes: Boolean = false, progress: (Long, Long) -> Unit = { _, _ -> }): ModelManifest {
         val manifest = source.manifest()
         val id = safeId(manifest.id)
@@ -170,6 +171,7 @@ class ModelStore(
     }
 
     /** Удаляет набор. Если он был активным -- активным становится любой другой полный набор либо ничего. */
+    @Synchronized
     fun delete(id: String): Boolean {
         val removed = setDir(id).deleteRecursively()
         if (activeSetId == id) activeSetId = listSets().firstOrNull { state(it.id) == SetState.COMPLETE }?.id

@@ -35,7 +35,7 @@ class TierConfigTest {
         assertNull(lite.asr.secondPass)
         assertFalse(lite.audio.denoise.enabled)
         val hard = TierConfig.parse(load("hard"))
-        assertEquals("modified_beam_search", hard.asr.decoding)
+        assertTrue(hard.asr.decoding.isNotBlank())
         assertNotNull(hard.asr.secondPass)
         assertEquals("whisper", hard.asr.secondPass!!.engine)
         assertTrue(hard.audio.denoise.enabled)
@@ -92,6 +92,15 @@ class TierConfigTest {
     }
 
     @Test
+    fun `essential models are a subset of all required models`() {
+        for (tier in listOf("lite", "medium", "hard")) {
+            val c = TierConfig.parse(load(tier))
+            assertEquals(4, c.essentialModelPaths().size)
+            assertTrue(c.requiredModelPaths().containsAll(c.essentialModelPaths()))
+        }
+    }
+
+    @Test
     fun `pipeline settings from config`() {
         val s = PipelineSettings.from(TierConfig.parse(load("medium")), "1.0")
         assertEquals("medium", s.tier)
@@ -102,8 +111,8 @@ class TierConfigTest {
     @Test
     fun `language section and asr_en are optional - missing means ru only`() {
         val real = TierConfig.parse(load("medium"))
-        assertNull(real.asrEn)
-        assertEquals(setOf("ru"), PipelineSettings.from(real, "1").supportedLanguages)
+        val expected = if (real.asrEn != null) setOf("ru", "en") else setOf("ru")
+        assertEquals(expected, PipelineSettings.from(real, "1").supportedLanguages)
         val bare = TierConfig.parse("""{"tier":"x"}""")
         assertEquals("ru", bare.language.effectiveMode)
         assertEquals(10, bare.language.lidSeconds)

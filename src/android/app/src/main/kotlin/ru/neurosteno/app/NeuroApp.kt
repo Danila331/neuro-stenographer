@@ -9,5 +9,7 @@ class NeuroApp : Application() {
     override fun onCreate() {
         super.onCreate()
         graph = AppGraph(this)
+        // создаёт app-specific внешнюю папку силами самого приложения (иначе её владелец -- adb shell и приложение её не прочитает)
+        runCatching { getExternalFilesDir(null) }
     }
 }

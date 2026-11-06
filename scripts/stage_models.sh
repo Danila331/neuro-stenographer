@@ -8,6 +8,8 @@
 #
 # --allow-missing  не падать, если часть моделей ещё не скачана (набор будет неполным -- приложение покажет сообщение)
 # --skip-llm       не копировать LLM (для быстрых проверок сборки)
+# --map <путь-в-конфиге>=<другой путь в кэше>  подставить имеющийся файл вместо отсутствующего (для проверок; можно несколько раз),
+#                                  например --map llm/qwen3-0.6b-q4_0.gguf=llm-qwen3-0.6b-q4_k_m/Qwen3-0.6B-Q4_K_M.gguf
 # MODELS_ROOT=/другой/каталог  переопределяет $ROOT/.cache/models
 set -euo pipefail
 
@@ -19,13 +21,24 @@ TIER="${1:-}"
 shift || true
 ALLOW_MISSING=0
 SKIP_LLM=0
-for a in "$@"; do
-  case "$a" in
+MAPS=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
     --allow-missing) ALLOW_MISSING=1 ;;
     --skip-llm) SKIP_LLM=1 ;;
-    *) echo "неизвестный аргумент: $a" >&2; exit 2 ;;
+    --map) shift; MAPS+=("${1:?--map требует путь=альтернатива}") ;;
+    *) echo "неизвестный аргумент: $1" >&2; exit 2 ;;
   esac
+  shift
 done
+# alt_for <путь>: альтернативный путь из --map (пусто, если не задан)
+alt_for() {
+  local m
+  for m in ${MAPS[@]+"${MAPS[@]}"}; do
+    [ "${m%%=*}" = "$1" ] && { echo "${m#*=}"; return 0; }
+  done
+  return 0
+}
 case "$TIER" in lite|medium|hard|online) ;; *) echo "usage: $0 <lite|medium|hard|online> [--allow-missing] [--skip-llm]" >&2; exit 2 ;; esac
 
 REPO="$(cd "$HERE/.." && pwd)"
@@ -82,7 +95,8 @@ while IFS= read -r line; do [ -n "$line" ] && PATHS+=("$line"); done < <(mapfile
 
 MISSING=()
 for p in "${PATHS[@]}"; do
-  [ -e "$MODELS_ROOT/$p" ] || MISSING+=("$p")
+  alt="$(alt_for "$p")"
+  [ -e "$MODELS_ROOT/$p" ] || { [ -n "$alt" ] && [ -e "$MODELS_ROOT/$alt" ]; } || MISSING+=("$p")
 done
 if [ "${#MISSING[@]}" -gt 0 ]; then
   echo "Не найдены модели в $MODELS_ROOT:" >&2
@@ -98,10 +112,13 @@ rm -rf "$DEST"
 mkdir -p "$DEST"
 for p in "${PATHS[@]}"; do
   src="$MODELS_ROOT/$p"
-  [ -e "$src" ] || continue
+  if [ ! -e "$src" ]; then
+    alt="$(alt_for "$p")"
+    [ -n "$alt" ] && [ -e "$MODELS_ROOT/$alt" ] && src="$MODELS_ROOT/$alt" || continue
+  fi
   mkdir -p "$DEST/$(dirname "$p")"
-  # APFS-клон (мгновенно и без дублирования места), иначе обычное копирование
-  cp -cR "$src" "$DEST/$(dirname "$p")/" 2>/dev/null || cp -R "$src" "$DEST/$(dirname "$p")/"
+  # APFS-клон (мгновенно и без дублирования места), иначе обычное копирование; имя берётся из пути конфига
+  cp -cR "$src" "$DEST/$p" 2>/dev/null || cp -R "$src" "$DEST/$p"
 done
 
 # manifest.json: файлы с размерами и sha256 (приложение проверяет размеры при установке в filesDir)

@@ -43,6 +43,13 @@ data class TierConfig(
         llm.model?.let(::add)
     }.distinct()
 
+    /**
+     * Без этих моделей обработка невозможна (VAD, основная ASR, диаризация). Остальное (английская ASR, LID, денойз,
+     * LLM, второй проход) необязательно: если файлов нет, соответствующая возможность отключается с предупреждением.
+     */
+    fun essentialModelPaths(): List<String> =
+        listOf(vad.model, asr.modelDir, diarization.segmentation, diarization.embedding).distinct()
+
     companion object {
         private val json = Json {
             ignoreUnknownKeys = true

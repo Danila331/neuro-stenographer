@@ -61,6 +61,24 @@ src/android/scripts/smoke_apk.sh artifacts/apk/neurosteno-medium-0.1.0.apk
 Правила нагрузки: Gradle ≤ 3 воркеров (`gradle.properties`), один эмулятор за раз (`scripts/emulator.sh` отказывается
 запускать второй), по окончании `./gradlew --stop` и `scripts/emulator.sh stop`.
 
+### Проверено на эмуляторе (jury-4g / jury-2g)
+
+```bash
+scripts/emulator.sh jury-4g                                    # headless, ждёт boot_completed
+src/android/scripts/smoke_apk.sh <apk>                         # установка, запуск, logcat без FATAL
+src/android/scripts/process_on_device.sh <apk> <audio> [out]   # настоящая обработка: VIEW-интент (автостарт),
+                                                               # JSON из Android/data/<pkg>/files/results, пик PSS/RSS, время
+(cd src/eval/stenoeval && uv run stenoeval validate <out>/<file>.json)
+scripts/emulator.sh stop
+```
+Приложение само сохраняет результат (`<имя>.json` и `<имя>.full.json`) в свою внешнюю папку
+`Android/data/<pkg>/files/results/` и пишет в logcat (тег `Neurosteno`) строку `done ...` с RTF и временем стадий.
+`stage_models.sh --map <путь в конфиге>=<другой путь в кэше>` подставляет имеющийся файл вместо отсутствующего
+(только для проверок: имена в кэше и в конфигах пока различаются). Необязательные модели (английская ASR, LID, денойз, LLM)
+при отсутствии отключаются с предупреждением; обязательны VAD, основная ASR и диаризация.
+Известно: `./gradlew :app:tasks --all` падает на `generate*ComposePreviewRunfiles` (релизные варианты без юнит-тестов),
+на сборку `assemble*` это не влияет.
+
 ## Модули
 
 | Модуль | Тип | Содержимое |
