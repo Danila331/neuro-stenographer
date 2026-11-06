@@ -60,11 +60,11 @@ def build(cfg: Cfg):
     return so.OfflineSpeakerDiarization(c)
 
 
-def run_one(sd, x: np.ndarray) -> tuple[Segments, float]:
-    t = time.perf_counter()
+def run_one(sd, x: np.ndarray) -> tuple[Segments, float, float]:
+    t, c = time.perf_counter(), time.process_time()
     r = sd.process(x).sort_by_start_time()
-    el = time.perf_counter() - t
-    return [(f"spk{s.speaker}", float(s.start), float(s.end)) for s in r], el
+    el, cpu = time.perf_counter() - t, time.process_time() - c
+    return [(f"spk{s.speaker}", float(s.start), float(s.end)) for s in r], el, cpu
 
 
 _W: dict = {}
@@ -78,8 +78,8 @@ def _work(args):
     if _W.get("cfg") != cfg:
         _W["cfg"], _W["sd"] = cfg, build(cfg)
     x = load_audio(item.audio)
-    segs, el = run_one(_W["sd"], x)
-    out = {"id": item.id, "segs": segs, "sec": el, "dur": len(x) / 16000}
+    segs, el, cpu = run_one(_W["sd"], x)
+    out = {"id": item.id, "segs": segs, "sec": el, "cpu": cpu, "dur": len(x) / 16000}
     RUN_CACHE.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps(out))
     return out

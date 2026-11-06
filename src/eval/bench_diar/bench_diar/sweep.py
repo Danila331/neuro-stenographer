@@ -15,7 +15,7 @@ from .metrics import aggregate, score
 from .runner import Cfg, run_items
 
 FIELDS = ["seg", "seg_int8", "emb", "threshold", "num_speakers", "min_on", "min_off", "shift",
-          "condition", "n", "der0", "der25", "miss25", "fa25", "conf25", "jer", "spk_acc", "spk_mae", "rtf", "threads"]
+          "condition", "n", "der0", "der25", "miss25", "fa25", "conf25", "jer", "spk_acc", "spk_mae", "rtf", "cpu_rtf", "threads"]
 
 
 def eval_cfg(cfg: Cfg, items, procs: int):
@@ -28,9 +28,10 @@ def eval_cfg(cfg: Cfg, items, procs: int):
         a0 = aggregate([score(items[i].ref, runs[i]["segs"], items[i].duration, 0.0) for i in idx])
         a25 = aggregate([score(items[i].ref, runs[i]["segs"], items[i].duration, 0.25) for i in idx])
         rtf = sum(runs[i]["sec"] for i in idx) / sum(runs[i]["dur"] for i in idx)
+        cpu_rtf = sum(runs[i].get("cpu", 0) for i in idx) / sum(runs[i]["dur"] for i in idx)
         rows.append({**asdict(cfg), "condition": cond, "n": a0["n"], "der0": a0["der"], "der25": a25["der"],
                      "miss25": a25["miss"], "fa25": a25["fa"], "conf25": a25["conf"], "jer": a0["jer"],
-                     "spk_acc": a0["spk_acc"], "spk_mae": a0["spk_mae"], "rtf": rtf})
+                     "spk_acc": a0["spk_acc"], "spk_mae": a0["spk_mae"], "rtf": rtf, "cpu_rtf": cpu_rtf})
     return rows
 
 
