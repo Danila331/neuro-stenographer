@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Настоящая обработка одного аудиофайла на запущенном эмуляторе/устройстве (DEBUG-сборка, нужен run-as):
+# Настоящая обработка одного аудиофайла на запущенном эмуляторе/устройстве (debug или release APK):
 # установка APK, копия файла в приватную папку приложения, ACTION_VIEW (обработка стартует сама), ожидание результата,
 # выгрузка JSON в <out-dir>, замер пикового PSS/RSS процесса (dumpsys meminfo, опрос раз в 2 с) и времени.
-#   src/android/scripts/process_on_device.sh <debug.apk> <audio.wav> [out-dir] [timeout-sec]
+#   src/android/scripts/process_on_device.sh <apk> <audio.wav> [out-dir] [timeout-sec]
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../../../scripts/env.sh
@@ -19,16 +19,18 @@ BASE="${NAME%.*}"
 
 adb install -r -g "$APK" >/dev/null
 adb shell am force-stop "$PKG"
-adb push "$AUDIO" "/data/local/tmp/$NAME" >/dev/null
-adb shell run-as "$PKG" mkdir -p files
-adb shell run-as "$PKG" cp "/data/local/tmp/$NAME" "files/$NAME"
-adb shell run-as "$PKG" rm -rf "files/../cache/none" >/dev/null 2>&1 || true
-RES="/sdcard/Android/data/$PKG/files/results"
+# файл кладётся в app-specific внешнюю папку приложения (читается без разрешений; работает и для release-APK)
+IN_DIR="/sdcard/Android/data/$PKG/files"
+adb shell am start -n "$PKG/ru.neurosteno.app.MainActivity" >/dev/null   # приложение создаёт папку само (владелец -- uid приложения)
+sleep 4
+adb shell am force-stop "$PKG"
+adb push "$AUDIO" "$IN_DIR/$NAME" >/dev/null
+RES="$IN_DIR/results"
 adb shell rm -f "$RES/$BASE.json" "$RES/$BASE.full.json" >/dev/null 2>&1 || true
 adb logcat -c
 
 START=$(date +%s)
-adb shell am start -W -a android.intent.action.VIEW -d "file:///data/data/$PKG/files/$NAME" -t "audio/*" -n "$PKG/ru.neurosteno.app.MainActivity" >/dev/null
+adb shell am start -W -a android.intent.action.VIEW -d "file://$IN_DIR/$NAME" -t "audio/*" -n "$PKG/ru.neurosteno.app.MainActivity" >/dev/null
 PEAK_PSS=0; PEAK_RSS=0; STATUS=timeout
 while [ $(( $(date +%s) - START )) -lt "$TIMEOUT" ]; do
   PID="$(adb shell pidof "$PKG" | tr -d '\r' || true)"

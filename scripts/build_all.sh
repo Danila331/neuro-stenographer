@@ -33,7 +33,7 @@ command -v java >/dev/null || { echo "нет JDK 17 (source scripts/env.sh)"; ex
 # --- локальный ключ подписи (создаётся один раз; в git не попадает: .local/ в .gitignore) ---
 if [ ! -f "$KEYSTORE" ]; then
   mkdir -p "$KEY_DIR"; chmod 700 "$KEY_DIR"
-  PASS="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
+  PASS="$(openssl rand -hex 16)"
   keytool -genkeypair -v -keystore "$KEYSTORE" -storetype PKCS12 -alias neurosteno \
     -keyalg RSA -keysize 4096 -validity 36500 -storepass "$PASS" -keypass "$PASS" \
     -dname "CN=Neurosteno Local, OU=Hackathon, O=Neurosteno, C=RU" >/dev/null 2>&1
