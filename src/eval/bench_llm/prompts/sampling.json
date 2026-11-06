@@ -1,0 +1,10 @@
+{
+  "_note": "Greedy decoding for all deterministic tasks (punctuation, speaker fix, JSON protocol). Free-form Q&A may use temp 0.3.",
+  "punctuation": {"temperature": 0.0, "top_k": 1, "top_p": 1.0, "min_p": 0.0, "repeat_penalty": 1.0, "n_predict_per_word": 4, "n_predict_min": 32},
+  "speaker_fix": {"temperature": 0.0, "top_k": 1, "repeat_penalty": 1.0},
+  "protocol": {"temperature": 0.0, "top_k": 1, "repeat_penalty": 1.05, "max_new_tokens": 700},
+  "qa": {"temperature": 0.3, "top_k": 40, "top_p": 0.9, "repeat_penalty": 1.05, "max_new_tokens": 200},
+  "qwen3_thinking": "disabled: assistant turn is pre-filled with '<think>\\n\\n</think>\\n\\n' (equivalent of enable_thinking=False)",
+  "stop": ["<|im_end|>"],
+  "n_batch": 512, "n_ubatch": 512, "cache_prompt": true
+}
