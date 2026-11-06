@@ -58,7 +58,7 @@ fun main(args: Array<String>) {
     val cfg = TierConfig.parse(cfgText)
     val root = ModelRoot(File(args[2]))
     val plan = ResourcePlanner.plan(MemorySnapshot(16_384, 8_000), cfg, Runtime.getRuntime().availableProcessors())
-    val threads = plan.numThreads
+    val threads = System.getenv("PARITY_THREADS")?.toIntOrNull() ?: plan.numThreads
     println("tier=${cfg.tier} threads=$threads config_hash=${TierConfig.hash(cfgText)} wav=${wav.name}")
 
     // LLM-пунктуация: SMOKE_LLM_GGUF=/путь/модель.gguf (нужна libneurosteno_llm: scripts/build_host_jni.sh)
@@ -74,7 +74,17 @@ fun main(args: Array<String>) {
         }
     }
     val providers = EngineProviders(
-        vad = { SherpaVad(cfg.vad, root, 1) },
+        vad = {
+            val inner = SherpaVad(cfg.vad, root, 1)
+            object : ru.neurosteno.core.Vad by inner {
+                override fun detect(audio: AudioBuffer) = inner.detect(audio).also { s ->
+                    if (System.getenv("SMOKE_DEBUG_ASR") != null) {
+                        println("VAD spans=" + s.map { it.startMs to it.endMs })
+                        println("CHUNKS=" + ru.neurosteno.core.asr.ChunkPlanner.plan(audio.samples, s, (cfg.asr.chunk.maxS * 1000).toLong()).map { it.startMs to it.endMs })
+                    }
+                }
+            }
+        },
         punctuator = punct,
         asr = { lang ->
             SherpaAsr(if (lang == "en") (cfg.asrEn ?: cfg.asr) else cfg.asr, root, threads, lang,
@@ -105,5 +115,15 @@ fun main(args: Array<String>) {
     println("stage_ms=${meta.stageMs}")
     result.warnings.forEach { println("WARNING: $it") }
     println(result.json)
-    args.getOrNull(3)?.let { File(it).writeText(result.json) }
+    // 4-й аргумент -- каталог прогона: <id>.json + <id>.meta.json в формате ARCHITECTURE §2 (для stenoeval score)
+    args.getOrNull(3)?.let { outDir ->
+        val dir = File(outDir).apply { mkdirs() }
+        val id = wav.nameWithoutExtension
+        File(dir, "$id.json").writeText(result.json)
+        File(dir, "$id.meta.json").writeText(
+            "{\"processing_ms\":${meta.processingMs},\"stage_ms\":{" +
+                meta.stageMs.entries.joinToString(",") { "\"${it.key}\":${it.value}" } +
+                "},\"tier\":\"${meta.tier}\",\"config_hash\":\"${TierConfig.hash(cfgText)}\",\"device\":\"jvm-smoke\"}",
+        )
+    }
 }

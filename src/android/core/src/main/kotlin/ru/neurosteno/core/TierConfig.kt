@@ -98,6 +98,19 @@ data class LanguageConfig(
 data class AudioConfig(
     @SerialName("sample_rate") val sampleRate: Int = 16_000,
     val denoise: DenoiseConfig = DenoiseConfig(),
+    /** Пиковая нормализация громкости перед VAD/ASR (BACKLOG B24); по умолчанию выключена. */
+    @SerialName("normalize_gain") val normalizeGain: NormalizeGainConfig = NormalizeGainConfig(),
+)
+
+@Serializable
+data class NormalizeGainConfig(
+    /** none | peak (неизвестное значение трактуется как none). */
+    val mode: String = "none",
+    @SerialName("target_peak_dbfs") val targetPeakDbfs: Double = -1.0,
+    /** Максимальное усиление, дБ. */
+    @SerialName("max_gain_db") val maxGainDb: Double = 40.0,
+    /** Максимальное ослабление, дБ (слишком громкие записи ослабляются не сильнее). */
+    @SerialName("max_attenuation_db") val maxAttenuationDb: Double = 6.0,
 )
 
 @Serializable
