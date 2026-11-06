@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: bench-asr
+Version: 0.1.0
+Summary: Бенчмарк ASR-кандидатов (sherpa-onnx, whisper) для Нейро-стенографиста
+Requires-Python: <3.12,>=3.11
+Requires-Dist: sherpa-onnx>=2.0.1
+Requires-Dist: numpy
+Requires-Dist: soundfile
+Requires-Dist: psutil
+Requires-Dist: scipy
+Requires-Dist: pandas
+Requires-Dist: pytest
