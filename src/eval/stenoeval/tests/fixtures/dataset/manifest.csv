@@ -1,0 +1,5 @@
+id,audio,ref,duration_ms,num_speakers,lang,source,condition,split
+cat01,audio/cat01.wav,ref/cat01.json,14500,2,ru,fixture,clean,dev
+cat02,audio/cat02.wav,ref/cat02.json,16000,3,ru,fixture,overlap,dev
+cat03,audio/cat03.wav,ref/cat03.json,11000,1,ru,fixture,noise,dev
+cat04,audio/cat04.wav,ref/cat04.json,8000,0,ru,fixture,clean,dev

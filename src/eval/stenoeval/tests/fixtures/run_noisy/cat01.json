@@ -1,0 +1,28 @@
+{
+ "transcript": [
+  {
+   "speaker_id": "speaker_1",
+   "start_ms": 450,
+   "end_ms": 3300,
+   "text": "добрый день мурзик как твои дела"
+  },
+  {
+   "speaker_id": "speaker_2",
+   "start_ms": 3700,
+   "end_ms": 7100,
+   "text": "здравствуй барсик всё хорошо кто то съел мою сметану"
+  },
+  {
+   "speaker_id": "speaker_1",
+   "start_ms": 7400,
+   "end_ms": 11200,
+   "text": "елки палки это был не я честное слово"
+  },
+  {
+   "speaker_id": "speaker_2",
+   "start_ms": 11600,
+   "end_ms": 14100,
+   "text": "посмотрим посмотрим"
+  }
+ ]
+}
