@@ -4,6 +4,8 @@
 # WER norm Android хуже refpipe более чем на 1 п.п. (порог: PARITY_TOL, по умолчанию 1.0).
 #
 #   src/android/scripts/parity.sh <dataset> <N> [tier]
+#   PARITY_LANGUAGE=auto -- язык refpipe (по умолчанию ru); для ru-en-mixed нужен auto.
+#   PARITY_SPLIT=all -- брать и test-файлы (только для проверки паритета, не для подбора параметров).
 #   <dataset> -- имя каталога в $ROOT/.cache/data (например ru-dialog-tts-cats) или путь; tier по умолчанию medium.
 # Пунктуация берётся из конфига (asr_native -- знаки и регистр от модели); для source=llm обе стороны без LLM (plain).
 # Язык ru, одинаковое число потоков (PARITY_THREADS). normalize_gain конфига: Android нормализует сам, refpipe получает
@@ -26,7 +28,7 @@ THREADS="${PARITY_THREADS:-4}"
 [ -d "$DATASET" ] || DATASET="$NEUROSTENO_ROOT/.cache/data/$DATASET"
 [ -f "$DATASET/manifest.csv" ] || { echo "нет $DATASET/manifest.csv" >&2; exit 2; }
 NAME="$(basename "$DATASET")"
-OUT="$NEUROSTENO_ROOT/.cache/parity/$NAME-$TIER"
+OUT="$NEUROSTENO_ROOT/.cache/parity/$NAME-$TIER${PARITY_TAG:+-$PARITY_TAG}"
 CONFIG="${PARITY_CONFIG:-$REPO/config/tiers/$TIER.json}"
 MODELS="$NEUROSTENO_ROOT/.cache/models"
 REFPIPE="$REPO/src/eval/refpipe/.venv/bin/refpipe"
@@ -37,7 +39,9 @@ REFPY="$REPO/src/eval/refpipe/.venv/bin/python"
 IDS=()
 while IFS= read -r line; do IDS+=("$line"); done < <(python3 -I - "$DATASET/manifest.csv" "$N" <<'PY'
 import csv, sys
-rows = [r for r in csv.DictReader(open(sys.argv[1], encoding="utf-8")) if r.get("split") == "dev"]
+import os
+split = os.environ.get("PARITY_SPLIT", "dev")  # dev | all
+rows = [r for r in csv.DictReader(open(sys.argv[1], encoding="utf-8")) if split == "all" or r.get("split") == split]
 rows.sort(key=lambda r: r["id"])
 for r in rows[: int(sys.argv[2])]:
     print(r["id"])
@@ -54,7 +58,7 @@ for id in "${IDS[@]}"; do
   wav="$DATASET/audio/$id.wav"
   echo "--- $id"
   "$REFPY" "$HERE/parity_norm.py" "$CONFIG" "$wav" "$OUT/wav/$id.wav"
-  "$REFPIPE" run --config "$CONFIG" --models "$MODELS" --input "$OUT/wav/$id.wav" --out "$OUT/refpipe" --language ru \
+  "$REFPIPE" run --config "$CONFIG" --models "$MODELS" --input "$OUT/wav/$id.wav" --out "$OUT/refpipe" --language "${PARITY_LANGUAGE:-ru}" \
     --num-threads "$THREADS" ${OVR[@]+"${OVR[@]}"} >/dev/null
   PARITY_THREADS="$THREADS" PARITY_CONFIG="$CONFIG" "$HERE/jvm_smoke.sh" "$wav" "$TIER" "$OUT/android" >/dev/null 2>&1 \
     || { echo "jvm_smoke упал на $id" >&2; exit 1; }

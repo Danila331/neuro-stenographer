@@ -82,7 +82,7 @@ class SherpaAsr(
         }
         val hotwords = root.optionalFile(cfg.hotwordsFile)
         val config = OfflineRecognizerConfig(
-            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = if (files.kind == AsrModelFiles.Kind.NEMO_TRANSDUCER) 64 else 80), // как в эталоне
+            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = if (files.kind == AsrModelFiles.Kind.NEMO_TRANSDUCER && cfg.engine.lowercase().contains("gigaam")) 64 else 80), // как в эталоне (64 -- только GigaAM RNNT; Parakeet и др. -- 80)
             modelConfig = model,
             decodingMethod = cfg.decoding,
             maxActivePaths = cfg.maxActivePaths,
