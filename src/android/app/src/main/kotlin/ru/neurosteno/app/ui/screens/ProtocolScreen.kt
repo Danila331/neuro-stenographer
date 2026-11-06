@@ -119,7 +119,7 @@ private fun ProtocolTab(
         ui.error?.let { MessageCard(it, isError = it != "Остановлено") }
         if (ui.protocol.isNotBlank()) {
             Card(
-                Modifier.weight(1f, fill = true).fillMaxWidth(),
+                Modifier.weight(1f, fill = false).fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
             ) {
                 SelectionContainer {
@@ -130,9 +130,8 @@ private fun ProtocolTab(
                     )
                 }
             }
-        } else {
-            Column(Modifier.weight(1f)) {}
         }
+        if (ui.protocol.isBlank()) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
         if (ui.running) {
             OutlinedButton(onClick = { llm.stop() }, modifier = Modifier.fillMaxWidth().testTag("btn_llm_stop")) { Text("Остановить") }
         } else {

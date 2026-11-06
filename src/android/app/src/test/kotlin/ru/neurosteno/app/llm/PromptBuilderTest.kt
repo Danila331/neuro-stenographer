@@ -53,6 +53,11 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun cleanStripsPseudoTagsAndMarkdownBold() {
+        assertEquals("Краткое резюме:\nТекст", PromptBuilder.clean("<protocol>\n\n**Краткое резюме:**\nТекст\n</protocol>"))
+    }
+
+    @Test
     fun selectRelevantPrefersMatchingChunks() {
         val chunks = listOf("обсуждали погоду и обед", "решили перенести релиз на пятницу", "говорили про отпуск", "бюджет проекта утвердили")
         val picked = PromptBuilder.selectRelevant(chunks, "Когда релиз?", 40)

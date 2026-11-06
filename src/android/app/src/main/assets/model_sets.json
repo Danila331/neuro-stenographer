@@ -15,7 +15,7 @@
       "id": "lite",
       "tier": "lite",
       "title": "Lite",
-      "description": "Минимальная нагрузка: слабые устройства, ≈ 0,9 ГБ.",
+      "description": "Минимальная нагрузка: для слабых устройств.",
       "recommended": false,
       "version": "1",
       "files": [
@@ -113,7 +113,7 @@
       "id": "medium",
       "tier": "medium",
       "title": "Medium",
-      "description": "Основной набор: лучший баланс точности и скорости, ≈ 1,6 ГБ.",
+      "description": "Основной набор: лучший баланс точности и скорости.",
       "recommended": true,
       "version": "1",
       "files": [
@@ -211,7 +211,7 @@
       "id": "hard",
       "tier": "hard",
       "title": "Hard",
-      "description": "Максимум точности для флагманов (от 8 ГБ ОЗУ), ≈ 4 ГБ.",
+      "description": "Максимум точности для флагманов (от 8 ГБ ОЗУ).",
       "recommended": false,
       "version": "1",
       "files": [

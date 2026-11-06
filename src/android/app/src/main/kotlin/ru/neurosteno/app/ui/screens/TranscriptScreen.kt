@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -79,6 +80,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -107,7 +109,7 @@ import ru.neurosteno.app.ui.speakerColor
 import ru.neurosteno.core.Utterance
 
 /** Расшифровка: реплики с цветными метками, плеер, поиск, правки, экспорт и протокол. */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 fun TranscriptScreen(
     session: TranscriptSession,
@@ -432,7 +434,7 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
     var speedMenu by remember { mutableStateOf(false) }
     val duration = state.durationMs.coerceAtLeast(1)
     Surface(tonalElevation = 3.dp, color = MaterialTheme.colorScheme.surfaceContainer) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(Format.clock(((dragging ?: (state.positionMs.toFloat() / duration)) * duration).toLong()), style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                 Slider(
@@ -469,6 +471,7 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
 
 private fun speedLabel(s: Float) = (if (s == s.toInt().toFloat()) s.toInt().toString() else s.toString().replace('.', ',')) + "×"
 
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 private fun EditTextDialog(initial: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf(initial) }
@@ -479,7 +482,8 @@ private fun EditTextDialog(initial: String, onSave: (String) -> Unit, onDismiss:
         title = { Text("Правка реплики") },
         text = {
             OutlinedTextField(
-                value = text, onValueChange = { text = it }, modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("edit_text_field"),
+                value = text, onValueChange = { text = it },
+                modifier = Modifier.fillMaxWidth().focusRequester(focus).semantics { testTagsAsResourceId = true }.testTag("edit_text_field"),
                 minLines = 3, maxLines = 8, label = { Text("Текст реплики") },
             )
         },
@@ -527,6 +531,7 @@ private fun SpeakerChoiceRow(id: String, label: String, selected: Boolean, label
     }
 }
 
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 private fun SpeakersDialog(
     transcript: EditableTranscript,
@@ -538,7 +543,7 @@ private fun SpeakersDialog(
         onDismissRequest = onDismiss,
         title = { Text("Говорящие") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()).semantics { testTagsAsResourceId = true }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "Имена показываются в расшифровке, TXT, SRT, VTT и расширенном JSON. В JSON по ТЗ остаётся speaker_N.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

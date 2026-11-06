@@ -46,6 +46,9 @@ object PromptBuilder {
         .replace(Regex("(?s)<think>.*?</think>"), "")
         .replace("<|im_end|>", "")
         .replace("<|im_start|>", "")
+        .replace(Regex("</?[A-Za-z_][A-Za-z0-9_]*>"), "") // «<protocol>» и подобные теги, которые подражающая промпту модель добавляет сама
+        .replace("**", "")
+        .replace(Regex("\n{3,}"), "\n\n")
         .trim()
 
     /**

@@ -2,6 +2,7 @@ package ru.neurosteno.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -64,11 +65,8 @@ fun ProcessingScreen(
     val elapsed = (now - state.startedAtMs).coerceAtLeast(0)
     val eta = EtaEstimator.remainingMs(elapsed, state.overall, state.audioDurationMs, priorRtf)
     val percentText = Format.percent(state.overall)
-    Scaffold(topBar = { NeuroTopBar("Обработка записи") }) { padding ->
-        Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
+    val headerBlock: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(state.sourceName, style = MaterialTheme.typography.titleMedium, maxLines = 2)
             if (models is ModelsStatus.Installing) {
                 MessageCard("Подготовка моделей (только при первом запуске): ${Format.percent(models.fraction)}. Обработка начнётся сразу после неё.") {
@@ -94,13 +92,19 @@ fun ProcessingScreen(
                     Text("Длительность записи ${Format.clock(it)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                val stages = buildList {
-                    addAll(VISIBLE_STAGES)
-                    state.fractions[Stage.DENOISE]?.let { if (it in 0.001f..0.999f) add(1, Stage.DENOISE) }
-                }
-                stages.forEach { st -> StageRow(st, state.fractions[st] ?: 0f, active = state.fractions[st]?.let { it > 0f && it < 1f } == true) }
+        }
+    }
+    val stagesBlock: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            val stages = buildList {
+                addAll(VISIBLE_STAGES)
+                state.fractions[Stage.DENOISE]?.let { if (it in 0.001f..0.999f) add(1, Stage.DENOISE) }
             }
+            stages.forEach { st -> StageRow(st, state.fractions[st] ?: 0f, active = state.fractions[st]?.let { it > 0f && it < 1f } == true) }
+        }
+    }
+    val footerBlock: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (showNotificationHint) {
                 MessageCard("Включите уведомления, чтобы видеть прогресс, когда приложение свёрнуто. Обработка идёт и без них.") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -109,7 +113,6 @@ fun ProcessingScreen(
                     }
                 }
             }
-            Spacer(Modifier.size(4.dp))
             OutlinedButton(onClick = onCancel, enabled = !state.cancelling, modifier = Modifier.fillMaxWidth().testTag(Tags.CANCEL)) {
                 Text("Отменить")
             }
@@ -118,6 +121,26 @@ fun ProcessingScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+    Scaffold(topBar = { NeuroTopBar("Обработка записи") }) { padding ->
+        BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
+            if (maxWidth >= 720.dp) {
+                // альбомная ориентация: слева общий прогресс и «Отменить», справа стадии -- всё видно без прокрутки
+                Row(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        headerBlock(); footerBlock()
+                    }
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { stagesBlock() }
+                }
+            } else {
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    headerBlock(); stagesBlock(); footerBlock()
+                }
+            }
         }
     }
 }
