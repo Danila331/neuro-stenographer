@@ -11,6 +11,9 @@ SUMMARY_COLS = [
     ("files", "files", lambda v: str(v)),
     ("WER raw", "wer_raw", fmt_pct),
     ("WER norm", "wer_norm", fmt_pct),
+    ("WER punct", "wer_punct", fmt_pct),
+    ("WER p-sep", "wer_punct_sep", fmt_pct),
+    ("WER p-lc", "wer_punct_lc", fmt_pct),
     ("WER num", "wer_num", fmt_pct),
     ("cpWER", "cpwer_norm", fmt_pct),
     ("DER", "der", fmt_pct),
@@ -50,7 +53,7 @@ def legend() -> str:
     return (
         "All error rates in %. WER/cpWER/DER are micro-averaged (sum of errors / sum of reference words or "
         "speech seconds); JER, ts MAE, spk acc are per-file means; RTF = sum(processing_ms)/sum(duration_ms). "
-        "WER raw/norm/num = normalisation modes; DER ±.25 = NIST collar +-0.25 s around reference boundaries (pyannote collar=0.5)."
+        "Main WER metrics: WER norm (no punctuation) and WER punct (punctuation and case counted, е=ё). WER raw/norm/punct/p-sep/p-lc/num = normalisation modes; DER ±.25 = NIST collar +-0.25 s around reference boundaries (pyannote collar=0.5)."
     )
 
 
@@ -59,6 +62,9 @@ def legend() -> str:
 COMPARE_METRICS = [
     ("WER norm", "wer_norm", True),
     ("WER raw", "wer_raw", True),
+    ("WER punct", "wer_punct", True),
+    ("WER p-sep", "wer_punct_sep", True),
+    ("WER p-lc", "wer_punct_lc", True),
     ("WER num", "wer_num", True),
     ("cpWER", "cpwer_norm", True),
     ("DER", "der", True),
@@ -79,7 +85,7 @@ def compare_runs(
 ) -> tuple[str, bool]:
     """Compare runs; the first id is the baseline. Only files present in ALL runs are compared.
 
-    Returns (text, regression) where regression is True if any accuracy metric (WER norm/raw,
+    Returns (text, regression) where regression is True if any accuracy metric (WER norm/punct/raw,
     cpWER, DER) of a later run is worse than the baseline by more than ``tol`` (absolute, in
     fraction units, e.g. 0.002 = 0.2 pp).
     """
@@ -108,7 +114,7 @@ def compare_runs(
     header = ["metric"] + list(run_ids) + [f"Δ {run_ids[i]} vs {run_ids[0]}" for i in range(1, len(run_ids))]
     body = []
     regress = False
-    accuracy_keys = {"wer_norm", "wer_raw", "cpwer_norm", "der"}
+    accuracy_keys = {"wer_norm", "wer_punct", "wer_raw", "cpwer_norm", "der"}
     for title, key, lower_better in COMPARE_METRICS:
         vals = [sums[r].get(key) for r in run_ids]
         is_pct = key not in ("ts_start_mae_ms", "ts_end_mae_ms", "rtf_total")
@@ -148,7 +154,7 @@ def compare_runs(
     lines.append("")
     lines.append(
         "RESULT: " + ("REGRESSION - accuracy got worse than baseline" if regress else "OK - accuracy not worse than baseline")
-        + f" (tolerance {100 * tol:.2f} pp on WER norm/raw, cpWER, DER; first run is the baseline)"
+        + f" (tolerance {100 * tol:.2f} pp on WER norm/punct/raw, cpWER, DER; first run is the baseline)"
     )
     return "\n".join(lines), regress
 

@@ -51,6 +51,10 @@ def cmd_score(a: argparse.Namespace) -> int:
         print(f"warning: {w}", file=sys.stderr)
     rows = [{k: ("" if v is None else str(v)) for k, v in s.row.items()} for s in scores]
     print(f"run_id={rows[0]['run_id']}  files={len(rows)}  dataset={rows[0]['dataset']}  commit={rows[0]['commit'][:10]}")
+    from .results import fmt_pct, summarize
+
+    _s = summarize(rows)
+    print(f"MAIN (micro): WER norm = {fmt_pct(_s['wer_norm'])}%   WER punct = {fmt_pct(_s['wer_punct'])}%")
     print(summary_table(rows))
     print(legend())
     if a.json_out:

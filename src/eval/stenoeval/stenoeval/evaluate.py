@@ -37,7 +37,7 @@ def evaluate_pair(
     pm = PairMetrics(duration_ms=duration_ms)
     for mode in MODES:
         pm.wer[mode] = werm.wer(ref, hyp, mode)
-    for mode in ("raw", "norm", "norm_num"):
+    for mode in ("raw", "norm", "norm_num", "punct"):
         pm.cpwer[mode] = werm.cpwer(ref, hyp, mode)
     for key, collar in diar.COLLARS.items():
         pm.der[key] = diar.der(ref, hyp, collar, duration_ms)

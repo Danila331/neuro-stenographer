@@ -11,6 +11,14 @@ The jury's exact normalisation is unknown, so every metric is computed in severa
              "кто-то" vs "кто то" ambiguity that would otherwise cost 2 errors.
 ``norm_hy``  like ``norm`` but a hyphen *between two letters/digits* is kept inside the token
              ("кто-то" stays one word) - the opposite hyphen policy, for comparison.
+``punct``    punctuation and case are part of the text (the jury apparently counts punctuation, see
+             docs/BACKLOG.md Q13/Q14; е/ё is NOT counted): NFKC -> ё->е, Ё->Е -> split on
+             whitespace. Marks stay glued to words, as in ``raw`` ("день!" is one token).
+``punct_sep`` like ``punct`` but every punctuation mark (Unicode category P*) becomes its own
+             token: "день!" -> "день", "!"; «да» -> "«", "да", "»"; "..." -> three "." tokens
+             (NFKC turns "…" into "..."). Kept inside the word: a hyphen/dash between two
+             letters/digits ("кто-то") and a "," or "." between two digits ("3,5").
+``punct_lc`` like ``punct_sep`` in lower case.
 ``norm_num`` ``norm`` + numbers written with digits are spelled out in Russian words
              (num2words, lang=ru) BEFORE punctuation removal: "25" -> "двадцать пять",
              "3,5" -> "три запятая пять", "5-й" -> "пятый".
@@ -28,7 +36,7 @@ import re
 import unicodedata
 from functools import lru_cache
 
-MODES = ("raw", "norm", "norm_hy", "norm_num")
+MODES = ("raw", "norm", "norm_hy", "norm_num", "punct", "punct_sep", "punct_lc")
 
 _NUM_RE = re.compile(r"(?<!\w)(\d+)(?:[.,](\d+))?(?:(-?)([а-яё]{1,4}))?(?!\w)", re.I)
 # suffixes that mark an ordinal number ("5-й", "21-го"); anything else ("2-х", "10-ти") is read as a cardinal
@@ -110,9 +118,51 @@ def _basic(text: str, keep_hyphen: bool = False) -> str:
     return "".join(out)
 
 
+def _yo(t: str) -> str:
+    return t.replace("ё", "е").replace("Ё", "Е")
+
+
+def _punct_sep(text: str, lower: bool) -> list[str]:
+    t = _yo(unicodedata.normalize("NFKC", text))
+    if lower:
+        t = t.lower()
+    out: list[str] = []
+    cur: list[str] = []
+    n = len(t)
+    for i, ch in enumerate(t):
+        if ch.isspace():
+            if cur:
+                out.append("".join(cur))
+                cur = []
+            continue
+        if unicodedata.category(ch)[0] == "P":
+            prev_c = t[i - 1] if i > 0 else ""
+            next_c = t[i + 1] if i < n - 1 else ""
+            inside = (
+                (unicodedata.category(ch) == "Pd" and prev_c.isalnum() and next_c.isalnum())
+                or (ch in ",." and prev_c.isdigit() and next_c.isdigit())
+            )
+            if not inside:
+                if cur:
+                    out.append("".join(cur))
+                    cur = []
+                out.append(ch)
+                continue
+        cur.append(ch)
+    if cur:
+        out.append("".join(cur))
+    return out
+
+
 def tokens(text: str, mode: str) -> list[str]:
     if mode == "raw":
         return text.split()
+    if mode == "punct":
+        return _yo(unicodedata.normalize("NFKC", text)).split()
+    if mode == "punct_sep":
+        return _punct_sep(text, lower=False)
+    if mode == "punct_lc":
+        return _punct_sep(text, lower=True)
     if mode == "norm":
         return _basic(text).split()
     if mode == "norm_hy":
