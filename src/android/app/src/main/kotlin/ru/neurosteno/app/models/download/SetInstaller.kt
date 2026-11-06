@@ -42,7 +42,7 @@ class SetInstaller(
 
     /** Блокирующая загрузка. Бросает [InsufficientSpaceException], [DownloadCancelledException], [IOException]. */
     fun install(set: CatalogSet, isCancelled: () -> Boolean, progress: DownloadProgress): ModelManifest {
-        val problems = catalog.problems().filter { it.startsWith("${set.id}/") }
+        val problems = catalog.problems(requireHttps = false).filter { it.startsWith("${set.id}/") }
         if (problems.isNotEmpty()) throw IOException("Каталог моделей повреждён: ${problems.first()}")
         val staging = stagingDir(set.id).apply { mkdirs() }
         val total = catalog.downloadBytes(set)

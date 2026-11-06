@@ -65,18 +65,18 @@ data class Catalog(
     fun installedBytes(set: CatalogSet): Long = set.files.sumOf { it.size }
 
     /** Проверка согласованности каталога: у каждого файла есть источник, архивы существуют, пути безопасны. */
-    fun problems(): List<String> = buildList {
+    fun problems(requireHttps: Boolean = true): List<String> = buildList {
         for (s in sets) {
             for (f in s.files) {
                 val where = "${s.id}/${f.path}"
                 if ((f.url == null) == (f.archive == null)) add("$where: нужно ровно одно из url/archive")
                 if (f.archive != null && (archive(f.archive) == null || f.member == null)) add("$where: архив ${f.archive} не найден или нет member")
-                if (f.url != null && !f.url.startsWith("https://")) add("$where: URL не https")
+                if (requireHttps && f.url != null && !f.url.startsWith("https://")) add("$where: URL не https")
                 if (f.path.startsWith("/") || f.path.split('/').any { it == ".." }) add("$where: небезопасный путь")
                 if (f.size <= 0) add("$where: размер не задан")
             }
         }
-        for (a in archives) if (!a.url.startsWith("https://")) add("архив ${a.id}: URL не https")
+        for (a in archives) if (requireHttps && !a.url.startsWith("https://")) add("архив ${a.id}: URL не https")
     }
 
     companion object {
