@@ -62,6 +62,8 @@ data class FragmentTuning(
     val embeddingSpeechMs: Long = 20_000,
     /** Не брать в эталон реплики короче. */
     val minReferenceUtteranceMs: Long = 700,
+    /** Автоопределение языка (LID) доверяем только при такой длине речи в отрезке; короче -- язык расшифровки. */
+    val minLidSpeechMs: Long = 3_000,
 )
 
 enum class FragmentOutcome {
@@ -233,21 +235,23 @@ class FragmentReprocessor(
                 sanitize(blocking(tracker, Stage.VAD) { engines.vad().use { it.detect(processed) } }, sliceDur)
             }
         }
+        var languageUsed: String? = null
         fun noSpeech(): FragmentResult {
             if (request.removeIfNoSpeech && replaced.isNotEmpty()) {
                 tracker.report(Stage.EXPORT, 0f)
                 return finish(kept, emptyList(), replaced, eff, duration, transcript, FragmentOutcome.NO_SPEECH_REMOVED,
-                    "Речь в отрезке не найдена, ${replaced.size} реплик удалено", emptyList(), null, warnings, stageMs, t0, nanoTime)
+                    "Речь в отрезке не найдена, ${replaced.size} реплик удалено", emptyList(), languageUsed, warnings, stageMs, t0, nanoTime)
                     .also { for (st in Stage.entries) tracker.report(st, 1f) }
             }
             return unchanged(FragmentOutcome.NO_SPEECH_KEPT,
                 if (replaced.isEmpty()) "Речь в отрезке не найдена, расшифровка не изменена"
-                else "Речь в отрезке не найдена, расшифровка не изменена (${replaced.size} реплик оставлено без изменений)", eff)
+                else "Речь в отрезке не найдена, расшифровка не изменена (${replaced.size} реплик оставлено без изменений)", eff, languageUsed)
         }
         if (speech.isEmpty()) return noSpeech()
 
         // ---- язык ----
         val language = timed(Stage.LID) { chooseLanguage(request.language, transcript, processed, speech, tracker, warnings) }
+        languageUsed = language
 
         // ---- глобальные говорящие и эталонные клипы ----
         val globalIds = LinkedHashMap<String, Int>() // speakerId -> индекс (1-based)
@@ -505,7 +509,7 @@ class FragmentReprocessor(
                 if (req != null) warnings += "Неизвестный язык '$requested' -- определяется автоматически"
                 val lid = engines.languageId
                 val canLid = lid != null && settings.languageMode == LanguageConfig.AUTO && LanguageConfig.EN in settings.supportedLanguages
-                if (canLid) {
+                if (canLid && SpeakerMatcher.total(speech) >= tuning.minLidSpeechMs) {
                     soft(Stage.LID, warnings, transcript.meta.language) {
                         val raw = blocking(tracker, Stage.LID) { lid().use { it.detect(audio, speech) } }
                         if (raw.trim().lowercase().startsWith(LanguageConfig.EN)) LanguageConfig.EN else LanguageConfig.RU

@@ -250,6 +250,16 @@ class FragmentReprocessorTest {
     }
 
     @Test
+    fun `short fragment does not trust lid and inherits the transcript language`() {
+        val short = utt("speaker_1", 30_000, 31_000, "кор")
+        w.words = mapOf("ru" to w.words.getValue("ru") + Word("коротко", 30_100, 30_900), "en" to emptyList())
+        val r = run(reprocessor(s = PipelineSettings(tier = "t", languageMode = LanguageConfig.AUTO, supportedLanguages = setOf("ru", "en")), lid = "en"),
+            FragmentRequest(30_000, 31_000), transcript(old + short))
+        assertEquals("ru", r.language)
+        assertEquals("коротко", r.transcript.utterances.last().text)
+    }
+
+    @Test
     fun `auto language without lid inherits the transcript language`() {
         val t = transcript().let { it.copy(meta = it.meta.copy(language = "en")) }
         val r = run(reprocessor(), FragmentRequest(5_000, 9_000), t)

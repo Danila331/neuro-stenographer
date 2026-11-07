@@ -76,10 +76,12 @@ class SpeakerMatcher(
 
     companion object {
         /**
-         * Порог косинусной близости. Подобран на `ru-dialog-tts-cats` для эмбеддингов medium (см. README, раздел
-         * «Повторная обработка фрагмента»): для TTS-голосов «тот же говорящий» -- обычно > 0.6, «другой» -- < 0.4.
+         * Порог косинусной близости. Подбор: `jvm-smoke --emb-check` на 9 dev-записях `ru-dialog-tts-cats` (эмбеддинги
+         * medium, 192-мерные, клипы реплик <= 8 с): на чистых записях «тот же говорящий» >= 0.59 (медиана 0.78), «другой» <= 0.41;
+         * на телефонных (mulaw) и похожих TTS-голосах (irina/milena) «другой» доходит до 0.8 -- там эмбеддинг неоднозначен
+         * при любом пороге. 0.55 -- середина зазора на чистых записях.
          */
-        const val DEFAULT_THRESHOLD = 0.5
+        const val DEFAULT_THRESHOLD = 0.55
 
         fun cosine(a: FloatArray, b: FloatArray): Double {
             val n = minOf(a.size, b.size)

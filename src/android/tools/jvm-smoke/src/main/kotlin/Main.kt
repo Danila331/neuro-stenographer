@@ -30,6 +30,8 @@ private class WavFileDecoder : AudioDecoder {
 
 /** args: <wav> <tier.json> <models-root> [out.json] */
 fun main(args: Array<String>) {
+    if (args.firstOrNull() == "--reprocess") { runReprocess(args.drop(1)); return } // повторная обработка фрагмента (Reprocess.kt)
+    if (args.firstOrNull() == "--emb-check") { runEmbCheck(args.drop(1)); return }
     if (args.firstOrNull() == "--llm-raw") { // --llm-raw <model.gguf> <вопрос...>: ChatML без правок
         val llm = LlamaAssistant(File(args[1]), 2048, 4)
         val q = args.drop(2).joinToString(" ")
