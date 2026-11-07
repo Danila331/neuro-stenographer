@@ -5,7 +5,7 @@ Python-пакет и CLI для проверки формата JSON, подсч
 Методика жюри заранее неизвестна, поэтому ключевые метрики считаются **в нескольких вариантах**
 (режимы нормализации текста, величины collar). Главные показатели для сравнения вариантов —
 **микро-усреднённые WER `norm` (без знаков препинания) и WER `punct` (знаки и регистр учитываются, е=ё)**:
-по ответам жюри (docs/BACKLOG.md Q13/Q14) пунктуация, по всей видимости, входит в WER, а различие е/ё не считается.
+по ответам жюри (docs/team/BACKLOG.md Q13/Q14) пунктуация, по всей видимости, входит в WER, а различие е/ё не считается.
 Какая именно токенизация знаков у жюри, неизвестно, поэтому считаются три punct-режима.
 
 ## Установка
@@ -25,7 +25,7 @@ Python, но медленнее), num2words, jsonschema, pyannote.core + pyannot
 ## Команды
 
 ### `stenoeval validate <file.json>... [--duration-ms N]`
-Строгая проверка по ARCHITECTURE §1 и `config/transcript.schema.json`. Код возврата 1, если хоть один
+Строгая проверка по docs/team/ARCHITECTURE_TEAM.md §1 и `config/transcript.schema.json`. Код возврата 1, если хоть один
 файл не прошёл. Проверяется: валидный UTF-8 без BOM; нет дубликатов ключей и `NaN`/`Infinity`;
 кириллица не записана `\uXXXX`; ровно ключ `transcript` и ровно 4 ключа у реплики; `start_ms`/`end_ms`
 — настоящие целые (`true` и `1.0` не принимаются); `speaker_N`, N ≥ 1, нумерация по первому
@@ -34,7 +34,7 @@ Python, но медленнее), num2words, jsonschema, pyannote.core + pyannot
 разрешены; `{"transcript":[]}` валиден.
 
 ### `stenoeval score --dataset <root> --run <run_dir> [опции]`
-Формат датасета и прогона — ARCHITECTURE §2: `<root>/manifest.csv`, `<root>/ref/<id>.json`;
+Формат датасета и прогона — docs/team/ARCHITECTURE_TEAM.md §2: `<root>/manifest.csv`, `<root>/ref/<id>.json`;
 `<run_dir>/<id>.json` (+ `<id>.meta.json` с `processing_ms`, `tier`, `config_hash`, `device`,
 опционально `num_threads`).
 

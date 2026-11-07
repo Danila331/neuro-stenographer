@@ -2,7 +2,7 @@
 
 Gradle-проект (Kotlin 2.4, AGP 9.5, Compose). Полностью офлайн: импорт аудио → распознавание (sherpa-onnx) →
 диаризация → выравнивание → пунктуация (llama.cpp) → показ и экспорт JSON строго по ТЗ.
-Контракты — `docs/ARCHITECTURE.md`; конфиги вариантов — `config/tiers/*.json` (их же читает Python-эталон).
+Контракты — `docs/team/ARCHITECTURE_TEAM.md`; конфиги вариантов — `config/tiers/*.json` (их же читает Python-эталон).
 
 ## Требования и окружение
 

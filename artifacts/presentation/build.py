@@ -1,25 +1,146 @@
 #!/usr/bin/env python3
-"""Build the self-contained offline HTML deck from repository screenshots."""
+"""Собирает автономную HTML-презентацию защиты (без сети): скриншоты и шрифты вшиваются в файл.
+
+Запуск из корня репозитория: python3 artifacts/presentation/build.py
+Источники цифр — в заметках к каждому слайду (клавиша N). Шрифты — из приложения (SIL OFL 1.1, `docs/LICENSES.md`).
+"""
 from pathlib import Path
 import base64
 from html import escape
+
 root = Path(__file__).resolve().parents[2]
 out = Path(__file__).with_name('defense.html')
-def image(name):
-    return 'data:image/png;base64,' + base64.b64encode((root/'artifacts/demo/screens'/name).read_bytes()).decode()
-slides = [
-('Нейро-стенографист','<p class="hero">Разговор превращается в расшифровку <mark>на устройстве</mark></p><p>Говорящие, временные метки и JSON по ТЗ. Локальная LLM готовит протокол после обработки.</p>', 'docs/ARCHITECTURE.md: Контекст и компоненты; docs/DEFENSE.md: план слайдов. TODO(финал): проверить финальный APK.'),
-('Пайплайн','<div class="flow"><div>Импорт аудио<br><small>декодирование · 16 кГц</small></div><div>VAD + язык</div><div>ASR + диаризация</div><div>Реплики и JSON</div></div><p>Qwen3 запускается после сохранения JSON: протокол и вопросы по запросу.</p>', 'docs/ARCHITECTURE.md: Компоненты, Контракты §1. TODO(финал): подтвердить финальную конфигурацию.'),
-('Выбор моделей','<div class="columns"><div><h2>GigaAM v3 RNNT punct</h2><p>Русская речь, знаки и регистр.</p><p class="metric">30,83% <span>против</span> 45,86%</p><p>WER со знаками, synth test: с пунктуацией и без неё.</p></div><div><h2>Другие задачи</h2><p>Parakeet: английская речь<br>Whisper-tiny: язык чанка<br>pyannote + эмбеддинги: говорящие<br>Qwen3: протокол</p></div></div>', 'docs/TEST_RESULTS.md: ASR, Mac M3 Pro, int8, 4 потока, synth test, p-sep, числа словами; docs/MODELS.md; docs/ARCHITECTURE.md. TODO(финал): сверить модели и конфиг.'),
-('Качество','<div class="columns"><div><p class="metric">16,77%</p><p>WER norm на synth test<br>компонент ASR на ПК</p><p class="metric">0,00 п.п.</p><p>расхождение Android и эталона в описанной проверке</p></div><div><p class="metric">24,0 → 11,7%</p><p>DER после relabel в refpipe, тестовый прогон B46</p><p>Финальную сквозную таблицу и паритет нужно повторить на итоговой сборке.</p></div></div>', 'docs/TEST_RESULTS.md: ASR, паритет Android; docs/BACKLOG.md B46: refpipe test DER; TODO(финал): финальный сквозной WER/DER и parity.sh.'),
-('Скорость и память','<div class="columns"><div><h2>Эмулятор jury-4g</h2><p class="metric">0,50–0,57</p><p>RTF, medium debug, короткие примеры без LLM</p><p>Пик PSS: 490–514 МБ на двух примерах</p></div><div><h2>Pixel 10</h2><p class="metric">0,26–0,36</p><p>RTF для шести файлов в B36</p><p>Протокол Qwen3: около 2,2 ГБ PSS на эмуляторе.</p></div></div>', 'docs/TEST_RESULTS.md: Устройства (jury-4g, cats_c01 и synth_0004; Qwen3); docs/BACKLOG.md B36: Pixel 10, шесть файлов. TODO(финал): финальная сборка, повторить на Pixel.'),
-('Ultra Pro Max','<p class="hero">Повторная обработка <mark>фрагмента</mark></p><p>Выделение участка, выбор языка и числа говорящих, пересчёт и замена реплик.</p><p>Ускорение на устройстве осталось для отдельной проверки.</p>', 'docs/BACKLOG.md B37: движок и UI, смоук jury-4g PASS; B38: аппаратное ускорение new, нужен Pixel. TODO(финал): перепроверить в релизной сборке.'),
-('Путь пользователя','<div class="screens"><figure><img src="'+image('01_home.png')+'"><figcaption>Импорт</figcaption></figure><figure><img src="'+image('04_transcript_playing.png')+'"><figcaption>Расшифровка</figcaption></figure><figure><img src="'+image('10c_protocol_done.png')+'"><figcaption>Протокол</figcaption></figure></div>', 'artifacts/demo/screens/01_home.png, 04_transcript_playing.png, 10c_protocol_done.png; docs/DEFENSE.md: Демо. TODO(финал): переснять на итоговой сборке.'),
-('Ограничения и следующие шаги','<div class="columns"><div><h2>Ограничения</h2><p>Перекрытия и дальняя речь ухудшают распознавание. Тестовые диалоги синтетические или собраны из чтения.</p></div><div><h2>Перед сдачей</h2><p>Прогнать реальные записи и финальный APK на Pixel. Повторить WER / DER и паритет. Переснять экраны и видео.</p></div></div>', 'docs/LIMITATIONS.md; docs/TEST_RESULTS.md: Наборы, устройства и оговорки; docs/DEFENSE.md. TODO(финал): результаты финальных тестов.')]
-html='''<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Нейро-стенографист — защита</title><style>
-*{box-sizing:border-box}body{margin:0;background:#181818;color:#111;font-family:Arial,sans-serif}.slide{background:white;width:100vw;height:100vh;padding:5vh 6vw;display:none;position:relative;border:10px solid #111;overflow:hidden}.slide.active{display:block}header{display:flex;align-items:center;gap:20px;border-bottom:6px solid #111;padding-bottom:2vh}header strong{background:#b6ff00;border:4px solid #111;padding:.1em .35em;font-size:2vw}h1{font-size:4vw;margin:0;line-height:1.05}h2{font-size:2.4vw;margin:0 0 2vh}p{font-size:2.15vw;line-height:1.28;margin:2.4vh 0}.hero{font-size:4.2vw;font-weight:800;max-width:85%;line-height:1.15;margin:8vh 0 4vh}mark{background:#b6ff00;padding:0 .1em}.columns{display:grid;grid-template-columns:1fr 1fr;gap:6vw;margin-top:6vh}.columns>div+div{border-left:5px solid #111;padding-left:5vw}.metric{font-weight:900;font-size:4vw;line-height:1;margin:3vh 0 1vh}.metric span{font-size:1.5vw;font-weight:400}.flow{display:flex;gap:0;margin-top:8vh}.flow div{flex:1;border:4px solid #111;padding:3vh 1vw;font-weight:bold;font-size:1.8vw}.flow div+div{border-left:0}.flow div:nth-child(3){background:#b6ff00}small{font-size:1.1vw;font-weight:normal}.screens{height:67vh;display:flex;justify-content:center;gap:5vw;margin-top:3vh}figure{height:100%;margin:0;text-align:center}figure img{height:90%;max-width:25vw;object-fit:contain;border:4px solid #111}figcaption{font-weight:bold;font-size:1.6vw}.notes{display:none;position:absolute;bottom:0;left:0;right:0;background:#b6ff00;border-top:4px solid black;padding:1em;font-size:1.1vw}.show-notes .notes{display:block}.hint{position:fixed;bottom:1vh;right:2vw;color:#555;font-size:12px}@media print{body{background:white}.slide{display:block;page-break-after:always;width:100vw;height:100vh}.hint,.notes{display:none!important}}
-</style><body>'''
-for i,(title,body,note) in enumerate(slides,1): html += f'<section class="slide{" active" if i==1 else ""}"><header><strong>{i:02}</strong><h1>{escape(title)}</h1></header>{body}<aside class="notes">Источник: {escape(note)}</aside></section>'
-html+='''<div class="hint">← / → слайды · N источники</div><script>let n=0,s=[...document.querySelectorAll('.slide')];function show(){s.forEach((x,i)=>x.classList.toggle('active',i===n))}onkeydown=e=>{if(e.key==='ArrowRight'||e.key===' '){n=Math.min(n+1,s.length-1);show()}if(e.key==='ArrowLeft'){n=Math.max(n-1,0);show()}if(e.key.toLowerCase()==='n')document.body.classList.toggle('show-notes')}</script></body></html>'''
-out.write_text(html,encoding='utf-8')
-print('Wrote',out)
+SCREENS = root / 'artifacts/demo/screens'
+FONTS = root / 'src/android/app/src/main/res/font'
+
+
+def b64(path, mime):
+    return f'data:{mime};base64,' + base64.b64encode(path.read_bytes()).decode()
+
+
+def img(name):
+    return b64(SCREENS / name, 'image/png')
+
+
+def shot(name, caption):
+    return f'<figure><img src="{img(name)}" alt="{escape(caption)}"><figcaption>{escape(caption)}</figcaption></figure>'
+
+
+def metric(value, label):
+    return f'<div class="m"><b>{value}</b><span>{label}</span></div>'
+
+
+slides = []
+
+slides.append(('Нейро-стенографист', f'''
+<div class="split">
+ <div><p class="hero">Разговор в расшифровку — <mark>на устройстве</mark></p>
+ <p>Русская и английская речь, говорящие, метки времени, локальная LLM и JSON строго по ТЗ. Без интернета.</p>
+ <div class="chips"><span>офлайн</span><span>ARM64 · 4 ГБ</span><span>4 варианта APK</span></div><p class="sm">Жюри: WER 40, диаризация 25, метки 10, скорость 10, UX 10, защита 5. Проверка автоматическая, модели внутри APK.</p></div>
+ <div class="shots">{shot('redesign/accent-green/01_home_light.png', 'Импорт и запись')}{shot('redesign/accent-green/02_transcript_dark.png', 'Расшифровка и плеер')}</div>
+</div>''', 'README.md; docs/INSTALL.md; docs/team/BACKLOG.md: Q2, Q6, Q7, Q9–Q10 (условия проверки). Скриншоты: artifacts/demo/screens/redesign/accent-green/.'))
+
+slides.append(('Пайплайн', '''
+<div class="flow"><div>Импорт<br><small>любой формат → 16 кГц</small></div><div>VAD + язык<br><small>Silero · Whisper-tiny по чанкам</small></div><div class="hi">ASR ∥ диаризация<br><small>GigaAM v3 / Parakeet · pyannote</small></div><div class="hi">Говорящие по фразам<br><small>эмбеддинг на фразу + ward</small></div><div>Реплики и JSON<br><small>Aligner · ТЗ</small></div></div>
+<div class="flow low"><div>Протокол<br><small>Qwen3, по кнопке</small></div><div>Выжимка<br><small>темы, решения, ссылки</small></div><div>AI-поиск<br><small>BM25 + эмбеддинги + ответ</small></div><div>PDF, SRT, VTT, TXT</div></div>
+<p>LLM работает после сохранения JSON и не влияет на RTF. Один код, один конфиг на телефоне и в Python-эталоне.</p>''',
+ 'docs/ARCHITECTURE.md: Компоненты и схема обработки.'))
+
+slides.append(('Выбор моделей', '''
+<div class="split">
+ <div><div class="m big"><b>30,8 % <small>против</small> 45,9 %</b><span>WER со знаками, synth test: GigaAM v3 с пунктуацией и без</span></div>
+ <div class="m big"><b>4,19 % <small>против</small> 9,77 %</b><span>GigaAM и Whisper-turbo на 166 русских фразах; Whisper — 2,7 ГБ RSS</span></div></div>
+ <div><h2>Что где</h2><p><b>GigaAM v3 RNNT</b> — русский, знаки и регистр<br><b>Parakeet-110m</b> — английский (WER 6,6 %)<br><b>Whisper-tiny</b> — язык фрагмента<br><b>pyannote + ERes2Net/CAM++</b> — говорящие<br><b>Qwen3 0,6B / 1,7B / 4B</b> — протокол, выжимка<br><b>USER2 / rubert-tiny</b> — поиск</p><p class="sm">Отвергнуто: Zipformer, Whisper вторым проходом, голосование моделей, hotwords, LLM-пунктуация.</p></div>
+</div>''', 'docs/MODELS.md: «Почему GigaAM», «Что отвергнуто»; src/eval/bench_asr/results/final/SUMMARY_ru.md (synth test, pc_sep_num); second_pass_rudev.md; final/mem.jsonl.'))
+
+slides.append(('Качество', '''
+<div class="grid4">'''+metric('24,0 → 11,7 %', 'DER ±.25, диаризация по фразам (refpipe, test)')+metric('42 → 77 %', 'файлов с верным числом говорящих (test)')+metric('21,4 %', 'WER norm, итоговая конфигурация, test')+metric('0,00 п.п.', 'расхождение Android и эталона по WER и DER')+'''</div>
+<table><tr><th>Итог refpipe, medium, test (31 файл)</th><th>WER norm</th><th>cpWER</th><th>DER ±.25</th><th>начало реплики</th></tr>
+<tr><td>все условия</td><td>21,4</td><td>30,5</td><td>11,3</td><td>256 мс, 77 % &lt; 300 мс</td></tr>
+<tr><td>шум · дальнее поле</td><td>14,4 · 14,9</td><td>24,8 · 22,0</td><td>8,7 · 5,2</td><td></td></tr>
+<tr><td>перекрытия · телефон</td><td>26,0 · 23,4</td><td>32,0 · 54,3</td><td>16,1 · 21,0</td><td></td></tr></table>
+<p class="sm">Наборы синтетические или из чтения; реальных размеченных диалогов нет.</p>''',
+ 'docs/TEST_RESULTS.md: сквозной пайплайн (run_id refpipe-bp-robust-test-bp1.0-k1thr030, refpipe-medium-relabel-test, refpipe-medium-norelabel-test); паритет — docs/team/BACKLOG.md B28, B42, B46, B55; подтверждено архитектором 2026-11-07.'))
+
+slides.append(('Скорость и память', '''
+<div class="grid4">'''+metric('0,075–0,133', 'RTF, medium release, 6 записей, jury-4g')+metric('0,088', 'RTF, запись 30 минут, пик 938 МБ, без OOM')+metric('0,5–0,66 ГБ', 'пик PSS обработки (LLM не участвует)')+metric('1258 → 53 МБ', 'пик памяти при первом запуске')+'''</div>
+<table><tr><th>Проверка</th><th>Результат</th></tr>
+<tr><td>lite на jury-2g (2 ГБ RAM)</td><td>RTF 0,105–0,119, пик PSS 452–498 МБ</td></tr>
+<tr><td>протокол Qwen3-1.7B · выжимка · ответ поиска</td><td>PSS 1,71 · 1,75 · 1,36 ГБ</td></tr>
+<tr><td>финальная регрессия release-APK</td><td>16 из 16 PASS</td></tr></table>
+<p class="sm">Эмулятор ARM без GPU, хост нагружен — RTF относительный. Pixel 10 (старая сборка): RTF 0,16–0,23; финальный прогон на телефоне — TODO(финал).</p>''',
+ 'artifacts/test-results/prerelease2/README.md (пп. 3, 4, 8–12, 16); B44; docs/TEST_RESULTS.md: Устройства. TODO(финал): финальный прогон на Pixel с итоговым APK.'))
+
+slides.append(('Функции', f'''
+<div class="shots four">{shot('live/c04_3_end.png', 'Живой текст при записи')}{shot('timeline-pdf/03_timeline_playing_light.png', 'Дорожка говорящих')}{shot('summary-search/device/03_summary_final_light.png', 'Выжимка по темам')}{shot('summary-search/states/search_04_answer_done_light.png', 'AI-поиск с ответом')}</div>
+<p class="sm">Ещё: повторная обработка фрагмента, PDF, протокол, менеджер моделей, тёмная тема, шрифт ×1,6.</p>''',
+ 'artifacts/demo/screens/live, timeline-pdf, summary-search; README.md: таблицы возможностей.'))
+
+slides.append(('ТЗ: Ultra Pro Max', '''
+<table class="tz"><tr><th>Пункт</th><th>Статус</th><th>Цифра</th></tr>
+<tr><td>Шум и плохие записи</td><td>да</td><td>шум WER 14,4 %, дальнее поле 14,9 %</td></tr>
+<tr><td>Короткие реплики, перебивания</td><td class="p">частично</td><td>VAD теряет 3–12 % коротких</td></tr>
+<tr><td>Одновременная речь</td><td class="p">частично</td><td>слова смеси — одному говорящему; DER 16,1 %</td></tr>
+<tr><td>Тембр и манера речи</td><td>да</td><td>число говорящих верно у 81 % файлов</td></tr>
+<tr><td>Оперативная память</td><td>да</td><td>0,5–0,66 ГБ; 30 мин — 938 МБ</td></tr>
+<tr><td>Аппаратное ускорение</td><td class="p">частично</td><td>только CPU-оптимизации; GPU/NPU нет</td></tr>
+<tr><td>Правка и повторная обработка</td><td>да</td><td>фрагмент за ≈1 с, с отменой</td></tr></table>
+<p class="sm">Сверх ТЗ: живая расшифровка, выжимка, AI-поиск, PDF, менеджер моделей, редизайн.</p>''',
+ 'README.md: «Требования ТЗ: как закрыто»; docs/TEST_RESULTS.md; docs/team/BACKLOG.md B31, B37, B38, B55. TODO(финал): NNAPI/GPU (B38) — нужен Pixel.'))
+
+slides.append(('Ограничения', '''
+<div class="split"><div><h2>Честно</h2><p>Перекрытия и дальнее поле ухудшают распознавание (остаток — предел модели).</p><p>Число говорящих иногда «флипает» (B57): DER cats_c01 21,7 %, cats_c04 41,2 %.</p><p>Данные синтетические; методика жюри не подтверждена (знаки, числа).</p></div>
+<div><h2>Дальше</h2><p>Реальные размеченные диалоги и подбор порогов на них.</p><p>Устойчивый выбор числа говорящих.</p><p>GPU/NPU с откатом на CPU.</p><p>Английская пунктуация.</p></div></div>''',
+ 'docs/LIMITATIONS.md; artifacts/test-results/prerelease2/README.md п. 2а; docs/team/BACKLOG.md B57, B61.'))
+
+slides.append(('Команда и ИИ', '''
+<div class="split"><div><h2>Как работали</h2><p>ИИ — инструмент: код и тексты писали агенты Claude под руководством архитектора; каждое решение подтверждено замером и записано в бэклоге.</p><p>Заготовленные расшифровки не используются; параметры подбирались по dev, test не трогали.</p></div>
+<div><h2>Что можно проверить</h2><p>Все цифры воспроизводятся: <b>stenoeval report</b>, таблицы bench, <b>parity.sh</b>.</p><p>Исходники, APK и sha256, лицензии — в репозитории.</p><p class="sm">Кто за какой блок отвечает — TODO(финал): назвать людей.</p></div></div>''',
+ 'docs/DEFENSE.md, вопросы 36–38; docs/team/TEAM.md; docs/LICENSES.md. TODO(финал): распределение блоков между людьми.'))
+
+fonts = (
+    "@font-face{font-family:'Unbounded';src:url(" + b64(FONTS / 'unbounded.ttf', 'font/ttf') + ") format('truetype');font-weight:200 900}"
+    "@font-face{font-family:'JetBrains Mono';src:url(" + b64(FONTS / 'jetbrains_mono.ttf', 'font/ttf') + ") format('truetype');font-weight:100 800}"
+)
+css = fonts + '''
+*{box-sizing:border-box}body{margin:0;background:#111;color:#111;font-family:Arial,Helvetica,sans-serif}
+.slide{background:#fff;width:100vw;height:100vh;padding:4vh 5vw;display:none;position:relative;border:.8vh solid #111;overflow:hidden}
+.slide.active{display:block}
+header{display:flex;align-items:center;gap:1.5vw;border-bottom:.7vh solid #111;padding-bottom:1.6vh;margin-bottom:2.2vh}
+header strong{background:#b6ff00;border:.45vh solid #111;box-shadow:.5vh .5vh 0 #111;padding:.1em .4em;font:700 1.8vw 'JetBrains Mono',monospace}
+h1{font:800 3.1vw 'Unbounded',Arial Black,sans-serif;margin:0;line-height:1.1}
+h2{font:800 1.9vw 'Unbounded',Arial Black,sans-serif;margin:0 0 1.6vh;border-bottom:.6vh solid #b6ff00;display:inline-block}
+p{font-size:1.75vw;line-height:1.3;margin:1.4vh 0}.sm{font-size:1.3vw;color:#333}
+.hero{font:800 3.1vw 'Unbounded',Arial Black,sans-serif;line-height:1.2;margin:2vh 0 3vh}
+mark{background:#b6ff00;padding:0 .12em}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:4vw;align-items:start}
+.chips span{display:inline-block;border:.4vh solid #111;box-shadow:.4vh .4vh 0 #111;padding:.4vh 1vw;margin:0 1vw 1vh 0;font:600 1.4vw 'JetBrains Mono',monospace;background:#fff}
+.shots{display:flex;gap:2.5vw;justify-content:center;height:76vh}.shots.four{gap:1.6vw;height:68vh;margin-top:.5vh}
+figure{margin:0;height:100%;text-align:center}figure img{height:calc(100% - 3.4vh);max-width:100%;object-fit:contain;border:.45vh solid #111;box-shadow:.7vh .7vh 0 #111}
+figcaption{font:700 1.2vw 'Unbounded',Arial,sans-serif;margin-top:1vh}
+.flow{display:flex;margin:2.4vh 0}.flow div{flex:1;border:.45vh solid #111;padding:2.2vh .8vw;font:700 1.5vw Arial,sans-serif;background:#fff}
+.flow div+div{border-left:0}.flow .hi{background:#b6ff00}.flow small{display:block;font:400 1vw 'JetBrains Mono',monospace;margin-top:.6vh}.flow.low div{background:#f2f2f2}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5vw;margin:1vh 0 2.4vh}
+.m{border:.45vh solid #111;box-shadow:.6vh .6vh 0 #111;padding:1.8vh 1vw;background:#fff}
+.m b{display:block;font:800 2.1vw 'JetBrains Mono',monospace;line-height:1.1}.m span{display:block;font-size:1.2vw;margin-top:1vh;line-height:1.25}
+.m.big{margin-bottom:3vh;background:#b6ff00}.m.big b{font-size:2.7vw}.m.big small{font-size:1.2vw;font-weight:400}
+table{border-collapse:collapse;width:100%;margin:1vh 0;font-size:1.45vw}th,td{border:.35vh solid #111;padding:1.1vh 1vw;text-align:left}th{background:#111;color:#fff}
+td.p{background:#fff3a6;font-weight:700}.tz td:nth-child(2){width:11vw}
+.bars div{position:relative;height:6.2vh;margin:1.2vh 0;border:.4vh solid #111;background:#fff}
+.bars div:before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:#b6ff00}
+.bars b,.bars i{position:relative;font:700 1.5vw 'JetBrains Mono',monospace;line-height:5.4vh;padding:0 1vw}.bars i{float:right;font-style:normal}
+.notes{display:none;position:absolute;bottom:0;left:0;right:0;background:#b6ff00;border-top:.5vh solid #111;padding:1vh 1.5vw;font-size:1.05vw}
+.show-notes .notes{display:block}.hint{position:fixed;bottom:1vh;right:1.5vw;color:#999;font:12px 'JetBrains Mono',monospace}
+@media print{body{background:#fff}.slide{display:block;page-break-after:always;width:100vw;height:100vh}.hint,.notes{display:none!important}}
+'''
+html = '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Нейро-стенографист — защита</title><style>' + css + '</style><body>'
+for i, (title, body, note) in enumerate(slides, 1):
+    html += (f'<section class="slide{" active" if i == 1 else ""}"><header><strong>{i:02}</strong><h1>{escape(title)}</h1></header>'
+             f'{body}<aside class="notes">Источник: {escape(note)}</aside></section>')
+html += ('<div class="hint">← / → слайды · N источники</div><script>let n=0,s=[...document.querySelectorAll(".slide")];'
+         'function show(){s.forEach((x,i)=>x.classList.toggle("active",i===n))}'
+         'onkeydown=e=>{if(e.key==="ArrowRight"||e.key===" "){n=Math.min(n+1,s.length-1);show()}'
+         'if(e.key==="ArrowLeft"){n=Math.max(n-1,0);show()}if(e.key.toLowerCase()==="n")document.body.classList.toggle("show-notes")};'
+         'onclick=e=>{if(e.clientX>innerWidth/2){n=Math.min(n+1,s.length-1)}else{n=Math.max(n-1,0)}show()}</script></body></html>')
+out.write_text(html, encoding='utf-8')
+print('Wrote', out, f'{out.stat().st_size // 1024} KiB, {len(slides)} slides')

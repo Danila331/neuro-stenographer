@@ -4,8 +4,8 @@
 |---|---|
 | Видео работы приложения (офлайн, режим полёта), 3–4 мин | `demo.mp4` — TODO(финал): записать по `VIDEO_SCRIPT.md` и положить сюда (или ссылка) |
 | Сценарий видео | `VIDEO_SCRIPT.md` |
-| Скриншоты экранов | `screens/redesign/` (нео-брутализм, акцент зелёный/розовый, тёмная тема, альбомная, шрифт ×1,6), `screens/live/` (живая расшифровка), `screens/timeline-pdf/` (дорожка говорящих и PDF), `screens/` (экраны до редизайна, часть снята до исправления B28); генерируют `src/android/app/tools/*.sh` |
-| Примеры входных записей и JSON | входы: `src/eval/datasets` (`ru-dialog-tts-cats`); выходы: `artifacts/test-results/ui-smoke/` (до исправления B28), TODO(финал): свежие примеры после финальной сборки |
+| Скриншоты экранов | `screens/redesign/` (нео-брутализм, акцент зелёный/розовый, тёмная тема, альбомная, шрифт ×1,6), `screens/live/` (живая расшифровка), `screens/timeline-pdf/` (дорожка говорящих и PDF), `screens/summary-search/` (выжимка и AI-поиск), `screens/` (экраны до редизайна, часть снята до исправления B28); генерируют `src/android/app/tools/*.sh` |
+| Примеры входных записей и JSON | входы: `src/eval/datasets` (`ru-dialog-tts-cats`); выходы финальной сборки: `artifacts/test-results/prerelease2/medium_release/` (JSON по ТЗ, расширенный JSON, маркеры) |
 
 ## Автоматическая запись (черновик)
 

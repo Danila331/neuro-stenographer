@@ -1,7 +1,7 @@
 # stenodata — eval-датасеты для «Нейро-стенографиста»
 
 Скрипты, которые собирают наборы для подбора моделей и параметров по цифрам (WER, DER, метки времени).
-Всё складывается в общий кэш `$ROOT/.cache/data/<имя>/` в формате `docs/ARCHITECTURE.md` §2:
+Всё складывается в общий кэш `$ROOT/.cache/data/<имя>/` в формате `docs/team/ARCHITECTURE_TEAM.md` §2:
 
 ```
 <name>/manifest.csv        id,audio,ref,duration_ms,num_speakers,lang,source,condition,split[,доп. колонки]
@@ -25,7 +25,7 @@
 | `ru-en-mixed` | 5 диалогов 3–4 дикторов: русские (VoxForge/RuLS) + реальный(е) англоязычный(е) диктор(ы) LibriSpeech — проверка определения языка, `lang=ru+en`, колонка `lang_segments` | VoxForge, RuLS, LibriSpeech |
 | `real` | структура и инструменты для реальных записей пользователя (см. `real/README.md`) | ваши записи |
 
-### Колонки manifest (сверх ARCHITECTURE §2)
+### Колонки manifest (сверх docs/team/ARCHITECTURE_TEAM.md §2)
 
 | колонка | где | смысл |
 |---|---|---|
@@ -77,7 +77,7 @@ cd src/eval/datasets
 .venv/bin/python -m stenodata fetch voxforge golos        # источники → $ROOT/.cache/data/.raw/<name>/
 .venv/bin/python -m stenodata build asr synth tts en-asr en-synth mixed --seed 0 \
     --n-asr 600 --n-synth 36 --n-tts 60 --n-en-asr 220 --n-en-synth 14 --n-mixed 5
-.venv/bin/python -m stenodata validate                    # проверка форматов (ARCHITECTURE §1–§2)
+.venv/bin/python -m stenodata validate                    # проверка форматов (docs/team/ARCHITECTURE_TEAM.md §1–§2)
 .venv/bin/python -m stenodata stats --update-readme       # статистика → STATS.md и этот README
 
 # тесты
@@ -107,7 +107,7 @@ cd src/eval/datasets
 | Piper ru_RU голоса | HF `rhasspy/piper-voices` | см. MODEL_CARD каждого голоса | denis, dmitri, irina, ruslan (medium) |
 | macOS `say` (Milena) | системный | Apple — только локальное использование | не распространяется; можно отключить `--no-say` |
 
-OpenSLR, repository.voxforge1.org и github.com/karolpiczak не перечислены в docs/TEAM.md (правило 4) — это
+OpenSLR, repository.voxforge1.org и github.com/karolpiczak не перечислены в docs/team/TEAM.md (правило 4) — это
 официальные площадки авторов корпусов; см. отчёт.
 
 ## Известные слабости

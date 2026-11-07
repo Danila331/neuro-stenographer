@@ -1,6 +1,6 @@
 # refpipe — Python-эталон пайплайна «Нейро-стенографист»
 
-Тот же пайплайн, что в Android-приложении (ARCHITECTURE §4), на **тех же моделях и том же конфиге
+Тот же пайплайн, что в Android-приложении (docs/team/ARCHITECTURE_TEAM.md §4), на **тех же моделях и том же конфиге
 `config/tiers/<tier>.json`**: sherpa-onnx (Silero VAD, GigaAM, pyannote-3.0 + эмбеддинги + кластеризация),
 Aligner §5, guard §6. На нём подбираются параметры на ПК; Android проверяется на совпадение.
 
