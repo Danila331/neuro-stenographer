@@ -124,6 +124,24 @@ def test_hyp_words_from_full():
     assert hyp_words_from_full({"utterances": [{"words": [{"text": "x", "start_ms": "a", "end_ms": 1}], "text": 5}]}) is None
 
 
+def test_hyp_words_from_app_full_export():
+    from stenoeval.timing import hyp_words_from_full
+
+    obj = {"transcript": [
+        {"speaker_id": "speaker_2", "start_ms": 1800, "end_ms": 2600, "text": "Второй фрагмент",
+         "words": [{"text": "фрагмент", "start_ms": 2100, "end_ms": 2500}]},
+        {"speaker_id": "speaker_1", "start_ms": 0, "end_ms": 1200, "text": "Первый фрагмент",
+         "words": [{"text": "Первый", "start_ms": 100, "end_ms": 500},
+                   {"text": "фрагмент", "start_ms": 700, "end_ms": 1100}]},
+    ], "meta": {"tier": "medium"}, "speakers": {}}
+    words = hyp_words_from_full(obj)
+
+    assert [word.text for word in words] == ["первый", "фрагмент", "фрагмент"]
+    assert [(word.start_ms, word.end_ms) for word in words] == [
+        (100, 500), (700, 1100), (2100, 2500),
+    ]
+
+
 def test_real_word_times_beat_proportional_split():
     ref = [U("speaker_1", 1000, 3000, "аа бб вв")]
     # hypothesis utterance has padded boundaries, but words are timed precisely

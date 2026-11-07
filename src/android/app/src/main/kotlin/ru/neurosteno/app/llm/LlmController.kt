@@ -2,21 +2,27 @@ package ru.neurosteno.app.llm
 
 import android.app.ActivityManager
 import android.content.Context
+import android.os.Debug
+import android.os.SystemClock
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import ru.neurosteno.app.AppGraph
 import ru.neurosteno.app.ProcessingState
 import ru.neurosteno.app.ProcessingUi
+import ru.neurosteno.app.data.ResultsAutosave
 import ru.neurosteno.app.edit.EditableTranscript
 import ru.neurosteno.llm.LlamaAssistant
 
@@ -98,9 +104,18 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         _ui.update { it.copy(running = true, error = null, protocol = "", protocolDone = false, status = "Загрузка модели…", startedAtMs = System.currentTimeMillis(), tokens = 0) }
         val entryId = boundEntry
         job = scope.launch {
+            val startedAt = SystemClock.elapsedRealtime()
+            val peakPss = AtomicInteger(currentPssMb())
+            val sampler = samplePeakPss(peakPss)
+            var model = "unknown"
+            var promptTokens = 0
+            var generatedTokens = 0
+            var status = "error"
             try {
-                val llm = ensureAssistant()
-                val cfg = graph.activeConfig()!!.first
+                val cfg = graph.activeConfig()?.first ?: throw IllegalStateException("нет конфигурации")
+                val modelPath = cfg.llm.model ?: throw IllegalStateException("в наборе нет LLM")
+                model = modelName(modelPath)
+                val llm = ensureAssistant(cfg)
                 val lines = PromptBuilder.transcriptLines(t)
                 if (lines.isEmpty()) throw IllegalStateException("В расшифровке нет реплик")
                 val system = prompts.protocolSystem
@@ -116,7 +131,8 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
                     frag.forEachIndexed { i, part ->
                         _ui.update { it.copy(status = "Конспект части ${i + 1} из ${frag.size}…") }
                         val prompt = PromptBuilder.chatml(prompts.notesSystem, "Фрагмент ${i + 1} из ${frag.size}:\n$part")
-                        notes += PromptBuilder.clean(generate(llm, prompt, NOTES_MAX_TOKENS) { })
+                        promptTokens += estimatePromptTokens(prompt)
+                        notes += PromptBuilder.clean(generate(llm, prompt, NOTES_MAX_TOKENS) { generatedTokens++ })
                     }
                     val perNote = budget / frag.size.coerceAtLeast(1)
                     material = notes.mapIndexed { i, n -> "Часть ${i + 1}:\n" + n.take(perNote) }.joinToString("\n\n")
@@ -124,18 +140,25 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
                 }
                 _ui.update { it.copy(status = "Составление протокола…") }
                 val prompt = PromptBuilder.chatml(system, "Расшифровка:\n$material")
+                promptTokens += estimatePromptTokens(prompt)
                 val sb = StringBuilder()
                 generate(llm, prompt, maxNew) { piece ->
+                    generatedTokens++
                     sb.append(piece)
                     _ui.update { it.copy(protocol = PromptBuilder.clean(sb.toString()), tokens = it.tokens + 1) }
                 }
                 val text = PromptBuilder.clean(sb.toString())
                 _ui.update { it.copy(running = false, protocol = text, protocolDone = true, status = "") }
                 if (entryId != null && text.isNotBlank()) graph.history.writeProtocol(entryId, text)
+                status = "ok"
             } catch (e: CancellationException) {
+                status = "cancelled"
                 _ui.update { it.copy(running = false, status = "", protocolDone = it.protocol.isNotBlank(), error = "Остановлено") }
             } catch (e: Throwable) {
+                status = "error"
                 _ui.update { it.copy(running = false, status = "", error = "Не удалось составить протокол: ${e.message ?: e.javaClass.simpleName}") }
+            } finally {
+                finishDiagnostics(entryId, "protocol", model, promptTokens, generatedTokens, startedAt, peakPss, status, sampler)
             }
         }
     }
@@ -145,20 +168,32 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         if (q.isEmpty() || _ui.value.running) return
         val index = _ui.value.qa.size
         _ui.update { it.copy(running = true, error = null, status = "Загрузка модели…", qa = it.qa + QaItem(q, "", false), startedAtMs = System.currentTimeMillis(), tokens = 0) }
+        val entryId = boundEntry
         job = scope.launch {
+            val startedAt = SystemClock.elapsedRealtime()
+            val peakPss = AtomicInteger(currentPssMb())
+            val sampler = samplePeakPss(peakPss)
+            var model = "unknown"
+            var promptTokens = 0
+            var generatedTokens = 0
+            var status = "error"
             try {
-                val llm = ensureAssistant()
-                val cfg = graph.activeConfig()!!.first
+                val cfg = graph.activeConfig()?.first ?: throw IllegalStateException("нет конфигурации")
+                val modelPath = cfg.llm.model ?: throw IllegalStateException("в наборе нет LLM")
+                model = modelName(modelPath)
+                val llm = ensureAssistant(cfg)
                 val system = prompts.qaSystem
                 val budget = PromptBuilder.contentBudgetChars(cfg.llm.nCtx, QA_MAX_TOKENS, system.length + q.length)
                 val chunks = PromptBuilder.chunk(PromptBuilder.transcriptLines(t), budget)
                 val material = PromptBuilder.selectRelevant(chunks, q, budget).joinToString("\n...\n")
                 _ui.update { it.copy(status = "Поиск ответа…") }
                 val prompt = PromptBuilder.chatml(system, "Расшифровка:\n$material\n\nВопрос: $q")
+                promptTokens += estimatePromptTokens(prompt)
                 val sb = StringBuilder()
                 var runaway = false
                 try {
                     generate(llm, prompt, QA_MAX_TOKENS) { piece ->
+                        generatedTokens++
                         sb.append(piece)
                         if (PromptBuilder.runawayIndex(sb.toString()) >= 0) {
                             // модель начала выдумывать следующий вопрос -- прерываем генерацию (llama.cpp проверяет флаг потока)
@@ -176,15 +211,20 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
                 val cut = if (runaway) full.substring(0, PromptBuilder.runawayIndex(full).coerceAtLeast(0)) else full
                 setAnswer(index, PromptBuilder.clean(cut).ifBlank { "Модель не дала ответа." }, done = true)
                 _ui.update { it.copy(running = false, status = "") }
+                status = "ok"
             } catch (e: CancellationException) {
+                status = "cancelled"
                 _ui.update { s ->
                     s.copy(running = false, status = "", qa = s.qa.mapIndexed { i, item -> if (i == index) item.copy(done = true, answer = item.answer.ifBlank { "(остановлено)" }) else item })
                 }
             } catch (e: Throwable) {
+                status = "error"
                 _ui.update { s ->
                     s.copy(running = false, status = "", error = "Не удалось ответить: ${e.message ?: e.javaClass.simpleName}",
                         qa = s.qa.mapIndexed { i, item -> if (i == index) item.copy(done = true) else item })
                 }
+            } finally {
+                finishDiagnostics(entryId, "qa", model, promptTokens, generatedTokens, startedAt, peakPss, status, sampler)
             }
         }
     }
@@ -214,9 +254,8 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
 
     // ---- внутреннее ----
 
-    private suspend fun ensureAssistant(): LlamaAssistant {
+    private suspend fun ensureAssistant(cfg: ru.neurosteno.core.TierConfig): LlamaAssistant {
         synchronized(this) { assistant }?.let { return it }
-        val (cfg, _) = graph.activeConfig() ?: throw IllegalStateException("нет конфигурации")
         val file = File(graph.modelStore.activeDir() ?: throw IllegalStateException("нет набора моделей"), cfg.llm.model ?: throw IllegalStateException("в наборе нет LLM"))
         val threads = minOf(cfg.llm.nThreads, Runtime.getRuntime().availableProcessors()).coerceAtLeast(1)
         val created = runInterruptible(Dispatchers.IO) {
@@ -227,6 +266,49 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         return created
     }
 
+    private fun samplePeakPss(peak: AtomicInteger): Job = scope.launch(Dispatchers.IO) {
+        while (isActive) {
+            peak.updateAndGet { previous -> maxOf(previous, currentPssMb()) }
+            delay(PSS_SAMPLE_INTERVAL_MS)
+        }
+    }
+
+    private fun finishDiagnostics(
+        entryId: String?, kind: String, model: String, promptTokens: Int, generatedTokens: Int,
+        startedAt: Long, peakPss: AtomicInteger, status: String, sampler: Job,
+    ) {
+        sampler.cancel()
+        peakPss.updateAndGet { previous -> maxOf(previous, currentPssMb()) }
+        val durationMs = (SystemClock.elapsedRealtime() - startedAt).coerceAtLeast(0)
+        val run = LlmRunMetrics(
+            kind = kind,
+            model = model,
+            promptTokens = promptTokens,
+            generatedTokens = generatedTokens,
+            tokPerSecond = if (durationMs > 0) generatedTokens * 1000.0 / durationMs else 0.0,
+            durationMs = durationMs,
+            peakPssMb = peakPss.get(),
+            status = status,
+        )
+        android.util.Log.i("Neurosteno", LlmDiagnostics.doneLine(run))
+        val sourceName = entryId?.let { graph.history.get(it)?.sourceName }
+        if (sourceName == null) {
+            android.util.Log.w("Neurosteno", "llm marker not written: source for entry is unavailable")
+            return
+        }
+        val resultsDir = ResultsAutosave.resultsDir(graph.externalFilesDir(), graph.filesDir(), android.os.Process.myUid())
+        LlmDiagnostics.writeMarker(resultsDir, sourceName, run).onFailure {
+            android.util.Log.e("Neurosteno", "llm marker not written for $sourceName", it)
+        }
+    }
+
+    private fun currentPssMb(): Int = runCatching { (Debug.getPss() / 1024L).toInt() }.getOrDefault(0)
+
+    private fun modelName(path: String): String = File(path).name.replace(Regex("\\s+"), "_").ifBlank { "unknown" }
+
+    /** llama.cpp's app-facing API does not expose prompt tokenization; this is a UTF-8-size estimate. */
+    private fun estimatePromptTokens(prompt: String): Int = (prompt.toByteArray(Charsets.UTF_8).size + 3) / 4
+
     private suspend fun generate(llm: LlamaAssistant, prompt: String, maxTokens: Int, onToken: (String) -> Unit): String =
         runInterruptible(Dispatchers.Default) { llm.generate(prompt, maxTokens, onToken) }
 
@@ -235,5 +317,6 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         const val PROTOCOL_MAX_TOKENS = 700
         const val NOTES_MAX_TOKENS = 320
         const val QA_MAX_TOKENS = 400
+        const val PSS_SAMPLE_INTERVAL_MS = 100L
     }
 }

@@ -41,6 +41,7 @@ import ru.neurosteno.core.fragment.FragmentRequest
 import ru.neurosteno.core.fragment.FragmentResult
 import ru.neurosteno.app.data.RunInfo
 import ru.neurosteno.app.edit.EditableTranscript
+import ru.neurosteno.app.edit.FragmentChangeDetector
 import ru.neurosteno.app.models.ModelBootstrap
 import ru.neurosteno.app.util.MinIntervalGate
 import ru.neurosteno.app.models.ModelsStatus
@@ -229,15 +230,17 @@ class ProcessingService : Service() {
                     updateNotification(label, stage, overall)
                 }
                 val r = run.result
-                if (r.changed) {
+                val changed = r.changed && !FragmentChangeDetector.isUnchanged(r.removed, r.added, r.speakerRemap)
+                if (changed) {
                     val applied = FragmentApplier.apply(stored, r)
                     graph.history.writeUndo(p.entryId, stored)
                     graph.history.saveTranscript(p.entryId, applied.stored)
                     rewriteResults(graph, entry, applied.stored, r, p, run.threads)
                 }
                 android.util.Log.i("Neurosteno", "fragment $label of ${entry.sourceName}: outcome=${r.outcome} lang=${r.language} " +
-                    "processing=${r.processingMs} ms stages=${r.stageMs} recompute=${p.recomputeSpeakers} warnings=${r.warnings}")
-                FragmentState.set(FragmentUi.Finished(p.entryId, r.outcome, r.message, r.changed, r.added.map { TimeSpan(it.startMs, it.endMs) }, label, r.warnings, r.processingMs))
+                    "processing=${r.processingMs} ms stages=${r.stageMs} recompute=${p.recomputeSpeakers} changed=$changed warnings=${r.warnings}")
+                val message = if (r.changed && !changed) "Без изменений" else r.message
+                FragmentState.set(FragmentUi.Finished(p.entryId, r.outcome, message, changed, r.added.map { TimeSpan(it.startMs, it.endMs) }, label, r.warnings, r.processingMs))
             } catch (e: CancellationException) {
                 FragmentState.set(FragmentUi.Idle)
             } catch (e: ModelsNotReadyException) {

@@ -196,9 +196,13 @@ fun TranscriptScreen(
                             snackbar.currentSnackbarData?.dismiss()
                             val msg = "${fs.label} обработан заново: " + Format.plural(fs.added.size, "новая реплика", "новые реплики", "новых реплик")
                             val r = snackbar.showSnackbar(msg, actionLabel = "Отменить", duration = SnackbarDuration.Long)
-                            if (r == SnackbarResult.ActionPerformed && session.undoFragment()) snackbar.showSnackbar("Возвращено как было")
+                            if (r == SnackbarResult.ActionPerformed) {
+                                android.util.Log.i("Neurosteno", "fragment_undo entry=${session.entryId} range=${fs.label}")
+                                if (session.undoFragment()) snackbar.showSnackbar("Возвращено как было")
+                            }
                         }
                     } else {
+                        session.clearHighlight()
                         scope.launch {
                             snackbar.currentSnackbarData?.dismiss()
                             snackbar.showSnackbar(fs.message, duration = SnackbarDuration.Long)
