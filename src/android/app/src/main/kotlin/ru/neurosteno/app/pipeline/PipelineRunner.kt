@@ -29,6 +29,7 @@ import ru.neurosteno.sherpa.ModelRoot
 import ru.neurosteno.sherpa.SherpaAsr
 import ru.neurosteno.sherpa.SherpaDenoiser
 import ru.neurosteno.sherpa.SherpaDiarizer
+import ru.neurosteno.sherpa.SherpaSpeakerEmbedder
 import ru.neurosteno.sherpa.SherpaLanguageId
 import ru.neurosteno.sherpa.SherpaVad
 
@@ -90,6 +91,8 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
                     chunkGain = cfg.audio.normalizeGain.takeIf { it.active && it.effectiveScope == "asr_chunk" })
             },
             diarizer = { SherpaDiarizer(cfg.diarization, root, threads) },
+            // эмбеддинги для relabel: создаются оркестратором ПОСЛЕ выгрузки ASR и диаризации
+            speakerEmbedder = if (cfg.diarization.relabel.enabled) { { SherpaSpeakerEmbedder(cfg.diarization.embedding, root, threads) } } else null,
             // Пунктуатор создаётся только после выгрузки ASR/диаризации (оркестратор). Если LLM недоступна (нет файла,
             // нет dotprod, нет нативной библиотеки) -- фабрика бросает, оркестратор переходит на fallback без падения.
             punctuator = if (cfg.punctuation.source == "llm") {

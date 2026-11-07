@@ -88,6 +88,7 @@ fun main(args: Array<String>) {
             }
         },
         punctuator = punct,
+        speakerEmbedder = if (cfg.diarization.relabel.enabled) { { ru.neurosteno.sherpa.SherpaSpeakerEmbedder(cfg.diarization.embedding, root, threads) } } else null,
         languageId = if (cfg.language.effectiveMode == "auto" && cfg.language.lidModel != null && cfg.asrEn != null &&
             java.io.File(root.dir, cfg.language.lidModel!!).isDirectory
         ) {

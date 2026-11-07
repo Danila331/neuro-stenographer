@@ -55,6 +55,11 @@ fun diarize(audio: AudioBuffer, numSpeakers: Int?, progress: ProgressListener): 
     fun speakerEmbeddings(clips: List<AudioBuffer>): List<FloatArray?> = emptyList()
 }
 
+/** Эмбеддинг говорящего для фрагмента 16 кГц (sherpa-onnx SpeakerEmbeddingExtractor); вектор не обязан быть нормирован. */
+interface SpeakerEmbedder : AutoCloseable {
+    fun embed(segment: FloatArray): FloatArray
+}
+
 interface Punctuator : AutoCloseable {
     /** Только пунктуация/регистр; последовательность нормализованных слов обязана сохраниться. */
 fun punctuate(utterances: List<Utterance>, progress: ProgressListener): List<Utterance>
