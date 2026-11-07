@@ -93,10 +93,12 @@ class ModelDownloadWorker(appContext: Context, params: WorkerParameters) : Corou
     }
 
     private var lastPercent = -1
+    /** Не чаще 2 обновлений в секунду: быстрая сеть меняет процент десятки раз в секунду, а система такие обновления отбрасывает. */
+    private val gate = ru.neurosteno.app.util.MinIntervalGate(500)
 
     private fun notify(title: String, done: Long, total: Long) {
         val percent = if (total > 0) (done * 100 / total).toInt() else 0
-        if (percent == lastPercent) return
+        if (percent == lastPercent || !gate.tryPass()) return
         lastPercent = percent
         runCatching {
             val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

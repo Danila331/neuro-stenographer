@@ -1,0 +1,36 @@
+{
+  "status": "done",
+  "source": "cats_c03_v0_meeting_farfield.wav",
+  "finished_at_ms": 1794012436120,
+  "audio_duration_ms": 53227,
+  "processing_ms": 20579,
+  "rtf": 0.387,
+  "language": "ru",
+  "utterances": 1,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 511,
+    "vad": 740,
+    "lid": 2113,
+    "asr": 12415,
+    "diarization": 17113,
+    "align": 3,
+    "punctuation": 1,
+    "export": 3,
+    "total": 20579
+  },
+  "peak_pss_mb": 496,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "cats_c03_v0_meeting_farfield.json",
+    "cats_c03_v0_meeting_farfield.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

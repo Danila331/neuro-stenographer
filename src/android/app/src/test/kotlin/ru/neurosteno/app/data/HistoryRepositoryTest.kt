@@ -26,13 +26,15 @@ class HistoryRepositoryTest {
 
     @Test
     fun addStoresEntryTranscriptAndAudio() {
-        val e = repo.add("встреча.m4a", TestData.dialog(), peakPssMb = 500, modelSetId = "medium", audio = { ByteArrayInputStream(ByteArray(10) { it.toByte() }) })
+        val e = repo.add("встреча.m4a", TestData.dialog(), run = RunInfo(peakPssMb = 500, threads = 4, device = "Google Pixel 10", androidSdk = 37, totalRamMb = 12000, appVersion = "0.1.0"), modelSetId = "medium", audio = { ByteArrayInputStream(ByteArray(10) { it.toByte() }) })
         assertEquals("встреча", e.title)
         assertEquals(2, e.speakerCount)
         assertEquals(3, e.utteranceCount)
         assertEquals("добрый день", e.preview)
         assertEquals(20_000, e.durationMs)
         assertEquals(0.3, e.rtf, 1e-9)
+        assertEquals(500, e.peakPssMb)
+        assertEquals(RunInfo(500, 4, "Google Pixel 10", 37, 12000, "0.1.0"), e.runInfo())
         val audio = repo.audioFile(e)
         assertNotNull(audio)
         assertEquals("audio.m4a", audio!!.name)

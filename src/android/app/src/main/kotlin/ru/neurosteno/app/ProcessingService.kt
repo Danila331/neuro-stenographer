@@ -27,7 +27,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.neurosteno.app.data.ResultsAutosave
+import ru.neurosteno.app.data.RunInfo
+import ru.neurosteno.app.edit.EditableTranscript
 import ru.neurosteno.app.models.ModelBootstrap
+import ru.neurosteno.app.util.MinIntervalGate
 import ru.neurosteno.app.models.ModelsStatus
 import ru.neurosteno.app.pipeline.ModelsNotReadyException
 import ru.neurosteno.app.pipeline.PipelineRunner
@@ -77,17 +81,33 @@ class ProcessingService : Service() {
         val graph = (application as NeuroApp).graph
         val startedAt = System.currentTimeMillis()
         val fractions = EnumMap<Stage, Float>(Stage::class.java)
+        val resultsDir = ResultsAutosave.resultsDir(getExternalFilesDir(null), filesDir, android.os.Process.myUid())
+        // маркер прошлого запуска с тем же именем не должен «залёживаться»: скрипты ждут именно свежий маркер
+        ResultsAutosave.clearMarkers(resultsDir, name)
         ProcessingState.setProcessing(ProcessingUi.Running(sourceName = name, startedAtMs = startedAt))
         job = scope.launch {
             var peakPssMb = 0
+            fun samplePss() {
+                val mi = Debug.MemoryInfo()
+                Debug.getMemoryInfo(mi)
+                peakPssMb = maxOf(peakPssMb, mi.totalPss / 1024)
+            }
             val sampler = launch {
-                // пик PSS процесса за время обработки -- в «Статистику обработки» (BACKLOG B14)
+                // пик PSS процесса за время обработки -- в «Статистику обработки», маркер и meta результата (B14, B33)
                 while (isActive) {
-                    val mi = Debug.MemoryInfo()
-                    Debug.getMemoryInfo(mi)
-                    peakPssMb = maxOf(peakPssMb, mi.totalPss / 1024)
+                    samplePss()
                     delay(1_000)
                 }
+            }
+            var threads = 0
+            fun runInfo() = RunInfo(
+                peakPssMb = peakPssMb, threads = threads, device = deviceName(), androidSdk = Build.VERSION.SDK_INT,
+                totalRamMb = totalRamMb(), appVersion = BuildConfig.VERSION_NAME,
+            )
+            fun fail(message: String) {
+                val problems = ResultsAutosave.writeErrorMarker(resultsDir, name, message, runInfo()).exceptionOrNull()
+                android.util.Log.e("Neurosteno", "failed $name: $message" + (problems?.let { " (error marker: $it)" } ?: ""))
+                ProcessingState.setProcessing(ProcessingUi.Failed(name, message))
             }
             try {
                 val duration = withContext(Dispatchers.IO) { probeDurationMs(uri) }
@@ -98,7 +118,7 @@ class ProcessingService : Service() {
                     if (s !is ModelsStatus.Ready) throw ModelsNotReadyException((s as ModelsStatus.Missing).message)
                 }
                 val runner = PipelineRunner(applicationContext, graph)
-                val result = runner.run(uri, name, graph.settings.current) { stage, stageFraction, overall ->
+                val outcome = runner.run(uri, name, graph.settings.current) { stage, stageFraction, overall ->
                     synchronized(fractions) { fractions[stage] = stageFraction }
                     ProcessingState.setProcessing(
                         ProcessingUi.Running(
@@ -108,31 +128,38 @@ class ProcessingService : Service() {
                     )
                     updateNotification(name, stage, overall)
                 }
-                autosave(result, name)
-                val entry = graph.history.add(
-                    sourceName = name,
-                    transcript = result.transcript,
-                    warnings = result.warnings,
-                    peakPssMb = peakPssMb,
-                    deviceTotalMb = totalRamMb(),
-                    modelSetId = graph.modelStore.activeSetId,
-                    audio = { contentResolver.openInputStream(uri) ?: throw java.io.IOException("нет доступа к файлу") },
-                )
+                threads = outcome.threads
+                val result = outcome.result
+                samplePss()
+                val info = runInfo()
+                val modelSet = graph.modelStore.activeSetId
+                // 1) результаты, 2) строка logcat (всегда, даже если запись файлов не удалась), 3) маркер -- последним
+                val editable = EditableTranscript.of(result.transcript)
+                val written = ResultsAutosave.write(resultsDir, name, editable, result.transcript, info)
+                android.util.Log.i("Neurosteno", ResultsAutosave.doneLine(name, result.transcript, info, result.warnings, written.problems, resultsDir))
+                ResultsAutosave.writeDoneMarker(resultsDir, name, result.transcript, editable.utterances.size, info, modelSet, result.warnings, written)
+                    .onFailure { android.util.Log.e("Neurosteno", "done marker for $name not written", it) }
+                val entry = runCatching {
+                    graph.history.add(
+                        sourceName = name, transcript = result.transcript, warnings = result.warnings, run = info, modelSetId = modelSet,
+                        audio = { contentResolver.openInputStream(uri) ?: throw java.io.IOException("нет доступа к файлу") },
+                    )
+                }.onFailure { android.util.Log.e("Neurosteno", "history not saved for $name", it) }.getOrNull()
                 removeOwnRecording(uri)
-                ProcessingState.setProcessing(ProcessingUi.Done(entry.id, name))
+                if (entry != null) ProcessingState.setProcessing(ProcessingUi.Done(entry.id, name))
+                else ProcessingState.setProcessing(ProcessingUi.Failed(name, "Расшифровка готова и сохранена в папку results, но не добавлена в историю (нет места?)."))
             } catch (e: CancellationException) {
                 ProcessingState.reset()
             } catch (e: ModelsNotReadyException) {
-                android.util.Log.e("Neurosteno", "processing failed: models not ready: ${e.message}")
-                ProcessingState.setProcessing(ProcessingUi.Failed(name, e.message ?: "Модели не готовы"))
+                fail(e.message ?: "Модели не готовы")
             } catch (e: PipelineException) {
                 android.util.Log.e("Neurosteno", "pipeline failed at ${e.stage}", e)
-                ProcessingState.setProcessing(ProcessingUi.Failed(name, e.message ?: "Ошибка обработки"))
+                fail(e.message ?: "Ошибка обработки")
             } catch (e: OutOfMemoryError) {
-                ProcessingState.setProcessing(ProcessingUi.Failed(name, "Не хватило памяти для обработки этой записи. Попробуйте файл покороче или вариант Lite."))
+                fail("Не хватило памяти для обработки этой записи. Попробуйте файл покороче или вариант Lite.")
             } catch (e: Throwable) {
                 android.util.Log.e("Neurosteno", "processing failed", e)
-                ProcessingState.setProcessing(ProcessingUi.Failed(name, "Не удалось обработать запись: ${e.message ?: e.javaClass.simpleName}"))
+                fail("Не удалось обработать запись: ${e.message ?: e.javaClass.simpleName}")
             } finally {
                 sampler.cancel()
                 releaseWakeLock()
@@ -140,6 +167,22 @@ class ProcessingService : Service() {
                 stopSelf()
             }
         }
+    }
+
+    private fun deviceName(): String =
+        listOf(Build.MANUFACTURER, Build.MODEL).filter { it.isNotBlank() }.joinToString(" ").let {
+            // «Google Google Pixel» у некоторых производителей модель уже содержит бренд
+            if (Build.MODEL.startsWith(Build.MANUFACTURER, ignoreCase = true)) Build.MODEL else it
+        }
+
+    /**
+     * Android 15+: система ограничивает время foreground-сервиса типа dataSync (6 ч за 24 ч) и вызывает этот метод перед остановкой.
+     * Корректно прерываем обработку, а не ждём принудительной остановки (иначе ANR/краш процесса).
+     */
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        android.util.Log.w("Neurosteno", "foreground service timeout (type $fgsType): processing cancelled")
+        job?.cancel()
+        stopSelf(startId)
     }
 
     /** Длительность записи для оценки оставшегося времени; null, если платформа её не сообщает. */
@@ -165,21 +208,6 @@ class ProcessingService : Service() {
         if (uri.scheme != "file") return
         val f = File(uri.path ?: return)
         if (f.parentFile == File(filesDir, RECORDINGS_DIR)) f.delete()
-    }
-
-    /**
-     * Автосохранение результата в приватную папку приложения (`Android/data/<pkg>/files/results/`): доступна для adb pull
-     * и проверки без интерфейса. Экспорт «наружу» остаётся только по действию пользователя (SAF).
-     */
-    private fun autosave(result: ru.neurosteno.core.PipelineResult, name: String) {
-        runCatching {
-            val dir = java.io.File(getExternalFilesDir(null) ?: filesDir, "results").apply { mkdirs() }
-            val base = name.substringBeforeLast('.', name).ifBlank { "transcript" }
-            java.io.File(dir, "$base.json").writeText(result.json, Charsets.UTF_8)
-            java.io.File(dir, "$base.full.json").writeText(ru.neurosteno.core.TranscriptJson.toFullJson(result.transcript), Charsets.UTF_8)
-            val m = result.transcript.meta
-            android.util.Log.i("Neurosteno", "done $name: duration=${m.audioDurationMs} ms processing=${m.processingMs} ms rtf=${"%.3f".format(java.util.Locale.ROOT, m.rtf)} lang=${m.language} stages=${m.stageMs} warnings=${result.warnings}")
-        }
     }
 
     override fun onDestroy() {
@@ -226,9 +254,13 @@ class ProcessingService : Service() {
 
     private var lastNotifiedPercent = -1
 
+    /** Уведомление обновляется не чаще 2 раз в секунду (система отбрасывает чаще; B34). */
+    private val notificationGate = MinIntervalGate(NOTIFICATION_MIN_INTERVAL_MS)
+
     private fun updateNotification(name: String, stage: Stage, progress: Float) {
         val percent = (progress * 100).toInt()
         if (percent == lastNotifiedPercent) return
+        if (!notificationGate.tryPass()) return
         lastNotifiedPercent = percent
         runCatching {
             (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIFICATION_ID, buildNotification(name, stage, progress))
@@ -255,6 +287,7 @@ class ProcessingService : Service() {
         const val EXTRA_NAME = "name"
         private const val CHANNEL_ID = "processing"
         private const val NOTIFICATION_ID = 1
+        private const val NOTIFICATION_MIN_INTERVAL_MS = 500L
         private const val WAKE_LOCK_TIMEOUT_MS = 2L * 60 * 60 * 1000
         /** Подкаталог filesDir с записями с микрофона. */
         const val RECORDINGS_DIR = "recordings"

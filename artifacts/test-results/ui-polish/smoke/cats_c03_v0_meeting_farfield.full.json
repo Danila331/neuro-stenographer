@@ -1,0 +1,546 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 596,
+      "end_ms": 51414,
+      "text": "Тихо, давай посмотрим расходы на рыбу за квартал. Смотрю, в июле потратили 8 400 ₽. А в августе— 11 200. Почему так выросло? Был праздник рождения старейшины, купили сёмгу. — Сему. По чьему решению?— По-вашему...— Василий Петрович?— Да вы сами сказали ни в чём себе не отказывать.— Помню, помню. Но сентябрь 9 650.— Тогда за квартал выходит около 30 000. Точнее, 29 250. Хорошо. Предлагаю сократить закупку сегодня. Это невозможно, коллеги привыкли. Привыкли, а бюджет нерезиновый мяу. Я подготовлю другой расчёт к пятница.",
+      "words": [
+        {
+          "text": "Тихо,",
+          "start_ms": 596,
+          "end_ms": 836,
+          "confidence": null
+        },
+        {
+          "text": "давай",
+          "start_ms": 1356,
+          "end_ms": 1396,
+          "confidence": null
+        },
+        {
+          "text": "посмотрим",
+          "start_ms": 1756,
+          "end_ms": 2156,
+          "confidence": null
+        },
+        {
+          "text": "расходы",
+          "start_ms": 2356,
+          "end_ms": 2756,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 2836,
+          "end_ms": 2876,
+          "confidence": null
+        },
+        {
+          "text": "рыбу",
+          "start_ms": 2996,
+          "end_ms": 3196,
+          "confidence": null
+        },
+        {
+          "text": "за",
+          "start_ms": 3276,
+          "end_ms": 3316,
+          "confidence": null
+        },
+        {
+          "text": "квартал.",
+          "start_ms": 3436,
+          "end_ms": 3716,
+          "confidence": null
+        },
+        {
+          "text": "Смотрю,",
+          "start_ms": 4076,
+          "end_ms": 4316,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 4636,
+          "end_ms": 4676,
+          "confidence": null
+        },
+        {
+          "text": "июле",
+          "start_ms": 4756,
+          "end_ms": 5036,
+          "confidence": null
+        },
+        {
+          "text": "потратили",
+          "start_ms": 5196,
+          "end_ms": 5636,
+          "confidence": null
+        },
+        {
+          "text": "8",
+          "start_ms": 5876,
+          "end_ms": 5916,
+          "confidence": null
+        },
+        {
+          "text": "400",
+          "start_ms": 6796,
+          "end_ms": 7076,
+          "confidence": null
+        },
+        {
+          "text": "₽.",
+          "start_ms": 7316,
+          "end_ms": 7356,
+          "confidence": null
+        },
+        {
+          "text": "А",
+          "start_ms": 7876,
+          "end_ms": 7916,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 7996,
+          "end_ms": 8036,
+          "confidence": null
+        },
+        {
+          "text": "августе—",
+          "start_ms": 8116,
+          "end_ms": 8556,
+          "confidence": null
+        },
+        {
+          "text": "11",
+          "start_ms": 9036,
+          "end_ms": 9276,
+          "confidence": null
+        },
+        {
+          "text": "200.",
+          "start_ms": 10436,
+          "end_ms": 10836,
+          "confidence": null
+        },
+        {
+          "text": "Почему",
+          "start_ms": 11476,
+          "end_ms": 11516,
+          "confidence": null
+        },
+        {
+          "text": "так",
+          "start_ms": 11836,
+          "end_ms": 11876,
+          "confidence": null
+        },
+        {
+          "text": "выросло?",
+          "start_ms": 12076,
+          "end_ms": 12476,
+          "confidence": null
+        },
+        {
+          "text": "Был",
+          "start_ms": 13516,
+          "end_ms": 13716,
+          "confidence": null
+        },
+        {
+          "text": "праздник",
+          "start_ms": 13836,
+          "end_ms": 14236,
+          "confidence": null
+        },
+        {
+          "text": "рождения",
+          "start_ms": 15556,
+          "end_ms": 15956,
+          "confidence": null
+        },
+        {
+          "text": "старейшины,",
+          "start_ms": 16156,
+          "end_ms": 16756,
+          "confidence": null
+        },
+        {
+          "text": "купили",
+          "start_ms": 16996,
+          "end_ms": 17276,
+          "confidence": null
+        },
+        {
+          "text": "сёмгу.",
+          "start_ms": 17396,
+          "end_ms": 17836,
+          "confidence": null
+        },
+        {
+          "text": "—",
+          "start_ms": 18354,
+          "end_ms": 18364,
+          "confidence": null
+        },
+        {
+          "text": "Сему.",
+          "start_ms": 18564,
+          "end_ms": 19044,
+          "confidence": null
+        },
+        {
+          "text": "По",
+          "start_ms": 19284,
+          "end_ms": 19324,
+          "confidence": null
+        },
+        {
+          "text": "чьему",
+          "start_ms": 19444,
+          "end_ms": 19684,
+          "confidence": null
+        },
+        {
+          "text": "решению?—",
+          "start_ms": 19804,
+          "end_ms": 20124,
+          "confidence": null
+        },
+        {
+          "text": "По-вашему...—",
+          "start_ms": 20724,
+          "end_ms": 21244,
+          "confidence": null
+        },
+        {
+          "text": "Василий",
+          "start_ms": 22084,
+          "end_ms": 22564,
+          "confidence": null
+        },
+        {
+          "text": "Петрович?—",
+          "start_ms": 22644,
+          "end_ms": 22924,
+          "confidence": null
+        },
+        {
+          "text": "Да",
+          "start_ms": 23444,
+          "end_ms": 23484,
+          "confidence": null
+        },
+        {
+          "text": "вы",
+          "start_ms": 23564,
+          "end_ms": 23604,
+          "confidence": null
+        },
+        {
+          "text": "сами",
+          "start_ms": 23844,
+          "end_ms": 24004,
+          "confidence": null
+        },
+        {
+          "text": "сказали",
+          "start_ms": 24244,
+          "end_ms": 24484,
+          "confidence": null
+        },
+        {
+          "text": "ни",
+          "start_ms": 25164,
+          "end_ms": 25204,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 25284,
+          "end_ms": 25324,
+          "confidence": null
+        },
+        {
+          "text": "чём",
+          "start_ms": 25404,
+          "end_ms": 25564,
+          "confidence": null
+        },
+        {
+          "text": "себе",
+          "start_ms": 25684,
+          "end_ms": 25724,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 25924,
+          "end_ms": 25964,
+          "confidence": null
+        },
+        {
+          "text": "отказывать.—",
+          "start_ms": 26044,
+          "end_ms": 26524,
+          "confidence": null
+        },
+        {
+          "text": "Помню,",
+          "start_ms": 27084,
+          "end_ms": 27444,
+          "confidence": null
+        },
+        {
+          "text": "помню.",
+          "start_ms": 27764,
+          "end_ms": 28124,
+          "confidence": null
+        },
+        {
+          "text": "Но",
+          "start_ms": 28524,
+          "end_ms": 28564,
+          "confidence": null
+        },
+        {
+          "text": "сентябрь",
+          "start_ms": 28804,
+          "end_ms": 29324,
+          "confidence": null
+        },
+        {
+          "text": "9",
+          "start_ms": 29804,
+          "end_ms": 29844,
+          "confidence": null
+        },
+        {
+          "text": "650.—",
+          "start_ms": 30804,
+          "end_ms": 31364,
+          "confidence": null
+        },
+        {
+          "text": "Тогда",
+          "start_ms": 32604,
+          "end_ms": 32844,
+          "confidence": null
+        },
+        {
+          "text": "за",
+          "start_ms": 32964,
+          "end_ms": 33004,
+          "confidence": null
+        },
+        {
+          "text": "квартал",
+          "start_ms": 33124,
+          "end_ms": 33484,
+          "confidence": null
+        },
+        {
+          "text": "выходит",
+          "start_ms": 33644,
+          "end_ms": 33844,
+          "confidence": null
+        },
+        {
+          "text": "около",
+          "start_ms": 34124,
+          "end_ms": 34404,
+          "confidence": null
+        },
+        {
+          "text": "30",
+          "start_ms": 34564,
+          "end_ms": 34604,
+          "confidence": null
+        },
+        {
+          "text": "000.",
+          "start_ms": 35004,
+          "end_ms": 35044,
+          "confidence": null
+        },
+        {
+          "text": "Точнее,",
+          "start_ms": 35854,
+          "end_ms": 36294,
+          "confidence": null
+        },
+        {
+          "text": "29",
+          "start_ms": 37094,
+          "end_ms": 37694,
+          "confidence": null
+        },
+        {
+          "text": "250.",
+          "start_ms": 38694,
+          "end_ms": 39174,
+          "confidence": null
+        },
+        {
+          "text": "Хорошо.",
+          "start_ms": 40174,
+          "end_ms": 40214,
+          "confidence": null
+        },
+        {
+          "text": "Предлагаю",
+          "start_ms": 40934,
+          "end_ms": 41414,
+          "confidence": null
+        },
+        {
+          "text": "сократить",
+          "start_ms": 41574,
+          "end_ms": 42014,
+          "confidence": null
+        },
+        {
+          "text": "закупку",
+          "start_ms": 42134,
+          "end_ms": 42534,
+          "confidence": null
+        },
+        {
+          "text": "сегодня.",
+          "start_ms": 42694,
+          "end_ms": 42734,
+          "confidence": null
+        },
+        {
+          "text": "Это",
+          "start_ms": 43454,
+          "end_ms": 43494,
+          "confidence": null
+        },
+        {
+          "text": "невозможно,",
+          "start_ms": 43654,
+          "end_ms": 44174,
+          "confidence": null
+        },
+        {
+          "text": "коллеги",
+          "start_ms": 44494,
+          "end_ms": 44894,
+          "confidence": null
+        },
+        {
+          "text": "привыкли.",
+          "start_ms": 45054,
+          "end_ms": 45494,
+          "confidence": null
+        },
+        {
+          "text": "Привыкли,",
+          "start_ms": 46214,
+          "end_ms": 46694,
+          "confidence": null
+        },
+        {
+          "text": "а",
+          "start_ms": 46934,
+          "end_ms": 46974,
+          "confidence": null
+        },
+        {
+          "text": "бюджет",
+          "start_ms": 47134,
+          "end_ms": 47494,
+          "confidence": null
+        },
+        {
+          "text": "нерезиновый",
+          "start_ms": 47614,
+          "end_ms": 48214,
+          "confidence": null
+        },
+        {
+          "text": "мяу.",
+          "start_ms": 48534,
+          "end_ms": 48774,
+          "confidence": null
+        },
+        {
+          "text": "Я",
+          "start_ms": 49174,
+          "end_ms": 49214,
+          "confidence": null
+        },
+        {
+          "text": "подготовлю",
+          "start_ms": 49374,
+          "end_ms": 49894,
+          "confidence": null
+        },
+        {
+          "text": "другой",
+          "start_ms": 50054,
+          "end_ms": 50294,
+          "confidence": null
+        },
+        {
+          "text": "расчёт",
+          "start_ms": 50374,
+          "end_ms": 50654,
+          "confidence": null
+        },
+        {
+          "text": "к",
+          "start_ms": 50814,
+          "end_ms": 50854,
+          "confidence": null
+        },
+        {
+          "text": "пятница.",
+          "start_ms": 50974,
+          "end_ms": 51414,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-medium",
+    "tier": "medium",
+    "language": "ru",
+    "audio_duration_ms": 53227,
+    "processing_ms": 20579,
+    "rtf": 0.387,
+    "stage_ms": {
+      "decode": 511,
+      "vad": 740,
+      "lid": 2113,
+      "asr": 12415,
+      "diarization": 17113,
+      "align": 3,
+      "punctuation": 1,
+      "export": 3,
+      "total": 20579
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/embedding/model.onnx",
+      "llm": "llm/qwen3-1.7b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 496,
+    "threads": 4,
+    "device_model": "Google sdk_gphone64_arm64",
+    "android_sdk": 35,
+    "total_ram_mb": 3920
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1"
+  }
+}

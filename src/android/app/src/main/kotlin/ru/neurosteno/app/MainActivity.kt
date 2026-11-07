@@ -83,6 +83,11 @@ class MainActivity : ComponentActivity(), AppHost {
         setContent { AppRoot(this, vm) }
     }
 
+    override fun onStop() {
+        vm.pausePlayback()
+        super.onStop()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)

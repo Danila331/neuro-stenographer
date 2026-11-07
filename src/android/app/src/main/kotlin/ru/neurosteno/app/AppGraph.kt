@@ -57,6 +57,8 @@ class AppGraph(private val context: Context) {
 
     val configError: String? get() = if (activeConfig() == null) "Не удалось прочитать конфигурацию уровня «${activeTier()}»" else null
 
+    val appContext: Context get() = context.applicationContext
+
     fun externalFilesDir(): File? = context.getExternalFilesDir(null)
 
     fun filesDir(): File = context.filesDir

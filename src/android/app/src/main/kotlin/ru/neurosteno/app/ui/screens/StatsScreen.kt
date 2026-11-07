@@ -62,6 +62,9 @@ fun StatsScreen(entries: List<HistoryEntry>, deviceTotalMb: Int, tier: String, o
                 InfoRow("Время обработки", Format.duration(last.processingMs))
                 InfoRow("RTF (время / длительность)", Format.rtf(last.rtf))
                 InfoRow("Пик памяти процесса (PSS)", if (last.peakPssMb > 0) "${last.peakPssMb} МБ" else "не измерялся")
+                if (last.threads > 0) InfoRow("Потоков", last.threads.toString())
+                if (last.device.isNotBlank()) InfoRow("Устройство", last.device + if (last.androidSdk > 0) " · Android API ${last.androidSdk}" else "")
+                if (last.appVersion.isNotBlank()) InfoRow("Версия приложения", last.appVersion)
                 InfoRow("Язык", last.language)
                 InfoRow("Набор моделей", last.modelSetId ?: "—")
             }

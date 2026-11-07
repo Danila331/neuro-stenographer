@@ -7,6 +7,7 @@ import ru.neurosteno.app.AppGraph
 import ru.neurosteno.app.BuildConfig
 import ru.neurosteno.app.data.AppSettings
 import ru.neurosteno.app.data.LanguageChoice
+import ru.neurosteno.app.data.NumbersChoice
 import ru.neurosteno.audio.MediaCodecAudioDecoder
 import ru.neurosteno.audio.UriAudioInput
 import ru.neurosteno.core.EngineProviders
@@ -29,11 +30,14 @@ import ru.neurosteno.sherpa.SherpaVad
 /** Модели/конфиг не готовы -- сообщение показывается пользователю как есть. */
 class ModelsNotReadyException(message: String) : Exception(message)
 
+/** Результат прогона и параметры, с которыми он выполнен (для статистики и меты результата, B33). */
+class RunOutcome(val result: PipelineResult, val threads: Int)
+
 /** Собирает [PipelineOrchestrator] из конфига варианта и активного набора моделей. */
 class PipelineRunner(private val context: Context, private val graph: AppGraph) {
 
     /** [userSettings] -- язык и число говорящих из экрана «Настройки» (переопределяют значения конфига уровня). */
-    suspend fun run(uri: Uri, displayName: String, userSettings: AppSettings, listener: PipelineProgressListener): PipelineResult {
+    suspend fun run(uri: Uri, displayName: String, userSettings: AppSettings, listener: PipelineProgressListener): RunOutcome {
         val cfg = graph.activeConfig()?.first ?: throw ModelsNotReadyException("Не удалось прочитать конфигурацию варианта: ${graph.configError}")
         val dir = graph.modelStore.activeDir()
             ?: throw ModelsNotReadyException("Модели не найдены. Вариант «${BuildConfig.TIER}» без встроенных моделей: скачайте набор на экране «Модели».")
@@ -96,10 +100,16 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
                     // число говорящих из настроек; ровно один говорящий -- диаризация не нужна вовсе (быстрее)
                     numSpeakers = if (userSettings.numSpeakers > 0) userSettings.numSpeakers else s.numSpeakers,
                     diarizationEnabled = s.diarizationEnabled && userSettings.numSpeakers != 1,
+                    // «Числа: цифрами / словами» из настроек; «по умолчанию» -- postprocess.numbers конфига
+                    spellNumbers = when (userSettings.numbers) {
+                        NumbersChoice.WORDS -> true
+                        NumbersChoice.DIGITS -> false
+                        NumbersChoice.CONFIG -> s.spellNumbers
+                    },
                 )
             },
         )
-        return orchestrator.run(UriAudioInput(uri, displayName), listener)
+        return RunOutcome(orchestrator.run(UriAudioInput(uri, displayName), listener), threads)
     }
 
     private fun memorySnapshot(): MemorySnapshot {

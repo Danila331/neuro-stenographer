@@ -41,8 +41,13 @@ object RussianNumbers {
 
     private val ORD_SUFFIXES = "й ый ий ой я ая яя ое ее е ые ие го ого его му ому ему м ом ем ым им ых их ю ую юю ей ой".split(' ').toSet()
 
-    // (?U) -- Unicode-версия \w, как в Python 3
-    private val NUM_RE: Pattern = Pattern.compile("(?iU)(?<!\\w)(\\d+)(?:[.,](\\d+))?(?:(-?)([а-яё]{1,4}))?(?!\\w)")
+    // Unicode-версия \w (как в Python 3) задана явно: флаг (?U)/UNICODE_CHARACTER_CLASS не поддерживается регулярками Android (ICU) --
+    // «Invalid value for match mode flags», и object падал при инициализации на устройстве (настройка «Числа: словами»).
+    private const val W = "[\\p{L}\\p{N}_]"
+    private val NUM_RE: Pattern = Pattern.compile(
+        "(?<!$W)(\\d+)(?:[.,](\\d+))?(?:(-?)([а-яё]{1,4}))?(?!$W)",
+        Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE,
+    )
 
     fun spell(text: String): String {
         val m = NUM_RE.matcher(text)

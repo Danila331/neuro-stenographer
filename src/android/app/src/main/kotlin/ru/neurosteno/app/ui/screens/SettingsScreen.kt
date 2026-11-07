@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import ru.neurosteno.app.data.AppSettings
 import ru.neurosteno.app.data.LanguageChoice
+import ru.neurosteno.app.data.NumbersChoice
 import ru.neurosteno.app.data.ThemeChoice
 import ru.neurosteno.app.models.ModelSetRow
 import ru.neurosteno.app.ui.Format
@@ -38,6 +39,8 @@ import ru.neurosteno.app.ui.components.SectionCard
 @Composable
 fun SettingsScreen(
     settings: AppSettings,
+    /** Что делает конфиг уровня с числами, пока пользователь не выбрал сам (`postprocess.numbers == words`). */
+    configSpellsNumbers: Boolean,
     activeSet: ModelSetRow?,
     tier: String,
     versionName: String,
@@ -55,12 +58,33 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             SectionCard(title = "Язык записи") {
-                Text("«Авто» определяет язык по первым секундам речи (русский или английский).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "«Авто» определяет язык отдельно для каждого фрагмента речи (русский или английский), поэтому смешанные русско-английские " +
+                        "диалоги распознаются корректно. Если язык записи известен, выберите его вручную — это быстрее и надёжнее.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     LanguageChoice.entries.forEach { l ->
                         FilterChip(selected = settings.language == l, onClick = { onChange { it.copy(language = l) } }, label = { Text(l.label) },
                             modifier = Modifier.testTag("lang_${l.id}"))
                     }
+                }
+            }
+            SectionCard(title = "Числа") {
+                val words = when (settings.numbers) {
+                    NumbersChoice.WORDS -> true
+                    NumbersChoice.DIGITS -> false
+                    NumbersChoice.CONFIG -> configSpellsNumbers
+                }
+                Text(
+                    "«Словами» заменяет цифры в тексте на слова («25» → «двадцать пять»), «Цифрами» оставляет их так, как выдала модель. " +
+                        "В расшифровке и в JSON по ТЗ будет выбранный вариант.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    FilterChip(selected = !words, onClick = { onChange { it.copy(numbers = NumbersChoice.DIGITS) } }, label = { Text("Цифрами") },
+                        modifier = Modifier.testTag("numbers_digits"))
+                    FilterChip(selected = words, onClick = { onChange { it.copy(numbers = NumbersChoice.WORDS) } }, label = { Text("Словами") },
+                        modifier = Modifier.testTag("numbers_words"))
                 }
             }
             SectionCard(title = "Число говорящих") {

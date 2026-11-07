@@ -1,0 +1,333 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 434,
+      "end_ms": 3924,
+      "text": "— Ты придёшь на заседание?— Да.— А Васик?— Нет.— Почему?—",
+      "words": [
+        {
+          "text": "—",
+          "start_ms": 434,
+          "end_ms": 444,
+          "confidence": null
+        },
+        {
+          "text": "Ты",
+          "start_ms": 564,
+          "end_ms": 604,
+          "confidence": null
+        },
+        {
+          "text": "придёшь",
+          "start_ms": 684,
+          "end_ms": 1084,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 1164,
+          "end_ms": 1204,
+          "confidence": null
+        },
+        {
+          "text": "заседание?—",
+          "start_ms": 1284,
+          "end_ms": 1644,
+          "confidence": null
+        },
+        {
+          "text": "Да.—",
+          "start_ms": 1804,
+          "end_ms": 1844,
+          "confidence": null
+        },
+        {
+          "text": "А",
+          "start_ms": 2044,
+          "end_ms": 2084,
+          "confidence": null
+        },
+        {
+          "text": "Васик?—",
+          "start_ms": 2164,
+          "end_ms": 2644,
+          "confidence": null
+        },
+        {
+          "text": "Нет.—",
+          "start_ms": 3044,
+          "end_ms": 3084,
+          "confidence": null
+        },
+        {
+          "text": "Почему?—",
+          "start_ms": 3884,
+          "end_ms": 3924,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 5884,
+      "end_ms": 6404,
+      "text": "А Музе?—",
+      "words": [
+        {
+          "text": "А",
+          "start_ms": 5884,
+          "end_ms": 5924,
+          "confidence": null
+        },
+        {
+          "text": "Музе?—",
+          "start_ms": 6084,
+          "end_ms": 6404,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 6924,
+      "end_ms": 7724,
+      "text": "Ну, придёт, наверное.—",
+      "words": [
+        {
+          "text": "Ну,",
+          "start_ms": 6924,
+          "end_ms": 6964,
+          "confidence": null
+        },
+        {
+          "text": "придёт,",
+          "start_ms": 7204,
+          "end_ms": 7444,
+          "confidence": null
+        },
+        {
+          "text": "наверное.—",
+          "start_ms": 7684,
+          "end_ms": 7724,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 8964,
+      "end_ms": 12044,
+      "text": "Наверное, и точно.— Хорошо. А мелку будет?—",
+      "words": [
+        {
+          "text": "Наверное,",
+          "start_ms": 8964,
+          "end_ms": 9284,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 9524,
+          "end_ms": 9564,
+          "confidence": null
+        },
+        {
+          "text": "точно.—",
+          "start_ms": 9964,
+          "end_ms": 10164,
+          "confidence": null
+        },
+        {
+          "text": "Хорошо.",
+          "start_ms": 10804,
+          "end_ms": 10844,
+          "confidence": null
+        },
+        {
+          "text": "А",
+          "start_ms": 11284,
+          "end_ms": 11324,
+          "confidence": null
+        },
+        {
+          "text": "мелку",
+          "start_ms": 11444,
+          "end_ms": 11724,
+          "confidence": null
+        },
+        {
+          "text": "будет?—",
+          "start_ms": 12004,
+          "end_ms": 12044,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 13404,
+      "end_ms": 13444,
+      "text": "Нет.—",
+      "words": [
+        {
+          "text": "Нет.—",
+          "start_ms": 13404,
+          "end_ms": 13444,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 14244,
+      "end_ms": 14964,
+      "text": "Ты уверен?—",
+      "words": [
+        {
+          "text": "Ты",
+          "start_ms": 14244,
+          "end_ms": 14284,
+          "confidence": null
+        },
+        {
+          "text": "уверен?—",
+          "start_ms": 14604,
+          "end_ms": 14964,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 15444,
+      "end_ms": 15804,
+      "text": "Да, конечно.—",
+      "words": [
+        {
+          "text": "Да,",
+          "start_ms": 15444,
+          "end_ms": 15484,
+          "confidence": null
+        },
+        {
+          "text": "конечно.—",
+          "start_ms": 15764,
+          "end_ms": 15804,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 16404,
+      "end_ms": 17204,
+      "text": "Тогда начинай.—",
+      "words": [
+        {
+          "text": "Тогда",
+          "start_ms": 16404,
+          "end_ms": 16644,
+          "confidence": null
+        },
+        {
+          "text": "начинай.—",
+          "start_ms": 16804,
+          "end_ms": 17204,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 18044,
+      "end_ms": 18084,
+      "text": "Хорошо.—",
+      "words": [
+        {
+          "text": "Хорошо.—",
+          "start_ms": 18044,
+          "end_ms": 18084,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 19084,
+      "end_ms": 19924,
+      "text": "Нет, опаздывай.—",
+      "words": [
+        {
+          "text": "Нет,",
+          "start_ms": 19084,
+          "end_ms": 19124,
+          "confidence": null
+        },
+        {
+          "text": "опаздывай.—",
+          "start_ms": 19364,
+          "end_ms": 19924,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 20524,
+      "end_ms": 20764,
+      "text": "Не буду.",
+      "words": [
+        {
+          "text": "Не",
+          "start_ms": 20524,
+          "end_ms": 20564,
+          "confidence": null
+        },
+        {
+          "text": "буду.",
+          "start_ms": 20724,
+          "end_ms": 20764,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-medium",
+    "tier": "medium",
+    "language": "ru",
+    "audio_duration_ms": 22730,
+    "processing_ms": 11208,
+    "rtf": 0.493,
+    "stage_ms": {
+      "decode": 1247,
+      "vad": 420,
+      "lid": 1062,
+      "asr": 6592,
+      "diarization": 8403,
+      "align": 7,
+      "punctuation": 1,
+      "export": 11,
+      "total": 11208
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/embedding/model.onnx",
+      "llm": "llm/qwen3-1.7b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 491,
+    "threads": 4,
+    "device_model": "Google sdk_gphone64_arm64",
+    "android_sdk": 35,
+    "total_ram_mb": 3920
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1",
+    "speaker_2": "Говорящий 2"
+  }
+}

@@ -21,6 +21,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun session(entryId: String): TranscriptSession = sessions.getOrPut(entryId) { TranscriptSession(graph, entryId) }
 
+    /** Явная пауза воспроизведения при уходе в фон: Android 17 глушит фоновый звук, лучше остановиться самим (B34). */
+    fun pausePlayback() {
+        sessions.values.forEach { it.player.pause() }
+    }
+
     fun closeSession(entryId: String) {
         sessions.remove(entryId)?.close()
     }
@@ -39,7 +44,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Текст файла в выбранном формате для открытой расшифровки; null, если она ещё не загружена. */
     fun render(entryId: String, format: ExportFormat): String? {
         val doc = sessions[entryId]?.doc?.value ?: return null
-        return Exports.render(format, doc.transcript, doc.source)
+        return Exports.render(format, doc.transcript, doc.source, graph.history.get(entryId)?.runInfo())
     }
 
     /** Запись файла в место, выбранное пользователем (SAF). Возвращает сообщение об ошибке или null. */

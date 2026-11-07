@@ -36,7 +36,7 @@ class TranscriptSession(
 
     data class Doc(val transcript: EditableTranscript, val source: Transcript)
 
-    val player = AudioPlayer(scope)
+    val player = AudioPlayer(scope, graph.appContext)
 
     val entry: StateFlow<HistoryEntry?> = graph.history.entries.map { list -> list.firstOrNull { it.id == entryId } }
         .stateIn(scope, SharingStarted.Eagerly, graph.history.get(entryId))
@@ -142,8 +142,8 @@ class TranscriptSession(
         val tr = Transcript(d.transcript.utterances, d.source.meta)
         graph.history.saveTranscript(entryId, StoredTranscript.of(tr, d.transcript.speakerNames, edited = true))
         graph.history.get(entryId)?.let { e ->
-            val base = ResultsAutosave.resultsDir(graph.externalFilesDir(), graph.filesDir())
-            ResultsAutosave.write(base, e.sourceName, d.transcript, d.source)
+            val base = ResultsAutosave.resultsDir(graph.externalFilesDir(), graph.filesDir(), android.os.Process.myUid())
+            ResultsAutosave.write(base, e.sourceName, d.transcript, d.source, e.runInfo())
         }
     }
 
