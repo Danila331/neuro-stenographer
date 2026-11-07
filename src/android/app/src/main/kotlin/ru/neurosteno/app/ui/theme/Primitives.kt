@@ -74,7 +74,7 @@ fun BrutalButton(
     contentDescription: String? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(6.dp)
     val fill = when (style) {
         BrutalButtonStyle.Primary -> Brutal.strong
         BrutalButtonStyle.Secondary -> Brutal.surface
@@ -142,14 +142,14 @@ fun BrutalChip(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(6.dp)
     Box(
         modifier.defaultMinSize(minHeight = BrutalDims.MinTouch, minWidth = 48.dp).clip(shape)
             .background(if (selected) Brutal.accent else Brutal.panel.copy(alpha = 0.55f))
             .border(1.dp, if (selected) Brutal.strong.copy(alpha = 0.22f) else Color.Transparent, shape)
             .clickable(enabled = enabled, role = Role.RadioButton, onClick = onClick)
             .semantics { this.selected = selected; stateDescription = if (selected) "выбрано" else "не выбрано" }
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = if (!enabled) Brutal.muted else if (selected) Brutal.onAccent else Brutal.muted)
@@ -159,18 +159,18 @@ fun BrutalChip(
 @Composable
 fun SpeakerChip(name: String, speakerId: String, modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(RoundedCornerShape(8.dp)).background(speakerFill(speakerId).copy(alpha = if (Brutal.dark) 0.16f else 0.65f))
+        modifier.clip(RoundedCornerShape(5.dp)).background(speakerFill(speakerId, Brutal.dark))
             .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(Modifier.size(6.dp).background(speakerFill(speakerId).copy(alpha = 1f), CircleShape))
+        Box(Modifier.size(6.dp).background(speakerInk(speakerId, Brutal.dark), CircleShape))
         Text(name, style = MaterialTheme.typography.labelMedium, color = Brutal.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
 fun SpeakerSquare(speakerId: String, size: Dp = 18.dp) {
-    Box(Modifier.size(size).background(speakerFill(speakerId), CircleShape))
+    Box(Modifier.size(size).background(speakerInk(speakerId, Brutal.dark), CircleShape))
 }
 
 @Composable
@@ -287,8 +287,8 @@ fun BrutalTextField(
         modifier = modifier.defaultMinSize(minHeight = BrutalDims.MinTouch),
         decorationBox = { inner ->
             Column(
-                Modifier.fillMaxWidth().background(Brutal.surface, RoundedCornerShape(12.dp))
-                    .border(1.dp, Brutal.outline, RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().background(Brutal.surface, RoundedCornerShape(6.dp))
+                    .border(1.dp, Brutal.outline, RoundedCornerShape(6.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 if (label != null) Text(label, style = MaterialTheme.typography.labelMedium, color = Brutal.muted)

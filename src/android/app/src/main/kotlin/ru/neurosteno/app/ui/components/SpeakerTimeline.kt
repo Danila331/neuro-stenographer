@@ -65,6 +65,7 @@ fun SpeakerTimeline(
     val bg = Brutal.bg
     val ink = Brutal.ink
     val accent = Brutal.accent
+    val dark = Brutal.dark
     val addedCount = items.count { it.added }
     val description = "Дорожка говорящих. Позиция ${Format.clock(shown)} из ${Format.clock(durationMs)}." +
         (if (addedCount > 0) " Добавлено повторной обработкой: $addedCount." else "") + " Нажмите или проведите, чтобы перемотать"
@@ -101,7 +102,7 @@ fun SpeakerTimeline(
                 val top = padY + s.lane * (laneH + gap)
                 val x0 = s.x0.coerceIn(0f, size.width)
                 val w = (s.x1 - s.x0).coerceAtLeast(1f)
-                drawRoundRect(speakerFill(s.speakerId), Offset(x0, top), Size(w, laneH), cornerRadius = CornerRadius(3.dp.toPx()))
+                drawRoundRect(speakerFill(s.speakerId, dark), Offset(x0, top), Size(w, laneH), cornerRadius = CornerRadius(3.dp.toPx()))
                 if (s.added) {
                     clipRect(x0, top, x0 + w, top + laneH) {
                         var k = -laneH

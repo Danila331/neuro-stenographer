@@ -29,7 +29,7 @@ object BrutalDims {
     val BorderThick: Dp = 1.dp
     val Shadow: Dp = 0.dp
     val ShadowSmall: Dp = 0.dp
-    val Corner: Dp = 18.dp
+    val Corner: Dp = 10.dp
     val MinTouch: Dp = 48.dp
 }
 
@@ -43,21 +43,23 @@ fun NeuroTheme(choice: ThemeChoice = ThemeChoice.SYSTEM, content: @Composable ()
         ThemeChoice.LIGHT -> false
         ThemeChoice.DARK -> true
     }
+    // Notion interface tokens. Blue is reserved for primary actions and focus;
+    // selected rows use the matching blue callout background instead of a saturated fill.
     val colors = if (dark) {
         BrutalColors(
-            bg = Color(0xFF1C211E), ink = Color(0xFFE8EDE5), onInk = Color(0xFF20271F),
-            muted = Color(0xFFADB6AA), panel = Color(0xFF303831), accent = Color(0xFF35483A),
-            onAccent = Color(0xFFDCEAD8), error = Color(0xFF49332F), dark = true,
-            surface = Color(0xFF252C26), outline = Color(0xFF3B443C), strong = Color(0xFFA8BEA1),
-            onStrong = Color(0xFF202E21), errorText = Color(0xFFE7BDB3),
+            bg = Color(0xFF191919), ink = Color(0xFFD4D4D4), onInk = Color(0xFF191919),
+            muted = Color(0xFF9B9B9B), panel = Color(0xFF252525), accent = Color(0xFF1F282D),
+            onAccent = Color(0xFFD4D4D4), error = Color(0xFF332523), dark = true,
+            surface = Color(0xFF202020), outline = Color(0xFF373737), strong = Color(0xFF2383E2),
+            onStrong = Color(0xFFFFFFFF), errorText = Color(0xFFBE524B),
         )
     } else {
         BrutalColors(
-            bg = Color(0xFFFAF9F6), ink = Color(0xFF30372F), onInk = Color(0xFFFAFCF8),
-            muted = Color(0xFF6D746B), panel = Color(0xFFEEEFE9), accent = Color(0xFFE5EDDF),
-            onAccent = Color(0xFF3F573B), error = Color(0xFFF3E3DF), dark = false,
-            surface = Color(0xFFFFFFFF), outline = Color(0xFFE3E7DE), strong = Color(0xFF526B4C),
-            onStrong = Color(0xFFFFFFFF), errorText = Color(0xFF874F43),
+            bg = Color(0xFFFFFFFF), ink = Color(0xFF373530), onInk = Color(0xFFFFFFFF),
+            muted = Color(0xFF787774), panel = Color(0xFFF1F1EF), accent = Color(0xFFE9F3F7),
+            onAccent = Color(0xFF373530), error = Color(0xFFFAECEC), dark = false,
+            surface = Color(0xFFFFFFFF), outline = Color(0xFFE9E9E7), strong = Color(0xFF2383E2),
+            onStrong = Color(0xFFFFFFFF), errorText = Color(0xFFC4554D),
         )
     }
     val scheme = if (dark) darkColorScheme(
@@ -88,8 +90,8 @@ fun NeuroTheme(choice: ThemeChoice = ThemeChoice.SYSTEM, content: @Composable ()
         error = colors.errorText, onError = colors.bg, errorContainer = colors.error, onErrorContainer = colors.errorText,
     )
     val shapes = Shapes(
-        extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(12.dp),
-        medium = BrutalShape, large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(28.dp),
+        extraSmall = RoundedCornerShape(4.dp), small = RoundedCornerShape(6.dp),
+        medium = BrutalShape, large = RoundedCornerShape(12.dp), extraLarge = RoundedCornerShape(16.dp),
     )
     CompositionLocalProvider(LocalBrutal provides colors, LocalDarkTheme provides dark) {
         MaterialTheme(colorScheme = scheme, typography = BrutalTypography, shapes = shapes, content = content)
@@ -97,4 +99,4 @@ fun NeuroTheme(choice: ThemeChoice = ThemeChoice.SYSTEM, content: @Composable ()
 }
 
 @Composable
-fun speakerColor(speakerId: String): Color = speakerFill(speakerId)
+fun speakerColor(speakerId: String): Color = speakerFill(speakerId, Brutal.dark)

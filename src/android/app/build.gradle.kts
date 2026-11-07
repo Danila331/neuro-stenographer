@@ -17,7 +17,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "ru.neurosteno.minimal"
+        // Третья самостоятельная дизайн-версия: устанавливается рядом с app и minimal.
+        applicationId = "ru.neurosteno.notion"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -32,14 +33,14 @@ android {
         resValues = true
     }
 
-    // Один код, три набора моделей + online (без встроенных моделей). applicationId: ru.neurosteno.app.<tier>
+    // Один код, три набора моделей + online (без встроенных моделей). applicationId: ru.neurosteno.notion.<tier>
     flavorDimensions += "tier"
     productFlavors {
         create("lite") {
             dimension = "tier"
             applicationIdSuffix = ".lite"
             versionNameSuffix = "-lite"
-            resValue("string", "app_name", "Нейро · Записи Lite")
+            resValue("string", "app_name", "Нейро · Документ Lite")
             buildConfigField("String", "TIER", "\"lite\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "true")
         }
@@ -47,7 +48,7 @@ android {
             dimension = "tier"
             applicationIdSuffix = ".medium"
             versionNameSuffix = "-medium"
-            resValue("string", "app_name", "Нейро · Записи")
+            resValue("string", "app_name", "Нейро · Документ")
             buildConfigField("String", "TIER", "\"medium\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "true")
         }
@@ -55,7 +56,7 @@ android {
             dimension = "tier"
             applicationIdSuffix = ".hard"
             versionNameSuffix = "-hard"
-            resValue("string", "app_name", "Нейро · Записи Hard")
+            resValue("string", "app_name", "Нейро · Документ Hard")
             buildConfigField("String", "TIER", "\"hard\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "true")
         }
@@ -63,7 +64,7 @@ android {
             dimension = "tier"
             applicationIdSuffix = ".online"
             versionNameSuffix = "-online"
-            resValue("string", "app_name", "Нейро · Записи Online")
+            resValue("string", "app_name", "Нейро · Документ Online")
             buildConfigField("String", "TIER", "\"online\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "false")
         }

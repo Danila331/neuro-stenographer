@@ -66,17 +66,17 @@ fun HomeScreen(
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
             val actions: @Composable () -> Unit = { ActionPanel(models, activeSet, onPickAudio, onRecord, onModels) }
             if (maxWidth >= 720.dp) {
-                Row(Modifier.fillMaxSize().padding(horizontal = 28.dp), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                    Column(Modifier.weight(0.44f).verticalScroll(rememberScrollState()).padding(vertical = 24.dp)) { actions() }
-                    LazyColumn(Modifier.weight(0.56f), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(top = 24.dp, bottom = 32.dp)) {
+                Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+                    Column(Modifier.weight(0.44f).verticalScroll(rememberScrollState()).padding(vertical = 18.dp)) { actions() }
+                    LazyColumn(Modifier.weight(0.56f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(top = 18.dp, bottom = 28.dp)) {
                         historyItems(entries, onOpen) { toDelete = it }
                     }
                 }
             } else {
                 LazyColumn(
-                    Modifier.fillMaxSize().padding(horizontal = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(top = 24.dp, bottom = 32.dp),
+                    Modifier.fillMaxSize().padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
                 ) {
                     item { actions() }
                     historyItems(entries, onOpen) { toDelete = it }
@@ -101,18 +101,14 @@ private fun ActionPanel(
     onRecord: () -> Unit,
     onModels: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Ваши записи", style = MaterialTheme.typography.headlineLarge, color = Brutal.ink)
-            Text("Разговоры, мысли и встречи.\nВозвращайтесь к тому, что важно.", style = MaterialTheme.typography.bodyMedium, color = Brutal.muted)
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            BrutalButton(onPickAudio, modifier = Modifier.weight(1.15f).fillMaxHeight().testTag(Tags.PICK_AUDIO), height = 56.dp, contentDescription = "Выбрать аудиофайл") {
+            BrutalButton(onPickAudio, modifier = Modifier.weight(1.15f).fillMaxHeight().testTag(Tags.PICK_AUDIO), height = 52.dp, contentDescription = "Выбрать аудиофайл") {
                 Icon(AppIcons.Folder, null, Modifier.size(19.dp))
                 Spacer(Modifier.width(8.dp))
                 ButtonLabel("Импорт аудио")
             }
-            BrutalButton(onRecord, modifier = Modifier.weight(1f).fillMaxHeight().testTag(Tags.RECORD), style = BrutalButtonStyle.Secondary, height = 56.dp) {
+            BrutalButton(onRecord, modifier = Modifier.weight(1f).fillMaxHeight().testTag(Tags.RECORD), style = BrutalButtonStyle.Secondary, height = 52.dp) {
                 Icon(AppIcons.Mic, null, Modifier.size(19.dp))
                 Spacer(Modifier.width(8.dp))
                 ButtonLabel("Записать")
@@ -158,16 +154,16 @@ private fun androidx.compose.foundation.lazy.LazyListScope.historyItems(
     onDelete: (HistoryEntry) -> Unit,
 ) {
     item(key = "history-header") {
-        Row(Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Недавние", style = MaterialTheme.typography.titleMedium, color = Brutal.ink)
             Spacer(Modifier.weight(1f))
             if (entries.isNotEmpty()) Text("${entries.size}", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
         }
     }
     if (entries.isEmpty()) item(key = "history-empty") {
-        BrutalCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 32.dp)) {
+        BrutalCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 20.dp, vertical = 24.dp)) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(Modifier.size(48.dp).background(Brutal.panel, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(44.dp).background(Brutal.panel, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
                     Icon(AppIcons.Description, null, Modifier.size(23.dp), tint = Brutal.muted)
                 }
                 Text("Пока нет записей", style = MaterialTheme.typography.titleMedium)

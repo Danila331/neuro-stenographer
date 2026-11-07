@@ -292,6 +292,9 @@ fun TranscriptScreen(
                     if (canUndo) {
                         BrutalIconButton(onClick = { session.undo() }, contentDescription = "Отменить последнюю правку") { Icon(Icons.Default.Refresh, contentDescription = null) }
                     }
+                    BrutalIconButton(onClick = { showFormats = true }, contentDescription = "Другие форматы") {
+                        Icon(Icons.Default.Share, contentDescription = null)
+                    }
                     BrutalIconButton(onClick = { searching = !searching; if (!searching) session.setQuery("") }, contentDescription = "Поиск по тексту", fill = if (searching) Brutal.accent else Brutal.bg) {
                         Icon(Icons.Default.Search, contentDescription = null)
                     }
@@ -317,8 +320,8 @@ fun TranscriptScreen(
                 else -> LazyColumn(
                     state = listState,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     item(key = "header") {
                         Header(
@@ -462,6 +465,7 @@ private fun FormatRow(title: String, hint: String, onClick: () -> Unit) {
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun Header(
     entry: ru.neurosteno.app.data.HistoryEntry?,
@@ -473,22 +477,76 @@ private fun Header(
     onSummary: (() -> Unit)? = null,
     onSearch: (() -> Unit)? = null,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 4.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+    val largeText = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f
+    val metadata: @Composable (Modifier) -> Unit = { modifier ->
+        androidx.compose.foundation.layout.FlowRow(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             BrutalTag(Format.clock(entry?.durationMs ?: transcript.durationMs), fill = Brutal.accent)
             BrutalTag(Format.plural(transcript.speakerIds.size, "говорящий", "говорящих", "говорящих"))
             BrutalTag(Format.plural(transcript.utterances.size, "реплика", "реплики", "реплик"))
             if (entry?.edited == true) BrutalTag("Изменено", fill = Brutal.ink)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            BrutalButton(onClick = onExportJson, modifier = Modifier.weight(1f).testTag(Tags.EXPORT_JSON)) { ButtonLabel("Экспорт JSON") }
-            BrutalButton(onClick = onMore, style = BrutalButtonStyle.Secondary, modifier = Modifier.weight(1f)) { ButtonLabel("Другие форматы") }
+    }
+    val export: @Composable (Modifier) -> Unit = { modifier ->
+        BrutalButton(onClick = onExportJson, height = 44.dp, modifier = modifier.testTag(Tags.EXPORT_JSON)) {
+            Icon(AppIcons.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(7.dp))
+            ButtonLabel("Экспорт JSON")
         }
-        // Three quiet tools leave more room for the actual conversation.
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            if (onSummary != null) ToolButton("Выжимка", onSummary, Modifier.weight(1f).testTag("btn_summary")) else ToolSlot("Выжимка", Modifier.weight(1f).testTag("slot_summary"))
-            BrutalButton(onClick = onProtocol, style = BrutalButtonStyle.Ink, height = 48.dp, modifier = Modifier.weight(1f).testTag("btn_protocol"), contentDescription = if (llmAvailability is LlmAvailability.Unavailable) "Протокол и вопросы: нажмите, чтобы узнать о доступности" else "Протокол и вопросы") { ButtonLabel("Протокол") }
-            if (onSearch != null) ToolButton("Поиск", onSearch, Modifier.weight(1f).testTag("btn_ai_search")) else ToolSlot("Поиск", Modifier.weight(1f).testTag("slot_ai_search"))
+    }
+    val textTab: @Composable (Modifier) -> Unit = { modifier ->
+        BrutalChip(selected = true, onClick = {}, label = "Текст", modifier = modifier)
+    }
+    val summaryTab: @Composable (Modifier) -> Unit = { modifier ->
+        if (onSummary != null) ToolButton("Выжимка", onSummary, modifier.testTag("btn_summary")) else ToolSlot("Выжимка", modifier.testTag("slot_summary"))
+    }
+    val protocolTab: @Composable (Modifier) -> Unit = { modifier ->
+        BrutalChip(
+            selected = false, onClick = onProtocol, label = "Протокол",
+            modifier = modifier.testTag("btn_protocol").semantics {
+                contentDescription = if (llmAvailability is LlmAvailability.Unavailable) "Протокол и вопросы: нажмите, чтобы узнать о доступности" else "Протокол и вопросы"
+            },
+        )
+    }
+    val searchTab: @Composable (Modifier) -> Unit = { modifier ->
+        if (onSearch != null) ToolButton("AI-поиск", onSearch, modifier.testTag("btn_ai_search")) else ToolSlot("AI-поиск", modifier.testTag("slot_ai_search"))
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().padding(androidx.compose.foundation.layout.PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 12.dp)),
+    ) {
+        if (largeText) {
+            metadata(Modifier.fillMaxWidth())
+            export(Modifier.fillMaxWidth())
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                metadata(Modifier.weight(1f))
+                export(Modifier)
+            }
+        }
+        // Four quiet tabs in a normal row; a readable 2×2 grid at large accessibility font sizes.
+        if (largeText) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                    textTab(Modifier.weight(1f))
+                    summaryTab(Modifier.weight(1f))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                    protocolTab(Modifier.weight(1f))
+                    searchTab(Modifier.weight(1f))
+                }
+            }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                textTab(Modifier.weight(1f))
+                summaryTab(Modifier.weight(1f))
+                protocolTab(Modifier.weight(1f))
+                searchTab(Modifier.weight(1f))
+            }
         }
         entry?.warnings?.takeIf { it.isNotEmpty() }?.let { w ->
             Text("Предупреждения обработки: ${w.joinToString("; ")}", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
@@ -496,10 +554,10 @@ private fun Header(
     }
 }
 
-/** Рабочая кнопка инструмента поверх расшифровки («Выжимка», «AI-поиск»). */
+/** Рабочая вкладка инструмента поверх расшифровки. */
 @Composable
 private fun ToolButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    BrutalButton(onClick = onClick, style = BrutalButtonStyle.Ink, height = 48.dp, modifier = modifier) { ButtonLabel(label) }
+    BrutalChip(selected = false, onClick = onClick, label = label, modifier = modifier)
 }
 
 /** Заложенное место под будущий инструмент (B50/B51): неактивная кнопка с меткой «СКОРО». */
@@ -538,55 +596,49 @@ private fun UtteranceCard(
     onMerge: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    // Заливка отражает состояние: выбрана -- инверсия, только что пересчитана -- акцент, звучит сейчас -- акцент; обычная -- фон.
-    val fill = when {
-        selected -> Brutal.accent
-        highlighted || current || flash -> Brutal.accent
-        else -> Brutal.surface
-    }
-    val fg = when {
-        selected -> Brutal.onAccent
-        highlighted || current || flash -> Brutal.onAccent
-        else -> Brutal.ink
-    }
+    // Реплики образуют единый документ: цвет появляется только у активного или выбранного фрагмента.
+    val active = selected || highlighted || current || flash
+    val fill = if (active) Brutal.accent else Brutal.bg
+    val fg = if (active) Brutal.onAccent else Brutal.ink
+    val borderColor = if (matched || selected) Brutal.strong else Color.Transparent
     val time = Format.clock(u.startMs)
-    BrutalSurface(
-        modifier = Modifier.fillMaxWidth()
-            .semantics(mergeDescendants = true) {
-                contentDescription = "$name, $time. ${u.text}" + (if (current) ". Сейчас звучит" else "") +
-                    (if (selected) ". Выбрана" else "") + (if (highlighted) ". Обработана заново" else "")
-            }
-            .combinedClickable(
-                onClickLabel = if (selectionMode) (if (selected) "Снять выбор" else "Выбрать реплику") else "Воспроизвести с этого места",
-                onClick = onClick, onLongClickLabel = "Выбрать для повторной обработки", onLongClick = onLongClick,
-            ),
-        fill = fill, contentColor = fg,
-        shadow = if (matched) 6.dp else BrutalDims.Shadow,
-        borderWidth = if (matched || selected) BrutalDims.BorderThick + 1.dp else BrutalDims.Border,
-    ) {
-        Row(Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 4.dp), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f).padding(end = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SpeakerChip(name, u.speakerId, Modifier.weight(1f, fill = false))
-                    BrutalTag(time, fill = if (selected) Brutal.ink else Brutal.bg)
-                    if (highlighted) BrutalTag("Обновлено", fill = Brutal.ink)
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp)) {
+        Column(
+            Modifier.fillMaxWidth().background(fill, BrutalShape)
+                .border(1.dp, borderColor, BrutalShape)
+                .semantics(mergeDescendants = true) {
+                    contentDescription = "$name, $time. ${u.text}" + (if (current) ". Сейчас звучит" else "") +
+                        (if (selected) ". Выбрана" else "") + (if (highlighted) ". Обработана заново" else "")
                 }
-                Text(highlight(u.text, query), style = MaterialTheme.typography.bodyLarge, color = fg)
-            }
-            Box {
-                BrutalIconButton(
-                    onClick = onMenu, contentDescription = "Действия с репликой: $name, $time",
-                    fill = if (selected) Brutal.ink else Brutal.bg,
-                ) { Icon(Icons.Default.MoreVert, contentDescription = null) }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = onMenuDismiss, containerColor = Brutal.bg, shape = BrutalShape, border = BorderStroke(BrutalDims.Border, Brutal.outline)) {
-                    DropdownMenuItem(text = { Text("Обработать заново", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Refresh, null) }, onClick = onReprocess,
-                        modifier = Modifier.testTag("menu_reprocess"))
-                    DropdownMenuItem(text = { Text("Править текст", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = onEdit)
-                    DropdownMenuItem(text = { Text("Сменить говорящего", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Person, null) }, onClick = onSpeaker)
-                    if (canMerge) DropdownMenuItem(text = { Text("Объединить со следующей", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(AppIcons.Merge, null) }, onClick = onMerge)
-                    DropdownMenuItem(text = { Text("Удалить реплику", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Delete, null) }, onClick = onDelete)
+                .combinedClickable(
+                    onClickLabel = if (selectionMode) (if (selected) "Снять выбор" else "Выбрать реплику") else "Воспроизвести с этого места",
+                    onClick = onClick, onLongClickLabel = "Выбрать для повторной обработки", onLongClick = onLongClick,
+                ),
+        ) {
+            Row(Modifier.padding(start = 14.dp, top = 12.dp, bottom = 12.dp, end = 2.dp), verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f).padding(end = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SpeakerChip(name, u.speakerId, Modifier.weight(1f, fill = false))
+                        BrutalTag(time)
+                        if (highlighted) BrutalTag("Обновлено", fill = Brutal.ink)
+                    }
+                    Text(highlight(u.text, query), style = MaterialTheme.typography.bodyLarge, color = fg)
+                }
+                Box {
+                    BrutalIconButton(onClick = onMenu, contentDescription = "Действия с репликой: $name, $time") {
+                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = onMenuDismiss, containerColor = Brutal.surface, shape = BrutalShape, border = BorderStroke(BrutalDims.Border, Brutal.outline)) {
+                        DropdownMenuItem(text = { Text("Обработать заново", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Refresh, null) }, onClick = onReprocess,
+                            modifier = Modifier.testTag("menu_reprocess"))
+                        DropdownMenuItem(text = { Text("Править текст", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = onEdit)
+                        DropdownMenuItem(text = { Text("Сменить говорящего", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Person, null) }, onClick = onSpeaker)
+                        if (canMerge) DropdownMenuItem(text = { Text("Объединить со следующей", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(AppIcons.Merge, null) }, onClick = onMerge)
+                        DropdownMenuItem(text = { Text("Удалить реплику", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Delete, null) }, onClick = onDelete)
+                    }
                 }
             }
+            if (!active) BrutalDivider(Modifier.padding(horizontal = 14.dp))
         }
     }
 }
