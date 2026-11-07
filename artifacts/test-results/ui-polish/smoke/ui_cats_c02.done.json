@@ -1,26 +1,26 @@
 {
   "status": "done",
-  "source": "cats_c01_v0_meeting_clean.wav",
-  "finished_at_ms": 1794011905685,
-  "audio_duration_ms": 58580,
-  "processing_ms": 23154,
-  "rtf": 0.395,
+  "source": "cats_c02_v0_call_phone.wav",
+  "finished_at_ms": 1794012866995,
+  "audio_duration_ms": 41415,
+  "processing_ms": 25638,
+  "rtf": 0.619,
   "language": "ru",
-  "utterances": 16,
+  "utterances": 2,
   "tier": "medium",
   "model_set": "medium",
   "stage_ms": {
-    "decode": 543,
-    "vad": 962,
-    "lid": 1817,
-    "asr": 11025,
-    "diarization": 19757,
+    "decode": 617,
+    "vad": 878,
+    "lid": 5177,
+    "asr": 15173,
+    "diarization": 18896,
     "align": 4,
     "punctuation": 1,
-    "export": 10,
-    "total": 23154
+    "export": 2,
+    "total": 25638
   },
-  "peak_pss_mb": 509,
+  "peak_pss_mb": 528,
   "threads": 4,
   "device_model": "Google sdk_gphone64_arm64",
   "android_sdk": 35,
@@ -28,8 +28,8 @@
   "app_version": "0.1.0-medium",
   "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
   "files": [
-    "cats_c01_v0_meeting_clean.json",
-    "cats_c01_v0_meeting_clean.full.json"
+    "cats_c02_v0_call_phone.json",
+    "cats_c02_v0_call_phone.full.json"
   ],
   "problems": [],
   "warnings": []

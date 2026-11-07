@@ -15,6 +15,15 @@
 Также работают `ACTION_VIEW` / `ACTION_SEND` с `audio/*` (обработка стартует сразу) и автосохранение
 `Android/data/<pkg>/files/results/<имя>.json` (+ `.full.json`; после правок в интерфейсе файлы перезаписываются).
 
+### Маркер завершения (B32, B33)
+Рядом с результатом приложение пишет **`<имя>.done.json`** — последним и атомарно: если он есть, `.json` и `.full.json` уже на диске.
+В нём: `status`, `rtf`, `processing_ms`, `audio_duration_ms`, `stage_ms`, `utterances`, `language`, `tier`, `model_set`,
+`peak_pss_mb`, `threads`, `device_model`, `android_sdk`, `total_ram_mb`, `app_version`, `results_dir`, `files`, `problems`, `warnings`.
+При сбое — `<имя>.error.json` (`status=error`, `error`). Те же `peak_pss_mb`/`threads`/`device_model`/`android_sdk` — в `meta` расширенного
+JSON и в строке logcat `done <имя>: … peak_pss_mb=… threads=… device=… results=…` (тег `Neurosteno`). Скрипты ждут маркер, а не logcat.
+Если `results` недоступна для записи (остаток от другой установки/uid → `EACCES`), берётся `results-<uid>`, затем внутренняя `filesDir/results`;
+путь — в `results=` строки `done` и в `results_dir` маркера.
+
 ## Экраны (`ui/screens`)
 
 | Экран | Что есть |
@@ -25,9 +34,16 @@
 | Протокол и вопросы | «Протокол заседания» и «Вопрос по расшифровке» на `LlamaAssistant` с потоковым выводом; остановка; копировать/поделиться; если LLM недоступна — причина текстом (нет файла модели, < 3 ГБ ОЗУ, нет dotprod, идёт обработка) |
 | Модели | наборы (встроенный, скачанные, из каталога), активный, размер; «Скачать» (WorkManager, прогресс, скорость, докачка, отмена, sha256, проверка места), «Сделать активным», «Удалить встроенный набор», «Восстановить из APK» |
 | Первый запуск `online` | единственный вариант с экраном первого запуска: выбор и загрузка набора (`OnlineSetupScreen`) |
-| Настройки | язык (Авто / Русский / English), число говорящих (Авто / 1–8; при 1 диаризация отключается), тема, сведения о наборе, очистка истории |
+| Настройки | язык (Авто — по фрагментам речи / Русский / English), «Числа: цифрами / словами» (`postprocess.numbers`; пока не выбрано — как в конфиге), число говорящих (Авто / 1–8; при 1 диаризация отключается), тема, сведения о наборе, очистка истории |
 | Статистика обработки | время по стадиям, RTF, пик PSS процесса, сводка по запускам (BACKLOG B14) |
 | Запись | таймер, индикатор уровня; разрешение микрофона запрашивается только здесь, по нажатию |
+
+### Поведение в фоне (B34)
+Уведомление обработки и загрузки обновляется не чаще 2 раз в секунду (`MinIntervalGate`). `android:enableOnBackInvokedCallback="true"`:
+«Назад» на каждом экране проверен (`back_check.sh`); при открытом поиске он сначала закрывает поиск. Плеер запрашивает audio focus
+(потеря → пауза, кратковременная → продолжение после возврата, ducking), ставится на паузу при `onStop` (уход в фон — Android 17 глушит
+фоновый звук, лучше явная пауза), при отключении наушников и по окончании. Foreground-сервисы: `ProcessingService` и
+`SystemForegroundService` WorkManager — `dataSync` (проверено по merged manifest); `onTimeout` (Android 15+) прерывает обработку, а не ждёт ANR.
 
 Тёмная и светлая темы (`NeuroTheme`, палитра говорящих для обеих), поворот не пересоздаёт Activity (`configChanges`),
 `contentDescription` у иконок и карточек, минимальные цели нажатия 48 dp, проверено при шрифте ×1,6.
@@ -58,10 +74,12 @@
 
 ```bash
 cd src/android
-./gradlew :core:test :app:testMediumDebugUnitTest          # JVM: 177 + 66 тестов (редактор, экспорт, история, каталог, загрузчик на локальном HTTP-сервере, ETA, промпты)
+./gradlew :core:test :app:testMediumDebugUnitTest          # JVM: 201 + 75 тестов (редактор, экспорт, история, каталог, загрузчик на локальном HTTP-сервере, ETA, промпты)
 ./gradlew :app:connectedMediumDebugAndroidTest             # Compose UI-тесты на эмуляторе (3 теста; удаляют установленное приложение)
 src/android/scripts/process_on_device.sh <apk> <wav>       # холодный путь VIEW → JSON (foundation)
 src/android/app/tools/screens.sh                           # скриншоты экранов в artifacts/demo/screens (uiautomator, tools/uia.py)
+src/android/app/tools/back_check.sh                        # «Назад» на всех экранах (22 проверки)
+SKIP_INSTALL=1 src/android/scripts/process_on_device.sh …  # не переустанавливать APK (medium 1,6 ГБ не помещается дважды в /data эмулятора)
 python3 src/android/app/tools/gen_model_sets.py            # пересобрать каталог моделей (нужна сеть)
 ```
 `tools/uia.py` — минимальный adb+uiautomator (tap/wait/shot/type); кириллицу вводит через буфер обмена debug-сборки
