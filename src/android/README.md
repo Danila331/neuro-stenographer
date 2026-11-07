@@ -96,6 +96,12 @@ B30 (поля `TierConfig`, все с дефолтами «выключено»)
 `postprocess.numbers = words` (`RussianNumbers`, сверено с `stenoeval.textnorm.spell_numbers`).
 `parity.sh`: `PARITY_SPLIT=all`, `PARITY_LANGUAGE`, `PARITY_CONFIG`, `PARITY_TAG`.
 
+Engine v2 (B42, 1:1 с `refpipe`): `vad.chunking=pack` (`VadChunking`: `pad_segments`, `pack_chunks`, `rescue_segments`;
+сырые отсчёты Silero — `Vad.detectSamples`), `vad.rescue`, `audio.normalize_gain.scope = all|asr|asr_chunk` (+ `apply_if_peak_below_dbfs`;
+при `asr` VAD/rescue/диаризация читают исходный сигнал, ASR и LID — копию), `postprocess.strip_dashes`, пунктуация не определяет
+времена слова (`TokenWords`). Паритетные JSON-кейсы генерируются из refpipe: `src/eval/refpipe/.venv/bin/python src/android/scripts/gen_engine_cases.py`
+→ `core/src/test/resources/engine_cases.json` (`EngineCasesTest`, 189 кейсов).
+
 ## Модули
 
 | Модуль | Тип | Содержимое |

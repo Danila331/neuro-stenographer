@@ -15,7 +15,9 @@ import ru.neurosteno.core.ProgressListener
 import ru.neurosteno.core.Stage
 import ru.neurosteno.core.TimeSpan
 import ru.neurosteno.core.Word
+import ru.neurosteno.core.NormalizeGainConfig
 import ru.neurosteno.core.asr.AsrModelFiles
+import ru.neurosteno.core.audio.AudioNormalizer
 import ru.neurosteno.core.asr.ChunkPlanner
 import ru.neurosteno.core.asr.TokenWords
 import ru.neurosteno.core.postprocess.Postprocess
@@ -42,6 +44,10 @@ class SherpaAsr(
     private val keepPunct: Boolean = false,
     /** `postprocess.drop_tiny_chunks.max_chars`: чанк, весь вывод которого не длиннее, отбрасывается; null -- не отбрасывать. */
     private val dropTinyMaxChars: Int? = null,
+    /** true (vad.chunking = legacy) -- движок сам режет переданные интервалы на чанки; false (pack) -- интервалы УЖЕ чанки. */
+    private val replanChunks: Boolean = true,
+    /** normalize_gain.scope = asr_chunk: каждый чанк нормализуется по собственному пику; null -- нет. */
+    private val chunkGain: NormalizeGainConfig? = null,
     /** Отладка/диагностика: сырой результат распознавания каждого чанка (текст, токены, времена токенов в секундах). */
     private val onRawResult: ((text: String, tokens: List<String>, timestamps: FloatArray) -> Unit)? = null,
 ) : AsrEngine {
@@ -95,7 +101,7 @@ class SherpaAsr(
     override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word> {
         require(audio.sampleRate == SAMPLE_RATE) { "ASR ожидает 16 кГц, получено ${audio.sampleRate}" }
         val rec = recognizer()
-        val chunks = ChunkPlanner.plan(audio.samples, speech, (cfg.chunk.maxS * 1000).roundToLong())
+        val chunks = if (replanChunks) ChunkPlanner.plan(audio.samples, speech, (cfg.chunk.maxS * 1000).roundToLong()) else speech
         val minSamples = (cfg.chunk.minS * SAMPLE_RATE).toInt()
         val words = ArrayList<Word>()
         progress.onProgress(Stage.ASR, 0f)
@@ -107,6 +113,7 @@ class SherpaAsr(
                 val stream = rec.createStream()
                 try {
                     var seg = audio.samples.copyOfRange(from, to)
+                    if (chunkGain != null) seg = AudioNormalizer.normalizeChunk(seg, chunkGain)
                     // как в эталоне: слишком короткий чанк дополняется тишиной до chunk.min_s (границы чанка не двигаются)
                     if (seg.size < minSamples) seg = seg.copyOf(minSamples)
                     stream.acceptWaveform(seg, SAMPLE_RATE)

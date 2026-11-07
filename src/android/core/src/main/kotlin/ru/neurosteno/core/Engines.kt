@@ -21,7 +21,15 @@ fun denoise(audio: AudioBuffer, progress: ProgressListener): AudioBuffer
 }
 
 interface Vad : AutoCloseable {
-fun detect(audio: AudioBuffer): List<TimeSpan>
+    /** Речевые интервалы в мс (с паддингом и склейкой самого движка) -- режим `vad.chunking = legacy`. */
+    fun detect(audio: AudioBuffer): List<TimeSpan>
+
+    /**
+     * Сырые сегменты в ОТСЧЁТАХ без паддинга (режим `pack`: паддинг, rescue и упаковку в чанки делает [ru.neurosteno.core.asr.VadChunking]).
+     * По умолчанию -- из [detect] (для фейков и простых реализаций).
+     */
+    fun detectSamples(audio: AudioBuffer): List<SampleSpan> =
+        detect(audio).map { SampleSpan((it.startMs * audio.sampleRate / 1000).toInt(), (it.endMs * audio.sampleRate / 1000).toInt()) }
 }
 
 /** Определение языка по речи: "ru" | "en" (любой другой ответ трактуется как "ru"). */

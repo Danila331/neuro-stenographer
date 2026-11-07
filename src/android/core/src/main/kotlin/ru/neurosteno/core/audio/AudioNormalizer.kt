@@ -23,9 +23,11 @@ object AudioNormalizer {
         if (!cfg.active) return 0.0
         val pkDb = db(peak)
         if (pkDb < cfg.skipIfPeakBelowDbfs) return 0.0
+        cfg.applyIfPeakBelowDbfs?.let { if (pkDb >= it) return 0.0 }
         var g = cfg.peakDbfs - pkDb
         g = g.coerceIn(-cfg.maxAttenuationDb, cfg.maxGainDb)
-        return minOf(g, CEIL_DB - pkDb)
+        g = minOf(g, CEIL_DB - pkDb)
+        return if (abs(g) < 1e-6) 0.0 else g
     }
 
     fun peak(samples: FloatArray): Double {
@@ -46,5 +48,26 @@ object AudioNormalizer {
         val x = audio.samples
         for (i in x.indices) x[i] *= k
         return g
+    }
+
+    /** Нормализованная КОПИЯ ([NormalizeGainConfig.scope] = asr): исходный буфер не меняется; null, если усиление 0. */
+    fun scaledCopy(audio: AudioBuffer, cfg: NormalizeGainConfig): AudioBuffer? {
+        if (audio.samples.isEmpty()) return null
+        val g = gainDb(peak(audio.samples), cfg)
+        if (g == 0.0) return null
+        val k = 10.0.pow(g / 20).toFloat()
+        val src = audio.samples
+        val out = FloatArray(src.size)
+        for (i in src.indices) out[i] = src[i] * k
+        return AudioBuffer(out, audio.sampleRate)
+    }
+
+    /** Нормализует отрезок [seg] отдельно (scope = asr_chunk): новая копия либо тот же массив, если усиление 0. */
+    fun normalizeChunk(seg: FloatArray, cfg: NormalizeGainConfig): FloatArray {
+        if (seg.isEmpty()) return seg
+        val g = gainDb(peak(seg), cfg)
+        if (g == 0.0) return seg
+        val k = 10.0.pow(g / 20).toFloat()
+        return FloatArray(seg.size) { seg[it] * k }
     }
 }

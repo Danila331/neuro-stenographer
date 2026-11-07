@@ -10,6 +10,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runInterruptible
 import ru.neurosteno.core.asr.ChunkPlanner
+import ru.neurosteno.core.asr.VadChunking
 import kotlin.coroutines.coroutineContext
 
 /** Параметры прогона, не связанные с выбором движков. */
@@ -36,8 +37,15 @@ data class PipelineSettings(
     val normalizeGain: NormalizeGainConfig = NormalizeGainConfig(),
     /** LID на каждом VAD-чанке (при `languageMode == auto` и наличии английской ASR). */
     val perChunkLanguage: Boolean = false,
-    /** Максимальная длина чанка основной ASR (мс) -- по ней нарезаются чанки для LID. */
-    val chunkMaxMs: Long = 25_000,
+    /** Чанки основной ASR: максимум/минимум, секунд (`asr.chunk.*`). */
+    val chunkMaxS: Double = 25.0,
+    val chunkMinS: Double = 1.0,
+    /** VAD: паддинг, rescue и режим упаковки (`vad.*`); false -- прежний ChunkPlanner внутри движка. */
+    val vadPadMs: Int = 150,
+    val vadRescue: VadRescueConfig = VadRescueConfig(),
+    val packChunking: Boolean = false,
+    /** `postprocess.strip_dashes`: off | after_terminal | all. */
+    val stripDashes: String = "off",
     /** `postprocess.numbers = words`. */
     val spellNumbers: Boolean = false,
 ) {
@@ -65,7 +73,12 @@ data class PipelineSettings(
             diarizationEnabled = cfg.diarization.enabled,
             normalizeGain = cfg.audio.normalizeGain,
             perChunkLanguage = cfg.language.perChunk,
-            chunkMaxMs = (cfg.asr.chunk.maxS * 1000).toLong(),
+            chunkMaxS = cfg.asr.chunk.maxS,
+            chunkMinS = cfg.asr.chunk.minS,
+            vadPadMs = cfg.vad.padMs,
+            vadRescue = cfg.vad.rescue,
+            packChunking = cfg.vad.packChunking,
+            stripDashes = cfg.postprocess.stripDashes,
             spellNumbers = cfg.postprocess.spellNumbers,
         )
     }
@@ -153,7 +166,9 @@ class PipelineOrchestrator(
         }
 
         // ---- нормализация громкости (тихие записи: farfield, телефон) ----
-        ru.neurosteno.core.audio.AudioNormalizer.apply(audio, settings.normalizeGain)
+        // scope=all -- все стадии видят нормализованный сигнал; asr -- копия только для ASR/LID (ниже); asr_chunk -- в движке
+        val ng = settings.normalizeGain
+        if (ng.active && ng.effectiveScope == "all") ru.neurosteno.core.audio.AudioNormalizer.apply(audio, ng)
 
         // ---- denoise (только при низком SNR) ----
         val dnFactory = engines.denoiser
@@ -170,25 +185,30 @@ class PipelineOrchestrator(
         val processed = audio
 
         // ---- vad ----
-        val speech: List<TimeSpan> = timed(Stage.VAD) {
-            soft(Stage.VAD, warnings, listOf(TimeSpan(0, durationMs))) {
-                sanitizeSpans(blocking(tracker, Stage.VAD) { engines.vad().use { it.detect(processed) } }, durationMs)
-            }
-        }
-        if (speech.isEmpty()) {
+        val sp: SpeechChunks = timed(Stage.VAD) { planSpeech(processed, tracker, warnings) }
+        val speech = sp.speech
+        val chunks = sp.chunks
+        if (speech.isEmpty() || chunks.isEmpty()) {
             for (s in listOf(Stage.LID, Stage.ASR, Stage.DIARIZATION)) tracker.report(s, 1f)
             return finish(emptyList(), durationMs, LanguageConfig.RU, t0, stageMs, warnings, tracker)
         }
 
+        // ---- копия с нормализацией для ASR/LID (scope=asr): держим только на время этих стадий ----
+        var asrAudio: AudioBuffer = processed
+        if (ng.active && ng.effectiveScope == "asr") {
+            ru.neurosteno.core.audio.AudioNormalizer.scaledCopy(processed, ng)?.let { asrAudio = it }
+        }
+
         // ---- language id ----
-        val langPlan = timed(Stage.LID) { planLanguage(processed, speech, tracker, warnings) }
+        val langPlan = timed(Stage.LID) { planLanguage(asrAudio, speech, chunks, tracker, warnings) }
         val language = langPlan.language
 
         // ---- asr || diarization ----
+        val asrIn = asrAudio
         val (rawWords, turns) = coroutineScope {
             val asrJob = async {
                 timed(Stage.ASR) {
-                    fatal(Stage.ASR) { transcribeAll(processed, speech, langPlan, tracker) }
+                    fatal(Stage.ASR) { transcribeAll(asrIn, if (sp.packed) chunks else speech, langPlan, tracker) }
                 }
             }
             val diarJob = async {
@@ -199,6 +219,7 @@ class PipelineOrchestrator(
                 timed(Stage.DIARIZATION) {
                     soft(Stage.DIARIZATION, warnings, emptyList()) {
                         blocking(tracker, Stage.DIARIZATION) { l ->
+                            // диаризация всегда читает ИСХОДНЫЙ (не нормализованный при scope=asr) сигнал
                             engines.diarizer().use { it.diarize(processed, settings.numSpeakers, l) }
                         }
                     }
@@ -206,7 +227,9 @@ class PipelineOrchestrator(
             }
             asrJob.await() to diarJob.await()
         } // здесь ASR и диаризация уже закрыты -- память свободна под LLM
-        val words = if (settings.spellNumbers) ru.neurosteno.core.postprocess.Postprocess.spellNumbers(rawWords) else rawWords
+        asrAudio = processed // копия для ASR больше не нужна
+        val numbered = if (settings.spellNumbers) ru.neurosteno.core.postprocess.Postprocess.spellNumbers(rawWords) else rawWords
+        val words = ru.neurosteno.core.postprocess.Postprocess.stripDashes(numbered, settings.stripDashes)
 
         // ---- align ----
         coroutineContext.ensureActive()
@@ -243,9 +266,30 @@ class PipelineOrchestrator(
         val perChunk: Boolean get() = ruSpans != null && enSpans != null
     }
 
+    /** Речь и чанки ASR: pack -- по эталону refpipe (в отсчётах); legacy -- интервалы VAD, чанки режет движок. */
+    private class SpeechChunks(val speech: List<TimeSpan>, val chunks: List<TimeSpan>, val packed: Boolean)
+
+    private suspend fun planSpeech(audio: AudioBuffer, tracker: Tracker, warnings: MutableList<String>): SpeechChunks {
+        val durationMs = audio.durationMs
+        val whole = TimeSpan(0, durationMs)
+        if (!settings.packChunking) {
+            val speech = soft(Stage.VAD, warnings, listOf(whole)) {
+                sanitizeSpans(blocking(tracker, Stage.VAD) { engines.vad().use { it.detect(audio) } }, durationMs)
+            }
+            val chunks = if (settings.perChunkLanguage) ChunkPlanner.plan(audio.samples, speech, (settings.chunkMaxS * 1000).toLong()) else speech
+            return SpeechChunks(speech, chunks, packed = false)
+        }
+        val raw = soft<List<SampleSpan>?>(Stage.VAD, warnings, null) {
+            blocking(tracker, Stage.VAD) { engines.vad().use { it.detectSamples(audio) } }
+        } ?: listOf(SampleSpan(0, audio.samples.size)) // VAD не сработал -- вся запись как речь
+        val plan = VadChunking.plan(audio.samples, raw, settings.vadPadMs, settings.vadRescue, settings.chunkMaxS, settings.chunkMinS)
+        return SpeechChunks(plan.speech, plan.chunks, packed = true)
+    }
+
     private suspend fun planLanguage(
         audio: AudioBuffer,
         speech: List<TimeSpan>,
+        chunksIn: List<TimeSpan>,
         tracker: Tracker,
         warnings: MutableList<String>,
     ): LangPlan {
@@ -254,7 +298,7 @@ class PipelineOrchestrator(
             LanguageConfig.EN in settings.supportedLanguages && lidFactory != null
         if (!perChunk) return LangPlan(chooseLanguage(audio, speech, tracker, warnings))
 
-        val chunks = ChunkPlanner.plan(audio.samples, speech, settings.chunkMaxMs)
+        val chunks = chunksIn
         val preds: List<String?>? = soft<List<String?>?>(Stage.LID, warnings, null) {
             blocking(tracker, Stage.LID) { l ->
                 lidFactory().use { lid ->

@@ -5,6 +5,9 @@ class AudioBuffer(val samples: FloatArray, val sampleRate: Int = 16_000) {
 val durationMs: Long get() = samples.size * 1000L / sampleRate
 }
 
+/** Сегмент речи в ОТСЧЁТАХ 16 кГц: [start, end). */
+data class SampleSpan(val start: Int, val end: Int)
+
 data class TimeSpan(val startMs: Long, val endMs: Long) {
 val durationMs: Long get() = endMs - startMs
 }
