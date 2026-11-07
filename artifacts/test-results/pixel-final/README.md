@@ -1,6 +1,6 @@
 # Финальный прогон на Pixel 10 (07.11.2026)
 
-Устройство: Google Pixel 10 (Android 17, SDK 37, 11,5 ГБ ОЗУ), 4 потока. APK: `neurosteno-medium-0.1.0.apk` из GitHub Release v0.1.0
+Устройство: Google Pixel 10 (Android SDK 37, 11,5 ГБ ОЗУ), 4 потока. APK: `neurosteno-medium-0.1.0.apk` из GitHub Release v0.1.0
 (sha256 `a6d1c2be…74ef`), подписанный release, установлен свежим (`adb uninstall` + `adb install`). Запуск: `src/android/scripts/process_on_device.sh`
 (`ACTION_VIEW`, ожидание `<имя>.done.json`, пик PSS — `dumpsys meminfo` раз в 2 с). Набор: те же 6 эталонов, что в `../prerelease2/`.
 Оценка: `stenoeval score` (DER — с допуском ±0,25 с). Все 6 JSON проходят `stenoeval validate`.
