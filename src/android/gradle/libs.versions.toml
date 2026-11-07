@@ -18,8 +18,16 @@ commons-compress = "1.28.0"
 # Движки
 sherpa-onnx = "2.0.1"
 llama-cpp-tag = "b9000"
+onnxruntime = "1.28.0" # официальный onnxruntime-android (MIT); не новее ORT, вшитого в sherpa-onnx (1.28.2): оба грузят один libonnxruntime.so
+objectbox = "5.4.2"
 
 [libraries]
+onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntime" }
+onnxruntime-desktop = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
+objectbox-android = { module = "io.objectbox:objectbox-android", version.ref = "objectbox" }
+objectbox-processor = { module = "io.objectbox:objectbox-processor", version.ref = "objectbox" }
+objectbox-macos = { module = "io.objectbox:objectbox-macos", version.ref = "objectbox" }
+objectbox-kotlin = { module = "io.objectbox:objectbox-kotlin", version.ref = "objectbox" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
@@ -51,6 +59,8 @@ androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
 
 [plugins]
+objectbox = { id = "io.objectbox", version.ref = "objectbox" }
+android-legacy-kapt = { id = "com.android.legacy-kapt", version.ref = "agp" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

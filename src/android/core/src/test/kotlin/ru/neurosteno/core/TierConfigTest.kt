@@ -264,7 +264,7 @@ class TierConfigTest {
             assertEquals(160, s.answer.maxNewTokens, tier)
             val c = TierConfig.parse(load(tier))
             assertTrue(s.embedder.model!! in c.optionalModelPaths() && s.embedder.tokenizer!! in c.optionalModelPaths(), tier)
-            assertFalse(s.embedder.model!! in c.requiredModelPaths(), tier) // поиск необязателен: набор без модели эмбеддингов остаётся полным
+            assertFalse(s.embedder.model in c.requiredModelPaths(), tier) // поиск необязателен: набор без модели эмбеддингов остаётся полным
         }
     }
 
