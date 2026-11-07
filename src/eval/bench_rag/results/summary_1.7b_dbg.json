@@ -1,0 +1,402 @@
+{
+ "args": {
+  "models": [
+   "1.7b"
+  ],
+  "docs": [
+   "M1",
+   "d1_budget"
+  ],
+  "tag": "dbg",
+  "n_ctx": 4096,
+  "no_grammar": false,
+  "static_refs": false,
+  "min_support": 0.0,
+  "overview": false,
+  "threads": 4,
+  "flags": null,
+  "budget": null
+ },
+ "peak": {
+  "rss_mb": 1518,
+  "uss_mb": 0,
+  "load_s": 0.9
+ },
+ "rows": [
+  {
+   "topics_gold": 5,
+   "topics_gen": 2,
+   "cov_range": 0.2,
+   "cov_kw": 0.2,
+   "cov_both": 0.2,
+   "points": 5,
+   "grounded": 1.0,
+   "attrib": 1.0,
+   "facts": 6,
+   "facts_recall": 0.6666666666666666,
+   "who_n": 2,
+   "who_ok": 0.0,
+   "doc": "M1",
+   "model": "1.7b",
+   "wall_s": 74.3,
+   "frags": 1,
+   "prompt_tok": 3146,
+   "gen_tok": 730,
+   "pp_s": 44.1,
+   "tg_s": 30.2,
+   "truncated": 0,
+   "refs": 27,
+   "ref_bad": 9,
+   "items": 27,
+   "dropped": 9,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 87,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Заседание в Котовице",
+      "start_ms": 628,
+      "end_ms": 235268,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Заседание в Котовице открыто в 10:00 утра",
+        "refs": [
+         {
+          "n": 1,
+          "t": 628,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Решение назначить дежурного Бакиру",
+        "refs": [
+         {
+          "n": 36,
+          "t": 98799,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Исправление протокола",
+        "refs": [
+         {
+          "n": 80,
+          "t": 221492,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Отчёт по расходам на рыбу",
+        "refs": [
+         {
+          "n": 43,
+          "t": 116239,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Назначить дежурного Бакиру",
+        "refs": [
+         {
+          "n": 36,
+          "t": 98799,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "text": "Решить ловить мышей на складе",
+        "refs": [
+         {
+          "n": 81,
+          "t": 224748,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "text": "Исправить протокол",
+        "refs": [
+         {
+          "n": 80,
+          "t": 221492,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "text": "Решить о новой меске для общего зала",
+        "refs": [
+         {
+          "n": 69,
+          "t": 187480,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Бакиру",
+        "text": "Назначить дежурного Бакиру до пятницы",
+        "refs": [
+         {
+          "n": 36,
+          "t": 98799,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 3",
+        "text": "Предложить новую меску для общего зала до пятницы",
+        "refs": [
+         {
+          "n": 61,
+          "t": 175475,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 1",
+        "text": "Отчёт по расходам на рыбу до утра",
+        "refs": [
+         {
+          "n": 43,
+          "t": 116239,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 2",
+        "text": "Исправить протокол",
+        "refs": [
+         {
+          "n": 80,
+          "t": 221492,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Исправление протокола",
+      "start_ms": 221492,
+      "end_ms": 239188,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Записать, что Барсик отдыхал",
+        "refs": [
+         {
+          "n": 86,
+          "t": 235628,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Исправить протокол",
+        "refs": [
+         {
+          "n": 80,
+          "t": 221492,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 2",
+        "text": "Записать, что Барсик отдыхал",
+        "refs": [
+         {
+          "n": 86,
+          "t": 235628,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 2,
+   "topics_gen": 1,
+   "cov_range": 1.0,
+   "cov_kw": 1.0,
+   "cov_both": 1.0,
+   "points": 7,
+   "grounded": 1.0,
+   "attrib": 0.8571428571428571,
+   "facts": 6,
+   "facts_recall": 0.3333333333333333,
+   "who_n": 0,
+   "who_ok": null,
+   "claims": 11,
+   "claims_recall": 0.18181818181818182,
+   "claims_misattr": 0.09090909090909091,
+   "doc": "d1_budget",
+   "model": "1.7b",
+   "wall_s": 37.7,
+   "frags": 1,
+   "prompt_tok": 1561,
+   "gen_tok": 314,
+   "pp_s": 26.1,
+   "tg_s": 11.6,
+   "truncated": 0,
+   "refs": 11,
+   "ref_bad": 1,
+   "items": 11,
+   "dropped": 1,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 19,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Бюджет рыбного рынка",
+      "start_ms": 0,
+      "end_ms": 132380,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Запускаем заседание совета Котовицы",
+        "refs": [
+         {
+          "n": 1,
+          "t": 0,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Начинаем с бюджета",
+        "refs": [
+         {
+          "n": 2,
+          "t": 8380,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "В прошлом году доски стоили вдвое дешевле",
+        "refs": [
+         {
+          "n": 4,
+          "t": 24720,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Витрина — 90 000 р.",
+        "refs": [
+         {
+          "n": 6,
+          "t": 39800,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Фиксируем этап: витрина — до 30 числа",
+        "refs": [
+         {
+          "n": 8,
+          "t": 54040,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Свяжемся с Барсиком",
+        "refs": [
+         {
+          "n": 9,
+          "t": 61580,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_3",
+        "text": "Измерим размеры прилавка",
+        "refs": [
+         {
+          "n": 10,
+          "t": 68700,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "купить саженцы до пятницы",
+        "refs": [
+         {
+          "n": 4,
+          "t": 24720,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "who": "Тишку",
+        "text": "проверить качество уборки",
+        "refs": [
+         {
+          "n": 17,
+          "t": 119380,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 2",
+        "text": "купить фонарь для Тишку",
+        "refs": [
+         {
+          "n": 18,
+          "t": 126500,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

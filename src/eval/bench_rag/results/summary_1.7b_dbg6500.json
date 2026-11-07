@@ -1,0 +1,639 @@
+{
+ "args": {
+  "models": [
+   "1.7b"
+  ],
+  "docs": [
+   "M1",
+   "M2",
+   "d1_budget",
+   "d2_bridge"
+  ],
+  "tag": "dbg6500",
+  "n_ctx": 4096,
+  "no_grammar": false,
+  "static_refs": false,
+  "min_support": 0.0,
+  "overview": false,
+  "threads": 4,
+  "flags": null,
+  "budget": 6500
+ },
+ "peak": {
+  "rss_mb": 1518,
+  "uss_mb": 0,
+  "load_s": 0.6
+ },
+ "rows": [
+  {
+   "topics_gold": 5,
+   "topics_gen": 1,
+   "cov_range": 0.0,
+   "cov_kw": 0.4,
+   "cov_both": 0.0,
+   "points": 8,
+   "grounded": 1.0,
+   "attrib": 1.0,
+   "facts": 6,
+   "facts_recall": 0.6666666666666666,
+   "who_n": 2,
+   "who_ok": 0.5,
+   "doc": "M1",
+   "model": "1.7b",
+   "wall_s": 60.1,
+   "frags": 1,
+   "prompt_tok": 3150,
+   "gen_tok": 405,
+   "pp_s": 44.1,
+   "tg_s": 16.0,
+   "truncated": 0,
+   "refs": 16,
+   "ref_bad": 0,
+   "items": 16,
+   "dropped": 0,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 87,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Заседание в Котовице",
+      "start_ms": 628,
+      "end_ms": 235268,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Добрый день, коллеги! Объявляю заседание в Котовице открытым",
+        "refs": [
+         {
+          "n": 1,
+          "t": 628,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Здравствуйте, Мурзек Васильевич. Нас сегодня сколько?",
+        "refs": [
+         {
+          "n": 2,
+          "t": 4668,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "По списку 12 котов и три кошки",
+        "refs": [
+         {
+          "n": 3,
+          "t": 8868,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Котята, которые пишут протокол...",
+        "refs": [
+         {
+          "n": 12,
+          "t": 33532,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_3",
+        "text": "Я пушинка, а это рыжик",
+        "refs": [
+         {
+          "n": 5,
+          "t": 14948,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Заседание началось в 10:00 утра",
+        "refs": [
+         {
+          "n": 6,
+          "t": 17268,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_3",
+        "text": "Дата какая сегодня?",
+        "refs": [
+         {
+          "n": 7,
+          "t": 22373,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Пятнадцатое ноября",
+        "refs": [
+         {
+          "n": 8,
+          "t": 25453,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Сажаем яблони у южной стены",
+        "refs": [
+         {
+          "n": 13,
+          "t": 36972,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "text": "Мышей— значит, важнее сметаны. Не согласен",
+        "refs": [
+         {
+          "n": 14,
+          "t": 40172,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "text": "Согласие не требуется. Повестка утверждена",
+        "refs": [
+         {
+          "n": 15,
+          "t": 43652,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "text": "Назначить дежурный Бакиру. Кто за?",
+        "refs": [
+         {
+          "n": 28,
+          "t": 80119,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "купить саженцы до пятницы",
+        "refs": [
+         {
+          "n": 28,
+          "t": 80119,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 1",
+        "text": "Дежурство с понедельника. С 8 вечера до 6:00",
+        "refs": [
+         {
+          "n": 31,
+          "t": 88399,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 2",
+        "text": "Отчёт каждое утро",
+        "refs": [
+         {
+          "n": 33,
+          "t": 91599,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 2",
+        "text": "Я за.",
+        "refs": [
+         {
+          "n": 37,
+          "t": 102283,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 5,
+   "topics_gen": 1,
+   "cov_range": 0.0,
+   "cov_kw": 0.0,
+   "cov_both": 0.0,
+   "points": 2,
+   "grounded": 0.5,
+   "attrib": 1.0,
+   "facts": 9,
+   "facts_recall": 0.0,
+   "who_n": 2,
+   "who_ok": 0.0,
+   "doc": "M2",
+   "model": "1.7b",
+   "wall_s": 26.6,
+   "frags": 1,
+   "prompt_tok": 1753,
+   "gen_tok": 96,
+   "pp_s": 23.6,
+   "tg_s": 3.0,
+   "truncated": 0,
+   "refs": 3,
+   "ref_bad": 0,
+   "items": 3,
+   "dropped": 0,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 54,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Познакомиться с новичком",
+      "start_ms": 556,
+      "end_ms": 13676,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Предлагает познакомиться с новичком",
+        "refs": [
+         {
+          "n": 1,
+          "t": 556,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Представляет себя как Симба",
+        "refs": [
+         {
+          "n": 2,
+          "t": 2876,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Представляет себя как Симба",
+        "refs": [
+         {
+          "n": 2,
+          "t": 2876,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 2,
+   "topics_gen": 1,
+   "cov_range": 0.5,
+   "cov_kw": 1.0,
+   "cov_both": 0.5,
+   "points": 4,
+   "grounded": 1.0,
+   "attrib": 0.75,
+   "facts": 6,
+   "facts_recall": 0.3333333333333333,
+   "who_n": 0,
+   "who_ok": null,
+   "claims": 11,
+   "claims_recall": 0.18181818181818182,
+   "claims_misattr": 0.09090909090909091,
+   "doc": "d1_budget",
+   "model": "1.7b",
+   "wall_s": 17.6,
+   "frags": 1,
+   "prompt_tok": 1033,
+   "gen_tok": 205,
+   "pp_s": 12.1,
+   "tg_s": 5.5,
+   "truncated": 0,
+   "refs": 6,
+   "ref_bad": 0,
+   "items": 6,
+   "dropped": 0,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 19,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Бюджет рыбного рынка",
+      "start_ms": 8380,
+      "end_ms": 105160,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Нужно 300 000 р. на ремонт навеса",
+        "refs": [
+         {
+          "n": 2,
+          "t": 8380,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "В прошлом году доски стоили дешевле",
+        "refs": [
+         {
+          "n": 4,
+          "t": 24720,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Витрина — 90 000 р. при оплате до 30 числа",
+        "refs": [
+         {
+          "n": 6,
+          "t": 39800,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Оплата дворникам — 70 р. с 1 числа следующего месяца",
+        "refs": [
+         {
+          "n": 14,
+          "t": 97600,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Связаться с Барсиком и прислать размеры прилавка",
+        "refs": [
+         {
+          "n": 9,
+          "t": 61580,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 3",
+        "text": "Мурка поможет из-за вторникам",
+        "refs": [
+         {
+          "n": 10,
+          "t": 68700,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 3,
+   "topics_gen": 1,
+   "cov_range": 0.3333333333333333,
+   "cov_kw": 0.6666666666666666,
+   "cov_both": 0.3333333333333333,
+   "points": 8,
+   "grounded": 1.0,
+   "attrib": 0.75,
+   "facts": 5,
+   "facts_recall": 0.4,
+   "who_n": 0,
+   "who_ok": null,
+   "claims": 11,
+   "claims_recall": 0.36363636363636365,
+   "claims_misattr": 0.0,
+   "doc": "d2_bridge",
+   "model": "1.7b",
+   "wall_s": 18.1,
+   "frags": 1,
+   "prompt_tok": 876,
+   "gen_tok": 294,
+   "pp_s": 10.0,
+   "tg_s": 8.1,
+   "truncated": 0,
+   "refs": 14,
+   "ref_bad": 0,
+   "items": 14,
+   "dropped": 0,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 18,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Предложение о ремонте моста",
+      "start_ms": 0,
+      "end_ms": 114320,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Начать ремонт в понедельник",
+        "refs": [
+         {
+          "n": 1,
+          "t": 0,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Доски сгнили",
+        "refs": [
+         {
+          "n": 2,
+          "t": 7960,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_3",
+        "text": "Котята обходят мельницу",
+        "refs": [
+         {
+          "n": 3,
+          "t": 15500,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Длина моста 2 км",
+        "refs": [
+         {
+          "n": 4,
+          "t": 24300,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Время на ремонт 4 дня",
+        "refs": [
+         {
+          "n": 6,
+          "t": 36860,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_3",
+        "text": "Недостаток досок",
+        "refs": [
+         {
+          "n": 7,
+          "t": 43140,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Заказ досок и гвоздей",
+        "refs": [
+         {
+          "n": 8,
+          "t": 48580,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Оформить заказ",
+        "refs": [
+         {
+          "n": 9,
+          "t": 56540,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Ремонт начнём в понедельник",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "text": "Дежурным будет Пушка",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "text": "Заказ досок и гвоздей",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Ремонт начнём в понедельник",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 3",
+        "text": "Дежурным будет Пушка",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 2",
+        "text": "Заказ досок и гвоздей",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

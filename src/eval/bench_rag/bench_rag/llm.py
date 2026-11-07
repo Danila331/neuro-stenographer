@@ -88,8 +88,8 @@ class Server:
             except subprocess.TimeoutExpired:
                 os.killpg(self.proc.pid, signal.SIGKILL)
 
-    def complete(self, prompt: str, n_predict: int = 512, grammar: str | None = None) -> dict:
-        body = {"prompt": prompt, "n_predict": n_predict, "temperature": 0.0, "top_k": 1, "cache_prompt": False,
+    def complete(self, prompt: str, n_predict: int = 512, grammar: str | None = None, cache_prompt: bool = False) -> dict:
+        body = {"prompt": prompt, "n_predict": n_predict, "temperature": 0.0, "top_k": 1, "cache_prompt": cache_prompt,
                 "stop": ["<|im_end|>"], "samplers": ["top_k", "temperature"]}
         if grammar:
             body["grammar"] = grammar
@@ -99,7 +99,7 @@ class Server:
         r.raise_for_status()
         j = r.json()
         tm = j.get("timings", {})
-        return {"text": j["content"].strip(), "prompt_n": tm.get("prompt_n", 0), "prompt_ms": tm.get("prompt_ms", 0.0),
+        return {"text": j["content"].strip(), "prompt_n": tm.get("prompt_n", 0), "prompt_ms": tm.get("prompt_ms", 0.0), "cache_n": tm.get("cache_n", 0),
                 "predicted_n": tm.get("predicted_n", 0), "predicted_ms": tm.get("predicted_ms", 0.0), "wall_ms": wall * 1000,
                 "stop": j.get("stop_type")}
 
