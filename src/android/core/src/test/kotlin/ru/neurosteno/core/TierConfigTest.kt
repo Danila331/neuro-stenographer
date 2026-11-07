@@ -47,6 +47,17 @@ class TierConfigTest {
     }
 
     @Test
+    fun `blank penalty is read from tier configs and defaults to zero`() {
+        for (tier in listOf("lite", "medium", "hard")) {
+            val c = TierConfig.parse(load(tier))
+            assertEquals(1.0, c.asr.blankPenalty, "$tier asr.blank_penalty")
+            assertEquals(0.0, c.asrEn?.blankPenalty ?: 0.0, "$tier asr_en не должен получать штраф без явного значения")
+        }
+        assertEquals(0.0, TierConfig.parse("{}").asr.blankPenalty)
+        assertEquals(0.5, TierConfig.parse("""{"asr_en":{"blank_penalty":0.5}}""").asrEn!!.blankPenalty)
+    }
+
+    @Test
     fun `unknown fields are ignored and missing take defaults`() {
         val c = TierConfig.parse("""{"tier":"x","brand_new":{"a":1},"vad":{"threshold":0.7,"future":true}}""")
         assertEquals("x", c.tier)
