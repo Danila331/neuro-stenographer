@@ -1,7 +1,7 @@
 package ru.neurosteno.core
 
 /**
- * Guard неизменности слов для Punctuator/LLM (ARCHITECTURE §6).
+ * Guard неизменности слов для Punctuator/LLM (docs/team/ARCHITECTURE_TEAM.md §6).
  *
  * `norm(s)` = lower -> `ё -> е` -> удалить всё, кроме букв/цифр/пробелов -> схлопнуть пробелы.
  * Если `norm(output).split() != norm(input).split()` -- берём input (+ заглавная первая буква и точка).

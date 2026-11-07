@@ -1,4 +1,4 @@
-"""Проверка датасета на соответствие ARCHITECTURE §1–§2."""
+"""Проверка датасета на соответствие docs/team/ARCHITECTURE_TEAM.md §1–§2."""
 from __future__ import annotations
 
 import csv
@@ -17,7 +17,7 @@ REQUIRED = ["id", "audio", "ref", "duration_ms", "num_speakers", "lang", "source
 
 
 def check_ref(obj, duration_ms: int, n_speakers: int | None = None) -> list[str]:
-    """Правила ARCHITECTURE §1. Возвращает список нарушений."""
+    """Правила docs/team/ARCHITECTURE_TEAM.md §1. Возвращает список нарушений."""
     errs = []
     if not isinstance(obj, dict) or list(obj) != ["transcript"] or not isinstance(obj["transcript"], list):
         return ["top-level must be exactly {'transcript': [...]}"]

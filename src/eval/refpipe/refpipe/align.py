@@ -1,4 +1,4 @@
-"""Aligner: words x speaker turns -> utterances.  ARCHITECTURE §5 -- reference for the Kotlin port.
+"""Aligner: words x speaker turns -> utterances.  docs/team/ARCHITECTURE_TEAM.md §5 -- reference for the Kotlin port.
 
 Pure and deterministic: integers only, no floats, no randomness, no I/O.  Every detail that is not
 pinned by §5 is pinned here and covered by `tests/align_cases.json` (the Android tests replay the

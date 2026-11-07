@@ -1,4 +1,4 @@
-"""Временный набор: FLEURS ru dev (официальный google/fleurs на HF), N фраз, формат ARCHITECTURE §2.
+"""Временный набор: FLEURS ru dev (официальный google/fleurs на HF), N фраз, формат docs/team/ARCHITECTURE_TEAM.md §2.
 Запуск: python scripts/prep_fleurs_tmp.py --src <dir с dev.tar.gz и dev.tsv> --out <dataset_root> --n 200
 """
 import argparse, csv, json, tarfile, io, random

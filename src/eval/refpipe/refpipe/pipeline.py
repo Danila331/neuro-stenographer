@@ -1,4 +1,4 @@
-"""Pipeline orchestration, ARCHITECTURE §4:
+"""Pipeline orchestration, docs/team/ARCHITECTURE_TEAM.md §4:
 
   decode -> [denoise] -> VAD -> (ASR  ||  diarization) -> align -> punctuation -> export
 

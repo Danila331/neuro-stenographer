@@ -1,7 +1,7 @@
 """Искажённые варианты FLEURS-фраз: шум (розовый SNR 10 дБ), «бормотание» (4 других фразы, SNR 10), телефон
 (300-3400 Гц, 8 кГц), реверберация (синтетическая RIR, RT60~0.6 с). Первые N фраз набора.
 python scripts/make_conditions.py --src <dataset_root> --out <out_parent> --n 60
--> <out_parent>/asr-bench-cond-{pink10,babble10,phone,reverb}/ (формат ARCHITECTURE §2)"""
+-> <out_parent>/asr-bench-cond-{pink10,babble10,phone,reverb}/ (формат docs/team/ARCHITECTURE_TEAM.md §2)"""
 import argparse, csv, json, shutil
 from pathlib import Path
 import numpy as np, soundfile as sf

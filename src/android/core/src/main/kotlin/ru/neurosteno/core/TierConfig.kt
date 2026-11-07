@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * Конфиг варианта сборки (`config/tiers/<tier>.json`, ARCHITECTURE §3).
+ * Конфиг варианта сборки (`config/tiers/<tier>.json`, docs/team/ARCHITECTURE_TEAM.md §3).
  * Тот же файл читает Python-эталон. Неизвестные поля игнорируются, отсутствующие берут дефолт.
  * Пути моделей -- относительно корня моделей (Android: `filesDir/models`, ПК: `.cache/models`).
  */

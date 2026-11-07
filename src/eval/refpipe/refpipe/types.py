@@ -1,4 +1,4 @@
-"""Plain data types shared by all stages (mirror of the Kotlin `:core` types, ARCHITECTURE §4)."""
+"""Plain data types shared by all stages (mirror of the Kotlin `:core` types, docs/team/ARCHITECTURE_TEAM.md §4)."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

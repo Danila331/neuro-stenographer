@@ -1,4 +1,4 @@
-"""Общие утилиты: пути, детерминированный RNG, запись датасета в формате ARCHITECTURE §2."""
+"""Общие утилиты: пути, детерминированный RNG, запись датасета в формате docs/team/ARCHITECTURE_TEAM.md §2."""
 from __future__ import annotations
 
 import csv
@@ -134,7 +134,7 @@ class DatasetWriter:
 
     def finalize(self, readme: str | None = None):
         if readme is None:
-            readme = (f"{self.name}\n\n{self.DESCR.get(self.name, '')}\n\nФормат: docs/ARCHITECTURE.md §2 (manifest.csv, audio/, ref/). "
+            readme = (f"{self.name}\n\n{self.DESCR.get(self.name, '')}\n\nФормат: docs/team/ARCHITECTURE_TEAM.md §2 (manifest.csv, audio/, ref/). "
                       "Собрано stenodata (src/eval/datasets, README.md там же): описание условий, лицензий и слабостей. "
                       "split=test не использовать при подборе параметров.\n")
         with open(self.tmp / "manifest.csv", "w", newline="", encoding="utf-8") as f:

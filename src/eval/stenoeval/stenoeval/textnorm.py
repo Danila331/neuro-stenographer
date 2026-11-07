@@ -12,7 +12,7 @@ The jury's exact normalisation is unknown, so every metric is computed in severa
 ``norm_hy``  like ``norm`` but a hyphen *between two letters/digits* is kept inside the token
              ("кто-то" stays one word) - the opposite hyphen policy, for comparison.
 ``punct``    punctuation and case are part of the text (the jury apparently counts punctuation, see
-             docs/BACKLOG.md Q13/Q14; е/ё is NOT counted): NFKC -> ё->е, Ё->Е -> split on
+             docs/team/BACKLOG.md Q13/Q14; е/ё is NOT counted): NFKC -> ё->е, Ё->Е -> split on
              whitespace. Marks stay glued to words, as in ``raw`` ("день!" is one token).
 ``punct_sep`` like ``punct`` but every punctuation mark (Unicode category P*) becomes its own
              token: "день!" -> "день", "!"; «да» -> "«", "да", "»"; "..." -> three "." tokens

@@ -129,7 +129,7 @@ fun main(args: Array<String>) {
     println("stage_ms=${meta.stageMs}")
     result.warnings.forEach { println("WARNING: $it") }
     println(result.json)
-    // 4-й аргумент -- каталог прогона: <id>.json + <id>.meta.json в формате ARCHITECTURE §2 (для stenoeval score)
+    // 4-й аргумент -- каталог прогона: <id>.json + <id>.meta.json в формате docs/team/ARCHITECTURE_TEAM.md §2 (для stenoeval score)
     args.getOrNull(3)?.let { outDir ->
         val dir = File(outDir).apply { mkdirs() }
         val id = wav.nameWithoutExtension

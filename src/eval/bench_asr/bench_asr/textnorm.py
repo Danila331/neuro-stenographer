@@ -1,4 +1,4 @@
-"""Нормализация текста и WER. Нормализация совпадает с ARCHITECTURE §6 (guard): lower, ё->е,
+"""Нормализация текста и WER. Нормализация совпадает с docs/team/ARCHITECTURE_TEAM.md §6 (guard): lower, ё->е,
 всё кроме букв/цифр -> пробел, схлопнуть пробелы."""
 from __future__ import annotations
 
