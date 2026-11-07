@@ -90,6 +90,10 @@ fun FragmentOptionsSheet(
                 "$rangeLabel · ${Format.plural(utteranceCount, "реплика", "реплики", "реплик")}. Остальная расшифровка не изменится.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Text(
+                "Чтобы получить другой результат, смените язык или включите “Заново определить говорящих”",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             blockedReason?.let { MessageCard(it, isError = true) }
 
             Text("Язык фрагмента", style = MaterialTheme.typography.titleSmall)
