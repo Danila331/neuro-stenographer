@@ -46,13 +46,13 @@ class Server:
                "-ngl", "0", "--host", "127.0.0.1", "--port", str(self.port), "--parallel", "1", "--no-webui", "--log-disable",
                "-ub", "512"] + (extra if extra is not None else FLAGS_PHONE)
         self.cmd = cmd
-        self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                      env={**os.environ, "DYLD_LIBRARY_PATH": str(BIN)}, start_new_session=True)
         self.url = f"http://127.0.0.1:{self.port}"
         t0 = time.time()
         while True:
             if self.proc.poll() is not None:
-                raise RuntimeError(self.proc.stderr.read().decode()[-2000:])
+                raise RuntimeError("llama-server died")
             try:
                 if requests.get(self.url + "/health", timeout=2).status_code == 200:
                     break

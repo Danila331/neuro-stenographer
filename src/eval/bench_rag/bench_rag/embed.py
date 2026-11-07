@@ -112,14 +112,14 @@ class LlamaEmbedder(Embedder):
         self.instruct = instruct
         self.port = free_port()
         path = gguf or str(EMB / "qwen3-emb-0.6b" / "Qwen3-Embedding-0.6B-Q8_0.gguf")
-        self.path = path
+        self.path = Path(path)
         cmd = [str(BIN / "llama-server"), "-m", path, "--embeddings", "--pooling", "last", "-c", "2048", "-t", str(threads),
-               "-tb", str(threads), "-ngl", "0", "--host", "127.0.0.1", "--port", str(self.port), "--no-webui", "-ub", "1024", "-b", "1024", "--parallel", "1"]
-        self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env={**os.environ, "DYLD_LIBRARY_PATH": str(BIN)}, start_new_session=True)
+               "-tb", str(threads), "-ngl", "0", "--host", "127.0.0.1", "--port", str(self.port), "--no-webui", "-ub", "1024", "-b", "1024", "--parallel", "1", "--log-disable"]
+        self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env={**os.environ, "DYLD_LIBRARY_PATH": str(BIN)}, start_new_session=True)
         t0 = time.time()
         while True:
             if self.proc.poll() is not None:
-                raise RuntimeError(self.proc.stderr.read().decode()[-1500:])
+                raise RuntimeError('llama-server (embeddings) died')
             try:
                 if requests.get(f"http://127.0.0.1:{self.port}/health", timeout=2).status_code == 200:
                     break
@@ -137,8 +137,7 @@ class LlamaEmbedder(Embedder):
     def embed(self, texts: list[str], kind: str = "doc") -> np.ndarray:
         if kind == "query" and self.instruct:
             texts = [f"Instruct: Given a question about a conversation transcript, retrieve the transcript fragment that answers it\nQuery:{t}" for t in texts]
-        out = np.array([self._one(t + "<|endoftext|>") for t in texts], dtype=np.float32)
-        return _norm(out)
+        return _norm(np.array([self._one(t + "<|endoftext|>") for t in texts], dtype=np.float32))
 
     def close(self) -> None:
         import signal
@@ -146,7 +145,27 @@ class LlamaEmbedder(Embedder):
             os.killpg(self.proc.pid, signal.SIGTERM)
 
 
+class TorchEmbedder(Embedder):
+    """Reference fp32 PyTorch embedder (sentence-transformers) for models whose ONNX export is not exact (DeBERTa)."""
+
+    def __init__(self, name: str, threads: int = 4):
+        import torch
+        from sentence_transformers import SentenceTransformer
+        torch.set_num_threads(threads)
+        self.spec = SPECS[name]
+        self.name = name
+        self.path = EMB / self.spec.dir
+        self.m = SentenceTransformer(str(self.path), device="cpu")
+        self.dim = self.m.get_sentence_embedding_dimension()
+
+    def embed(self, texts: list[str], kind: str = "doc") -> np.ndarray:
+        pre = self.spec.qpre if kind == "query" else self.spec.dpre
+        return self.m.encode([pre + t for t in texts], normalize_embeddings=True, batch_size=16).astype(np.float32)
+
+
 def make(name: str, threads: int = 4, **kw) -> Embedder:
+    if name.endswith("-torch"):
+        return TorchEmbedder(name[:-6], threads=threads)
     if name.startswith("qwen3-emb"):
         return LlamaEmbedder(name, threads=threads, **kw)
     return OnnxEmbedder(name, threads=threads, **kw)

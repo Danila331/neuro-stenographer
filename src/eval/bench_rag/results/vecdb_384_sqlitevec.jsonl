@@ -1,0 +1,4 @@
+{"backend": "sqlitevec", "n": 10000, "dim": 384, "build_s": 0.2, "size_mb": 15.3, "recall10": 1.0, "q_p50_ms": 5.77, "q_p95_ms": 7.86, "rss_delta_mb": 14.0}
+{"backend": "sqlitevec-i8", "n": 10000, "dim": 384, "build_s": 0.0, "size_mb": 4.0, "recall10": 0.931, "q_p50_ms": 3.9, "q_p95_ms": 5.47, "rss_delta_mb": 16.0}
+{"backend": "sqlitevec", "n": 100000, "dim": 384, "build_s": 1.5, "size_mb": 149.4, "recall10": 1.0, "q_p50_ms": 54.45, "q_p95_ms": 70.76, "rss_delta_mb": 8.0}
+{"backend": "sqlitevec-i8", "n": 100000, "dim": 384, "build_s": 0.6, "size_mb": 39.0, "recall10": 0.926, "q_p50_ms": 36.62, "q_p95_ms": 53.24, "rss_delta_mb": 48.0}

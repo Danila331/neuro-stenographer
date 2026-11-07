@@ -20,6 +20,8 @@ def export(name: str) -> None:
     if out.exists():
         print("have", out)
         return
+    if not (d / s.tok).exists():
+        AutoTokenizer.from_pretrained(str(d)).save_pretrained(str(d))      # writes tokenizer.json for the `tokenizers` runtime
     fp32 = d / s.onnx.replace(".int8", "")
     if not fp32.exists():
         tok = AutoTokenizer.from_pretrained(str(d))
@@ -39,7 +41,7 @@ def export(name: str) -> None:
         torch.onnx.export(W(model), args, str(fp32), input_names=names, output_names=["last_hidden_state"],
                           dynamic_axes={**{n: {0: "b", 1: "t"} for n in names}, "last_hidden_state": {0: "b", 1: "t"}},
                           opset_version=17, dynamo=False)
-    quantize_dynamic(str(fp32), str(out), weight_type=QuantType.QInt8)
+    quantize_dynamic(str(fp32), str(out), weight_type=QuantType.QInt8, per_channel=True)
     print(name, "fp32", fp32.stat().st_size >> 20, "MiB; int8", out.stat().st_size >> 20, "MiB")
 
 

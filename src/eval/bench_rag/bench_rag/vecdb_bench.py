@@ -73,10 +73,10 @@ def run(backend: str, n: int, dim: int):
             db.executemany("insert into v(rowid, e) values (?, ?)", ((i, sqlite_vec.serialize_float32(x[i].tolist())) for i in range(n)))
         out["build_s"] = time.perf_counter() - t
         sq = [sqlite_vec.serialize_float32(q.tolist()) for q in qs]
-        idx = {id(q): s for q, s in zip(qs, sq)}
-        def fn(q): return db.execute("select rowid from v where e match ? and k = 10", (idx[id(q)],)).fetchall()
+        idx = {q.tobytes(): s for q, s in zip(qs, sq)}
+        def fn(q): return db.execute("select rowid from v where e match ? and k = 10", (idx[q.tobytes()],)).fetchall()
         res = [set(r[0] for r in fn(q)) for q in qs]
-        db.close(); out["size_mb"] = (tmp / "v.db").stat().st_size / 2**20
+        out["size_mb"] = (tmp / "v.db").stat().st_size / 2**20
     elif backend == "sqlitevec-i8":
         import sqlite3
         import sqlite_vec
@@ -87,10 +87,10 @@ def run(backend: str, n: int, dim: int):
         with db:
             db.executemany("insert into v(rowid, e) values (?, vec_int8(?))", ((i, x8[i].tobytes()) for i in range(n)))
         out["build_s"] = time.perf_counter() - t
-        q8 = {id(q): np.round(q * 127).astype(np.int8).tobytes() for q in qs}
-        def fn(q): return db.execute("select rowid from v where e match vec_int8(?) and k = 10", (q8[id(q)],)).fetchall()
+        q8 = {q.tobytes(): np.round(q * 127).astype(np.int8).tobytes() for q in qs}
+        def fn(q): return db.execute("select rowid from v where e match vec_int8(?) and k = 10", (q8[q.tobytes()],)).fetchall()
         res = [set(r[0] for r in fn(q)) for q in qs]
-        db.close(); out["size_mb"] = (tmp / "v.db").stat().st_size / 2**20
+        out["size_mb"] = (tmp / "v.db").stat().st_size / 2**20
     elif backend.startswith("usearch"):
         from usearch.index import Index
         dtype = backend.split("-")[1] if "-" in backend else "f32"
@@ -118,7 +118,6 @@ def run(backend: str, n: int, dim: int):
         qb = lambda q: box.query(Chunk.vec.nearest_neighbor(q, k)).build()
         def fn(q): return qb(q).find_ids()
         res = [set(i - 1 for i in fn(q)) for q in qs]
-        ob.close()
         out["size_mb"] = sum(f.stat().st_size for f in (tmp / "ob").rglob("*") if f.is_file()) / 2**20
     else:
         raise SystemExit(backend)
