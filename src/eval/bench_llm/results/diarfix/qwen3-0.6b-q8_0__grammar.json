@@ -1,0 +1,87 @@
+{
+ "model": "qwen3-0.6b-q8_0",
+ "mode": "grammar",
+ "threads": 4,
+ "dialogs": [
+  {
+   "id": "d1_budget",
+   "words": 314,
+   "boundaries": 18,
+   "err_before": 32,
+   "err_after": 32,
+   "fixed": 0,
+   "broken": 0,
+   "calls": 18,
+   "prompt_ms": 6726.685000000001,
+   "predicted_ms": 25370.672999999995,
+   "prompt_n": 1312,
+   "predicted_n": 707,
+   "guard_fail": 0
+  },
+  {
+   "id": "d2_bridge",
+   "words": 256,
+   "boundaries": 17,
+   "err_before": 31,
+   "err_after": 49,
+   "fixed": 4,
+   "broken": 22,
+   "calls": 17,
+   "prompt_ms": 4183.683999999999,
+   "predicted_ms": 18385.853000000003,
+   "prompt_n": 759,
+   "predicted_n": 640,
+   "guard_fail": 0
+  },
+  {
+   "id": "d3_holiday",
+   "words": 231,
+   "boundaries": 15,
+   "err_before": 23,
+   "err_after": 52,
+   "fixed": 3,
+   "broken": 32,
+   "calls": 15,
+   "prompt_ms": 5038.713,
+   "predicted_ms": 24892.133000000005,
+   "prompt_n": 718,
+   "predicted_n": 613,
+   "guard_fail": 0
+  },
+  {
+   "id": "d4_homework",
+   "words": 117,
+   "boundaries": 11,
+   "err_before": 12,
+   "err_after": 14,
+   "fixed": 5,
+   "broken": 7,
+   "calls": 11,
+   "prompt_ms": 5247.209,
+   "predicted_ms": 31136.905000000002,
+   "prompt_n": 504,
+   "predicted_n": 427,
+   "guard_fail": 0
+  },
+  {
+   "id": "d5_phone",
+   "words": 138,
+   "boundaries": 11,
+   "err_before": 12,
+   "err_after": 12,
+   "fixed": 0,
+   "broken": 0,
+   "calls": 11,
+   "prompt_ms": 20497.185,
+   "predicted_ms": 187088.755,
+   "prompt_n": 514,
+   "predicted_n": 437,
+   "guard_fail": 0
+  }
+ ],
+ "baseline": {
+  "words": 1056,
+  "noisy": 110,
+  "snap": 32
+ }
+}
