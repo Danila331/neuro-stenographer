@@ -3,9 +3,10 @@
 | Что | Где |
 |---|---|
 | `results.csv` | по строке на (прогон × файл); колонки фиксированы, пишет `stenoeval score --csv` |
-| `REPORT.md` | сводные таблицы; **генерируется** командой ниже, руками не править (TODO(финал): создать после финальных прогонов) |
+| `REPORT.md` | сводные таблицы; **генерируется** командой ниже, руками не править |
 | `ui-smoke/` | JSON из дымовых прогонов на эмуляторе (до исправления B28; не показатель качества) |
-| `device/` | выгрузки `process_on_device.sh` (результат, `.full.json`, маркер `.done.json`) — TODO(финал) |
+| `prerelease2/` | финальная регрессия release-APK (16/16 PASS): `README.md`, выгрузки 6 эталонов (результат, `.full.json`, маркер `.done.json`), 30-минутная запись, lite на 2 ГБ |
+| `ui-summary-search/`, `ux-timeline-pdf/`, `live-transcribe/`, `ui-fragment/`, `llm-integration/` | проверки отдельных функций |
 
 ```bash
 cd src/eval/stenoeval
