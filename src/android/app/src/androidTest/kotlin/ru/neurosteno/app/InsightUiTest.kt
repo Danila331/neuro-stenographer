@@ -1,5 +1,6 @@
 package ru.neurosteno.app
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -311,5 +312,34 @@ class InsightUiTest {
         showSearch(SearchUi(query = "мыши", recordId = "r1", index = IndexState.Unavailable("нет модели эмбеддингов")))
         rule.onNodeWithTag("search_index_unavailable").assertIsDisplayed()
         rule.onNodeWithTag("btn_search_go").assertIsNotEnabled()
+    }
+
+    @Test
+    fun duplicatedAnswerSentenceIsShownOnceWithItsCitation() {
+        ru.neurosteno.app.insight.FakeInsightConfig.reset()
+        ru.neurosteno.app.insight.FakeInsightConfig.searchAnswerMode = "duplicate"
+        ru.neurosteno.app.insight.FakeInsightConfig.searchStepMs = 0
+        val rec = ru.neurosteno.app.insight.SearchRecord(
+            "r1", "Совещание",
+            listOf(
+                ru.neurosteno.core.Utterance("speaker_1", 24_000, 26_000, "дата сегодня пятнадцатое ноября", emptyList()),
+                ru.neurosteno.core.Utterance("speaker_2", 27_000, 29_000, "хорошо договорились", emptyList()),
+            ),
+        )
+        val controller = ru.neurosteno.app.insight.SearchController(
+            ru.neurosteno.app.insight.FakeSearchRepository { listOf(rec) }, kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default),
+        )
+        rule.setContent {
+            val ui = controller.ui.collectAsState().value
+            NeuroTheme { SearchScreen(ui, searchSuggestions(null), "Совещание", searchActions()) }
+        }
+        controller.open("r1"); controller.setQuery("дата сегодня"); controller.submit()
+        rule.waitUntil(5_000) { controller.ui.value.phase == SearchPhase.Results }
+        controller.answer()
+        rule.waitUntil(5_000) { controller.ui.value.answer is AnswerUi.Done }
+        scrolled("answer_text")
+        val texts = rule.onNodeWithTag("answer_text").fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text].joinToString("") { it.text }
+        assertEquals("предложение повторено: $texts", 1, Regex("дата сегодня пятнадцатое ноября").findAll(texts).count())
+        assertEquals("ссылка осталась: $texts", 1, Regex("\\[00:24, Говорящий 1\\]").findAll(texts).count())
     }
 }

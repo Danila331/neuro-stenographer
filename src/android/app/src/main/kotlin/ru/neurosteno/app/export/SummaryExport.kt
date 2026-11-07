@@ -10,7 +10,7 @@ object SummaryExport {
     fun toText(doc: SummaryDoc, t: EditableTranscript, entry: HistoryEntry?): String =
         toText(doc, names = { t.displayName(it) }, title = entry?.title ?: "запись", durationMs = entry?.durationMs?.takeIf { it > 0 } ?: t.durationMs, speakers = t.speakerIds.size)
 
-    fun toText(doc: SummaryDoc, names: (String) -> String, title: String, durationMs: Long, speakers: Int): String = buildString {
+    fun toText(raw: SummaryDoc, names: (String) -> String, title: String, durationMs: Long, speakers: Int): String = ru.neurosteno.app.insight.SummaryPolish.clean(raw).let { doc -> buildString {
         append("Выжимка: ").append(title).append('\n')
         append("Длительность: ").append(Format.clock(durationMs)).append(" · говорящих: ").append(speakers).append('\n')
         append(if (doc.mode == "llm") "ИИ-выжимка" else "Быстрая выжимка (без ИИ)").append(". Черновик — проверьте по репликам.\n")
@@ -28,5 +28,5 @@ object SummaryExport {
                 t.tasks.forEach { append("  > ").append(if (it.who.isNotBlank()) it.who + ": " else "").append(it.text.trim()).append(tc(it.refs)).append('\n') }
             }
         }
-    }
+    } }
 }

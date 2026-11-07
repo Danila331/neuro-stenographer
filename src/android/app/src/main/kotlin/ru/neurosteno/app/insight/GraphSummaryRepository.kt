@@ -37,17 +37,17 @@ class GraphSummaryRepository(private val context: Context, private val graph: Ap
 
     private fun map(entryId: String, ui: SummaryUi): SummaryState {
         if (ui.entryId == entryId) {
-            val doc = ui.doc
+            val doc = ui.doc?.let(SummaryPolish::clean)
             when (ui.status) {
                 SummaryUi.Status.Running -> return if (doc == null) SummaryState.Preparing(ui.stage.ifBlank { "Подготовка…" })
                 else SummaryState.Shown(doc, SummaryProgress(ui.stage.ifBlank { "Уточняю выжимку…" }, ui.fragmentsDone, ui.fragments))
                 SummaryUi.Status.Done -> if (doc != null) return SummaryState.Shown(doc, notice = ui.error)
                 SummaryUi.Status.Cancelled -> if (doc != null) return SummaryState.Shown(doc, notice = "Остановлено: показана последняя готовая версия.")
-                SummaryUi.Status.Failed -> return SummaryState.Failed(ui.error ?: "Не удалось составить выжимку.", doc ?: graph.summary.load(entryId))
+                SummaryUi.Status.Failed -> return SummaryState.Failed(ui.error ?: "Не удалось составить выжимку.", doc ?: graph.summary.load(entryId)?.let(SummaryPolish::clean))
                 SummaryUi.Status.Idle -> {}
             }
         }
-        return graph.summary.load(entryId)?.let { SummaryState.Shown(it) } ?: SummaryState.None
+        return graph.summary.load(entryId)?.let { SummaryState.Shown(SummaryPolish.clean(it)) } ?: SummaryState.None
     }
 
     override fun build(entryId: String, utterances: List<Utterance>, useLlm: Boolean) {

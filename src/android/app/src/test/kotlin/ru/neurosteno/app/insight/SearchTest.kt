@@ -174,4 +174,15 @@ class SearchTest {
         assertTrue(c.ui.value.answer is AnswerUi.Done || c.ui.value.answer == AnswerUi.Ready)
         advanceUntilIdle()
     }
+
+    @Test
+    fun controllerShowsDuplicatedModelSentenceOnlyOnce() = runTest {
+        FakeInsightConfig.searchAnswerMode = "duplicate"
+        val c = controller(this)
+        c.open("r1"); c.setQuery("мышей"); c.submit(); advanceUntilIdle(); c.answer(); advanceUntilIdle()
+        val a = c.ui.value.answer as AnswerUi.Done
+        val sentence = a.text.substringBefore(" [").trim()
+        assertEquals(1, Regex(Regex.escape(sentence)).findAll(a.text).count())
+        assertEquals(1, CitationParser.citations(a.text).size) // ссылка осталась у единственного экземпляра
+    }
 }
