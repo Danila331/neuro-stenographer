@@ -202,4 +202,25 @@ class TierConfigTest {
             assertEquals(tier == "lite", c.isDraft, tier)
         }
     }
+
+    @Test
+    fun `shipped tier configs enable live preview with canonical model dir`() {
+        for (tier in listOf("lite", "medium", "hard")) {
+            val c = TierConfig.parse(load(tier))
+            assertTrue(c.live.enabled, tier)
+            assertEquals("asr/streaming-zipformer-small-ru-int8", c.live.modelDir, tier)
+            assertEquals(listOf("asr/streaming-zipformer-small-ru-int8"), c.optionalModelPaths(), tier)
+            // превью необязательно: его модель не входит ни в обязательные, ни в requiredModelPaths (наборы без неё остаются полными)
+            assertFalse("asr/streaming-zipformer-small-ru-int8" in c.requiredModelPaths(), tier)
+            assertFalse("asr/streaming-zipformer-small-ru-int8" in c.essentialModelPaths(), tier)
+            assertTrue(c.live.endpoint.minTrailingSilenceS in 0.3..2.0, tier)
+        }
+    }
+
+    @Test
+    fun `config without live block means no preview`() {
+        val c = TierConfig.parse("{\"tier\":\"x\"}")
+        assertFalse(c.live.enabled)
+        assertTrue(c.optionalModelPaths().isEmpty())
+    }
 }

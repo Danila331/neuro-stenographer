@@ -26,6 +26,8 @@ data class TierConfig(
     val llm: LlmConfig = LlmConfig(),
     val normalization: NormalizationConfig = NormalizationConfig(),
     val postprocess: PostprocessConfig = PostprocessConfig(),
+    /** Живая расшифровка во время записи (B13): потоковая ASR как превью; итог всё равно даёт полная обработка. */
+    val live: LiveConfig = LiveConfig(),
 ) {
     /** Все модели, нужные этому варианту (для проверки наличия assets и для stage_models). */
     fun requiredModelPaths(): List<String> = buildList {
@@ -43,6 +45,11 @@ data class TierConfig(
         punctuation.model?.let(::add)
         llm.model?.let(::add)
     }.distinct()
+
+    /** Необязательные модели варианта (их отсутствие отключает возможность, а не обработку): потоковая ASR превью. */
+    fun optionalModelPaths(): List<String> = buildList {
+        if (live.enabled) live.modelDir?.let(::add)
+    }
 
     /**
      * Без этих моделей обработка невозможна (VAD, основная ASR, диаризация). Остальное (английская ASR, LID, денойз,
@@ -72,6 +79,32 @@ data class TierConfig(
                 .joinToString("") { "%02x".format(it) }.take(12)
     }
 }
+
+/**
+ * Живая расшифровка (B13). Потоковая модель живёт только пока идёт запись; на устройствах без запаса RAM превью выключается
+ * ([ResourcePlanner.planLive]). `enabled = false` -- возможность отсутствует в варианте.
+ */
+@Serializable
+data class LiveConfig(
+    val enabled: Boolean = false,
+    /** Каталог потоковой модели (encoder/decoder/joiner/tokens) относительно корня моделей; схема `asr/<модель>`. */
+    @SerialName("model_dir") val modelDir: String? = null,
+    @SerialName("num_threads") val numThreads: Int = 2,
+    /** Минимум свободной памяти и общей памяти устройства для превью (иначе оно выключается). */
+    @SerialName("min_avail_mb") val minAvailMb: Long = 600,
+    @SerialName("min_total_mb") val minTotalMb: Long = 1_800,
+    /** Конец фразы (endpoint detection), секунды: пауза после речи; пауза без речи в начале; максимальная длина фразы. */
+    val endpoint: LiveEndpointConfig = LiveEndpointConfig(),
+    /** Последние N финальных фраз, хранимых для экрана (старше сворачиваются; весь текст всё равно в итоговой обработке). */
+    @SerialName("keep_phrases") val keepPhrases: Int = 200,
+)
+
+@Serializable
+data class LiveEndpointConfig(
+    @SerialName("min_trailing_silence_s") val minTrailingSilenceS: Double = 0.8,
+    @SerialName("start_silence_s") val startSilenceS: Double = 2.4,
+    @SerialName("max_utterance_s") val maxUtteranceS: Double = 30.0,
+)
 
 @Serializable
 data class LanguageConfig(

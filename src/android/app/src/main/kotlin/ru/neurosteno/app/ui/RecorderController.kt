@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import ru.neurosteno.app.ProcessingService
+import ru.neurosteno.app.live.LiveController
 import ru.neurosteno.audio.AudioRecorder
 
 data class RecorderUi(
@@ -27,7 +28,7 @@ data class RecorderUi(
 )
 
 /** Запись с микрофона в WAV 16 кГц (приватная папка приложения). Живёт в ViewModel: поворот экрана запись не прерывает. */
-class RecorderController(private val context: Context) {
+class RecorderController(private val context: Context, private val live: LiveController? = null) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var recorder: AudioRecorder? = null
     private var file: File? = null
@@ -42,10 +43,13 @@ class RecorderController(private val context: Context) {
         val dir = File(context.filesDir, ProcessingService.RECORDINGS_DIR).apply { mkdirs() }
         val name = "Запись " + SimpleDateFormat("yyyy-MM-dd HH-mm-ss", Locale.ROOT).format(Date()) + ".wav"
         val f = File(dir, name)
-        val r = AudioRecorder(f) { level = it }
+        // живая расшифровка (B13): может быть выключена (нет модели/памяти) -- тогда onPcm == null и запись идёт как раньше
+        val onPcm = live?.begin()
+        val r = AudioRecorder(f, onLevel = { level = it }, onPcm = onPcm)
         try {
             r.start()
         } catch (e: Exception) {
+            live?.cancel()
             _ui.value = RecorderUi(error = "Не удалось начать запись: ${e.message ?: "микрофон недоступен"}")
             return
         }
@@ -70,11 +74,13 @@ class RecorderController(private val context: Context) {
         file = null
         return try {
             r.stop()
+            live?.end() // дорасшифровать хвост и ВЫГРУЗИТЬ потоковую модель до старта полной обработки
             val ok = f != null && r.durationMs >= MIN_MS
             if (!ok) f?.delete()
             _ui.value = RecorderUi(error = if (ok) null else "Запись слишком короткая")
             if (ok) f else null
         } catch (e: Exception) {
+            live?.cancel()
             f?.delete()
             _ui.value = RecorderUi(error = "Запись прервана: ${e.message}")
             null
@@ -86,6 +92,7 @@ class RecorderController(private val context: Context) {
         ticker?.cancel()
         recorder = null
         runCatching { r.stop() }
+        live?.cancel()
         file?.delete()
         file = null
         _ui.value = RecorderUi()
