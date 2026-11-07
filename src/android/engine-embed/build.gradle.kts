@@ -28,5 +28,7 @@ dependencies {
     api(libs.onnxruntime.android)
 
     testImplementation(libs.junit4)
+    testImplementation(project(":store-objectbox")) // SearchEvalTest сравнивает ObjectBox HNSW с перебором
+    testImplementation(libs.objectbox.macos)
     testImplementation(libs.onnxruntime.desktop) // Java-API с нативной библиотекой для macOS: тесты эмбеддера на хосте
 }

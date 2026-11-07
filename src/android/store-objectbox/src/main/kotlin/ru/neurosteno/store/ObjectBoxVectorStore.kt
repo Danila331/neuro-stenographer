@@ -38,19 +38,22 @@ class ObjectBoxVectorStore(private val store: BoxStore, private val dim: Int = D
     override fun search(q: FloatArray, k: Int, recordId: String?): List<Pair<Long, Float>> {
         require(q.size == dim) { "размер запроса ${q.size} != $dim" }
         if (k <= 0) return emptyList()
-        if (recordId != null) {
-            val rows = box.query(ChunkVec_.recordId.equal(recordId)).build().use { it.find() }
-            return rows.map { r ->
-                var dot = 0f
-                val v = r.vec!!
-                for (j in 0 until dim) dot += v[j] * q[j]
-                r.id to dot
-            }.sortedWith(compareByDescending<Pair<Long, Float>> { it.second }.thenBy { it.first }).take(k)
-        }
-        return box.query(ChunkVec_.vec.nearestNeighbors(q, k)).build().use { query ->
-            query.findWithScores().map { it.get().id to (1f - it.score.toFloat()) }
-        }.sortedWith(compareByDescending<Pair<Long, Float>> { it.second }.thenBy { it.first })
+        if (recordId != null) return exact(box.query(ChunkVec_.recordId.equal(recordId)).build().use { it.find() }, q, k)
+        // небольшая история: точный перебор надёжнее приближённого графа (соседние окна почти одинаковы, HNSW путает их порядок)
+        if (box.count() <= EXACT_LIMIT) return exact(box.all, q, k)
+        // большая история: HNSW берёт запас кандидатов, ближайшие уточняются точным косинусом по f32
+        val want = maxOf(3 * k, k + 20)
+        val cands = box.query(ChunkVec_.vec.nearestNeighbors(q, want)).build().use { query -> query.find() }
+        return exact(cands, q, k)
     }
+
+    private fun exact(rows: List<ChunkVec>, q: FloatArray, k: Int): List<Pair<Long, Float>> =
+        rows.map { r ->
+            var dot = 0f
+            val v = r.vec!!
+            for (j in 0 until dim) dot += v[j] * q[j]
+            r.id to dot
+        }.sortedWith(compareByDescending<Pair<Long, Float>> { it.second }.thenBy { it.first }).take(k)
 
     override fun recordIds(): Set<String> =
         box.query().build().use { it.property(ChunkVec_.recordId).distinct().findStrings()?.toSet() ?: emptySet() }
@@ -61,6 +64,9 @@ class ObjectBoxVectorStore(private val store: BoxStore, private val dim: Int = D
 
     companion object {
         const val DIM = 384
+
+        /** До скольких векторов история просматривается точным перебором (иначе HNSW). */
+        const val EXACT_LIMIT = 3000L
 
         /** Открывает базу в каталоге [dir] (на Android -- с контекстом приложения для загрузки нативной библиотеки). */
         fun open(dir: File, androidContext: Any? = null): ObjectBoxVectorStore {
