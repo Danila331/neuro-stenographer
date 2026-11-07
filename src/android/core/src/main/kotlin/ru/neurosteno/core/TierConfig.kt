@@ -229,6 +229,10 @@ data class RelabelConfig(
     val refine: Int = 1,
     /** Защита от монологов: если лучший силуэт при k >= 2 ниже порога -- один говорящий; null -- без защиты. */
     @SerialName("k1_silhouette_thr") val k1SilhouetteThr: Double? = null,
+    /** Защита срабатывает, только если штатная диаризация тоже видит одного говорящего. */
+    @SerialName("k1_require_stock_single") val k1RequireStockSingle: Boolean = false,
+    /** «Видит» = говорящие с долей >= этой от суммарной речи штатной диаризации. */
+    @SerialName("k1_stock_min_share") val k1StockMinShare: Double = 0.10,
 )
 
 @Serializable

@@ -218,7 +218,7 @@ object SpeakerRelabeler {
     }
 
     // ---- 3-6. разметка ----
-    fun labelUnits(e: Array<DoubleArray>, durMs: LongArray, p: RelabelConfig): IntArray {
+    fun labelUnits(e: Array<DoubleArray>, durMs: LongArray, p: RelabelConfig, stockSingle: Boolean = false): IntArray {
         val n = e.size
         if (n == 0) return IntArray(0)
         var ok = BooleanArray(n) { durMs[it] >= p.minReliableMs }
@@ -240,7 +240,7 @@ object SpeakerRelabeler {
             }
         }
         // защита от монологов: слабая кластерная структура -> один говорящий
-        p.k1SilhouetteThr?.let { if (best < it) return IntArray(n) }
+        p.k1SilhouetteThr?.let { if (best < it && (stockSingle || !p.k1RequireStockSingle)) return IntArray(n) }
         val lab = cut(idx.size, merges, bestK)
         val w = DoubleArray(n) { durMs[it].toDouble() }
         val dim = e[0].size
@@ -288,6 +288,14 @@ object SpeakerRelabeler {
         return out
     }
 
+    /** `stock_is_single` эталона: не более одного говорящего штатной диаризации с долей >= [minShare] суммарной речи. */
+    fun stockIsSingle(turns: List<SpeakerTurn>?, minShare: Double = 0.10): Boolean {
+        val tot = LinkedHashMap<Int, Long>()
+        for (t in turns.orEmpty()) tot[t.speaker] = (tot[t.speaker] ?: 0L) + (t.endMs - t.startMs)
+        val sum = tot.values.sum()
+        return tot.values.count { sum > 0 && it >= minShare * sum } <= 1
+    }
+
     /** `phrase_turns`: слова (абс. мс) + turns диаризатора (только как точки смены) -> turns юнитов. */
     fun phraseTurns(
         words: List<Word>,
@@ -301,7 +309,7 @@ object SpeakerRelabeler {
         val units = makeUnits(spans, stockTurns, p)
         if (units.isEmpty()) return emptyList()
         val e = embedUnits(audio, units, embed, p, progress)
-        val lab = labelUnits(e, LongArray(units.size) { units[it].endMs - units[it].startMs }, p)
+        val lab = labelUnits(e, LongArray(units.size) { units[it].endMs - units[it].startMs }, p, stockIsSingle(stockTurns, p.k1StockMinShare))
         return units.mapIndexed { i, u -> SpeakerTurn(lab[i], u.startMs, u.endMs) }
     }
 }

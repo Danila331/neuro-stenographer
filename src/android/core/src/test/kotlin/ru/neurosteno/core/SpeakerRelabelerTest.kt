@@ -129,4 +129,58 @@ class SpeakerRelabelerTest {
         assertTrue(turns.indices.all { turns[it].speaker == turns[it % 2].speaker })
         assertEquals(words.map { it.startMs }, turns.map { it.startMs })
     }
+
+    /** Кейсы refpipe (`src/eval/refpipe/tests/relabel_cases.json`, порт Kotlin опирается именно на них). */
+    @TestFactory
+    fun `refpipe relabel cases`(): List<DynamicTest> {
+        val f = java.io.File(TestPaths.repoRoot, "src/eval/refpipe/tests/relabel_cases.json")
+        org.junit.jupiter.api.Assumptions.assumeTrue(f.isFile) { "ПРОПУЩЕНО: нет ${f.path}" }
+        val cases = Json.parseToJsonElement(f.readText()).jsonObject["cases"]!!.jsonArray
+        return cases.map { c ->
+            val o = c.jsonObject
+            DynamicTest.dynamicTest(o["name"]!!.jsonPrimitive.content) {
+                val pj = o["params"]!!.jsonObject
+                val p = RelabelConfig(
+                    enabled = true, gapMs = pj["gap_ms"]!!.jsonPrimitive.int, maxUnitMs = pj["max_unit_ms"]!!.jsonPrimitive.int,
+                    splitMinSideMs = pj["split_min_side_ms"]!!.jsonPrimitive.int, padMs = pj["pad_ms"]!!.jsonPrimitive.int,
+                    embedMaxS = pj["embed_max_s"]!!.jsonPrimitive.double, minReliableMs = pj["min_reliable_ms"]!!.jsonPrimitive.int,
+                    kMin = pj["k_min"]!!.jsonPrimitive.int, kMax = pj["k_max"]!!.jsonPrimitive.int,
+                    maxClusterUnits = pj["max_cluster_units"]!!.jsonPrimitive.int, refine = pj["refine"]!!.jsonPrimitive.int,
+                    k1SilhouetteThr = (pj["k1_silhouette_thr"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it !is JsonNull }?.double,
+                    k1RequireStockSingle = pj["k1_require_stock_single"]!!.jsonPrimitive.content.toBoolean(),
+                    k1StockMinShare = pj["k1_stock_min_share"]!!.jsonPrimitive.double,
+                )
+                val words = spans(o["words"]!!)
+                val turns = (o["turns"] as? kotlinx.serialization.json.JsonArray)?.map {
+                    SpeakerTurn(it.jsonArray[0].jsonPrimitive.int, it.jsonArray[1].jsonPrimitive.long, it.jsonArray[2].jsonPrimitive.long)
+                }
+                val exp = o["expected"]!!.jsonObject
+                val units = SpeakerRelabeler.makeUnits(words, turns, p)
+                assertEquals(exp["units"]!!.jsonArray.map { e -> e.jsonArray.map { it.jsonPrimitive.long } },
+                    units.map { listOf(it.startMs, it.endMs, it.w0.toLong(), it.w1.toLong()) })
+                val emb = o["embeddings"]
+                if (emb == null || emb is JsonNull) return@dynamicTest
+                // сырые эмбеддинги -> L2 -> метки (embedUnits не вызываем: звука нет)
+                val raw = matrix(emb)
+                val e = Array(raw.size) { k ->
+                    val r = raw[k]
+                    val norm = Math.sqrt(r.sumOf { it * it }) + 1e-9
+                    DoubleArray(r.size) { r[it] / norm }
+                }
+                val dur = LongArray(units.size) { units[it].endMs - units[it].startMs }
+                val stockSingle = (o["stock_single"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toBoolean() ?: false
+                val lab = SpeakerRelabeler.labelUnits(e, dur, p, stockSingle)
+                assertEquals(exp["labels"]!!.jsonArray.map { it.jsonPrimitive.int }, lab.toList())
+                val expTurns = exp["turns"]!!.jsonArray.map { t -> listOf(t.jsonArray[0].jsonPrimitive.long, t.jsonArray[1].jsonPrimitive.long, t.jsonArray[2].jsonPrimitive.long) }
+                assertEquals(expTurns, units.mapIndexed { i, u -> listOf(lab[i].toLong(), u.startMs, u.endMs) })
+            }
+        }
+    }
+
+    @Test
+    fun `stock_is_single matches the reference unit test`() {
+        assertTrue(SpeakerRelabeler.stockIsSingle(listOf(SpeakerTurn(0, 0, 9000), SpeakerTurn(1, 9000, 9500))))
+        assertTrue(!SpeakerRelabeler.stockIsSingle(listOf(SpeakerTurn(0, 0, 5000), SpeakerTurn(1, 5000, 9000))))
+        assertTrue(SpeakerRelabeler.stockIsSingle(emptyList()))
+    }
 }
