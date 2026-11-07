@@ -4,7 +4,9 @@ Speech intervals (ms, ints):
   1. sherpa-onnx Silero VAD with threshold / min_silence / min_speech / max_speech from the config;
   2. each interval is padded by `pad_ms` on both sides (clamped to the file); the padding never
      crosses the middle of the pause to a neighbour, intervals are NOT merged (as bench_asr/vad.py);
-  3. ASR chunks (`pack_chunks`, ported from bench_asr/vad.py, in SAMPLES): padded intervals are
+  3. `vad.chunking="legacy"` selects the first refpipe version (padded intervals merged, no min_s rule) -- what the Android
+   ChunkPlanner implements; default = bench_asr packing below.
+   ASR chunks (`pack_chunks`, ported from bench_asr/vad.py, in SAMPLES): padded intervals are
      packed greedily while (last.end - first.start) <= chunk.max_s; the chunk is the contiguous audio
      slice (inner pauses included) so a cut is only ever made inside a pause.  An interval longer than
      max_s is cut at the quietest point (30 ms RMS windows, 3-window smoothing) of
@@ -187,6 +189,74 @@ def _span(a: int, b: int) -> TimeSpan:
     return TimeSpan(a * 1000 // SR, b * 1000 // SR)
 
 
+# ---- legacy chunking (vad.chunking = "legacy") ----------------------------------------------------------------------
+# The first refpipe version, which Android's ChunkPlanner ports (core/asr/AsrSupport.kt): padded intervals are MERGED
+# when they touch, chunks are packed greedily, no min_s merging, no midpoint rule, the partial last VAD window is fed.
+def _legacy_detect(vad: "SileroVad", x: np.ndarray) -> list[TimeSpan]:
+    v = vad.vad
+    v.reset()
+    out: list[TimeSpan] = []
+
+    def drain():
+        while not v.empty():
+            seg = v.front
+            out.append(TimeSpan(_ms(seg.start), _ms(seg.start + len(seg.samples))))
+            v.pop()
+
+    for i in range(0, len(x), WINDOW):
+        v.accept_waveform(x[i:i + WINDOW])
+        drain()
+    v.flush()
+    drain()
+    return out
+
+
+def _legacy_pad_and_merge(spans: list[TimeSpan], pad_ms: int, dur_ms: int) -> list[TimeSpan]:
+    out: list[TimeSpan] = []
+    for s in sorted(spans, key=lambda s: (s.start_ms, s.end_ms)):
+        a, b = max(0, s.start_ms - pad_ms), min(dur_ms, s.end_ms + pad_ms)
+        if b <= a:
+            continue
+        if out and a <= out[-1].end_ms:
+            out[-1] = TimeSpan(out[-1].start_ms, max(out[-1].end_ms, b))
+        else:
+            out.append(TimeSpan(a, b))
+    return out
+
+
+def _legacy_quietest_cut(x: np.ndarray, lo_ms: int, hi_ms: int) -> int:
+    fr = 20
+    best_t, best_e = (lo_ms + hi_ms) // 2, None
+    t = lo_ms
+    while t + fr <= hi_ms:
+        seg = x[t * SR // 1000:(t + fr) * SR // 1000]
+        e = float(np.dot(seg, seg)) if len(seg) else 0.0
+        if best_e is None or e < best_e:
+            best_t, best_e = t + fr // 2, e
+        t += fr
+    return best_t
+
+
+def _legacy_make_chunks(x: np.ndarray, intervals: list[TimeSpan], max_s: float) -> list[TimeSpan]:
+    max_ms = int(round(max_s * 1000))
+    flat: list[TimeSpan] = []
+    for iv in intervals:
+        cur = iv
+        while cur.dur_ms > max_ms:
+            cut = _legacy_quietest_cut(x, cur.start_ms + max_ms // 2, cur.start_ms + max_ms)
+            flat.append(TimeSpan(cur.start_ms, cut))
+            cur = TimeSpan(cut, cur.end_ms)
+        flat.append(cur)
+    chunks: list[TimeSpan] = []
+    for iv in flat:
+        if chunks and iv.end_ms - chunks[-1].start_ms <= max_ms:
+            chunks[-1] = TimeSpan(chunks[-1].start_ms, iv.end_ms)
+        else:
+            chunks.append(iv)
+    return chunks
+
+
+
 def speech_segments(x: np.ndarray, cfg: dict, vad: "SileroVad") -> list[tuple[int, int]]:
     """Padded speech segments in samples (Silero + optional rescue + pad_segments)."""
     raw = [(s.start_sample, s.end_sample) for s in vad.detect_samples(x)]
@@ -203,6 +273,9 @@ def chunks_from_segments(segs: list[tuple[int, int]], cfg: dict, x: np.ndarray) 
 
 def speech_chunks(x: np.ndarray, cfg: dict, vad: "SileroVad") -> tuple[list[TimeSpan], list[TimeSpan]]:
     """Returns (padded speech intervals, ASR chunks), both in ms."""
+    if cfg["vad"].get("chunking") == "legacy":
+        iv = _legacy_pad_and_merge(_legacy_detect(vad, x), int(cfg["vad"]["pad_ms"]), len(x) * 1000 // SR)
+        return iv, _legacy_make_chunks(x, iv, float(cfg["asr"]["chunk"]["max_s"]))
     seg = speech_segments(x, cfg, vad)
     chunks = chunks_from_segments(seg, cfg, x)
     return [_span(a, b) for a, b in seg if b > a], [_span(a, b) for a, b in chunks if b > a]

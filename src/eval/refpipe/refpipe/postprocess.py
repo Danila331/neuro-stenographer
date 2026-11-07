@@ -40,3 +40,34 @@ def spell_numbers(words: list[Word]) -> list[Word]:
             b = w.end_ms if i == len(merged) - 1 else w.start_ms + span * (i + 1) // len(merged)
             out.append(Word(p, a, max(b, a + 1), w.confidence))
     return out
+
+
+# --- postprocess.strip_dashes (BACKLOG B39) -----------------------------------------------------------------------
+import re  # noqa: E402
+
+_DASH_AFTER_TERMINAL = re.compile("(?<=[.?!…])[—–]+")
+_ANY_DASH = re.compile("[—–]+")
+
+
+def strip_dashes_text(text: str, mode: str) -> str:
+    """mode off | after_terminal | all.
+    after_terminal: delete every run of em/en dashes (U+2014, U+2013) that directly follows . ? ! or the ellipsis char
+                    ("Уточните.— Синий" -> "Уточните. Синий" at the word level: "Уточните.—" -> "Уточните.").
+    all:            delete all em/en dashes (the hyphen-minus U+002D is never touched)."""
+    if mode == "after_terminal":
+        return _DASH_AFTER_TERMINAL.sub("", text)
+    if mode == "all":
+        return _ANY_DASH.sub("", text)
+    return text
+
+
+def strip_dashes(words: list[Word], mode: str) -> list[Word]:
+    """Applied to ASR words (after spell_numbers, before the Aligner); a word that becomes empty is dropped."""
+    if mode in (None, "", "off"):
+        return words
+    out = []
+    for w in words:
+        t = strip_dashes_text(w.text, mode)
+        if t.strip():
+            out.append(w if t == w.text else Word(t, w.start_ms, w.end_ms, w.confidence))
+    return out

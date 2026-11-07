@@ -27,3 +27,17 @@ def test_android_number_cases_file_is_consistent_for_plain_integers():
     for k, v in cases.items():
         if k.isdigit():
             assert " ".join(w.text for w in spell_numbers([Word(k, 0, 1000)])) == v, k
+
+
+def test_strip_dashes_modes():
+    from refpipe.postprocess import strip_dashes, strip_dashes_text
+
+    assert strip_dashes_text("Уточните.—", "after_terminal") == "Уточните."
+    assert strip_dashes_text("да?—–", "after_terminal") == "да?"
+    assert strip_dashes_text("кто—то", "after_terminal") == "кто—то"       # not after a terminal sign
+    assert strip_dashes_text("кто—то,—", "after_terminal") == "кто—то,—"
+    assert strip_dashes_text("кто—то,—", "all") == "кто"+"то,"
+    assert strip_dashes_text("кто-то", "all") == "кто-то"                          # hyphen-minus untouched
+    assert strip_dashes_text("x—", "off") == "x—"
+    ws = [Word("—", 0, 10), Word("а", 10, 20)]
+    assert [w.text for w in strip_dashes(ws, "all")] == ["а"]

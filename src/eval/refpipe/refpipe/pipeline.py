@@ -111,7 +111,7 @@ class Pipeline:
         lang = cfg.get("language") or {}
         self.lang_mode = lang.get("mode", "auto")
         if self.lang_mode == "auto" and lang.get("lid_model") and cfg.get("asr_en"):
-            self.lid = LanguageId(self.root / lang["lid_model"], self.threads, float(lang.get("lid_seconds", 10.0)))
+            self.lid = LanguageId(self.root / lang["lid_model"], 1, float(lang.get("lid_seconds", 10.0)))
         elif self.lang_mode == "auto":
             log.info("language.mode=auto without lid_model/asr_en: using ru")
         if self.lang_mode == "en" and not cfg.get("asr_en"):
@@ -234,7 +234,8 @@ class Pipeline:
         asr_parts = {k: c.get(k) for k in ("vad", "asr", "asr_en", "language")}
         asr_parts["denoise"] = c["audio"]["denoise"]
         asr_parts["gain"] = c["audio"].get("normalize_gain")
-        asr_parts["post"] = c.get("postprocess")
+        # only drop_tiny_chunks changes the cached ASR output; numbers / strip_dashes are applied after the cache
+        asr_parts["post"] = {"numbers": "as_is", "drop_tiny_chunks": (c.get("postprocess") or {}).get("drop_tiny_chunks")}
         asr_parts["keep_punct"] = self.keep_punct
         asr_cache = self._ckey("asr", audio_key, asr_parts)
         diar_cache = self._ckey("diar", audio_key, {"d": c["diarization"], "n": num_speakers,
@@ -328,6 +329,11 @@ class Pipeline:
             from .postprocess import spell_numbers
 
             words = spell_numbers(words)
+        sd = (cfg.get("postprocess") or {}).get("strip_dashes", "off")
+        if sd not in (None, "off"):
+            from .postprocess import strip_dashes
+
+            words = strip_dashes(words, sd)
 
         t = time.perf_counter()
         utts = align(words, turns, AlignParams.from_config(cfg))
