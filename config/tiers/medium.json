@@ -10,21 +10,31 @@
       "snr_threshold_db": 12.0
     },
     "normalize_gain": {
-      "enabled": false,
+      "enabled": true,
       "mode": "peak",
       "peak_dbfs": -1.0,
       "max_gain_db": 40.0,
       "skip_if_peak_below_dbfs": -85.0,
-      "_pending": "Выключено: в сквозном пайплайне усиливает фон и ухудшает VAD (synth: 40.2→46.8 %). Решение по совместному перебору с vad.threshold (refpipe)."
+      "max_attenuation_db": 6.0,
+      "scope": "asr"
     }
   },
   "vad": {
     "model": "silero-vad/silero_vad.onnx",
-    "threshold": 0.45,
+    "threshold": 0.3,
     "min_silence_ms": 300,
     "min_speech_ms": 120,
     "pad_ms": 150,
-    "max_speech_s": 25.0
+    "max_speech_s": 25.0,
+    "rescue": {
+      "enabled": true,
+      "snr_db": 10,
+      "abs_floor_db": -50,
+      "bridge_ms": 300,
+      "min_ms": 600,
+      "margin_ms": 200
+    },
+    "chunking": "pack"
   },
   "asr": {
     "engine": "gigaam_rnnt",
@@ -105,6 +115,7 @@
     "drop_tiny_chunks": {
       "enabled": true,
       "max_chars": 2
-    }
+    },
+    "strip_dashes": "after_terminal"
   }
 }
