@@ -33,4 +33,5 @@ def test_hash_ignores_live_and_llm_blocks():
     cfg = load_config(TIERS / "medium.json")
     h = config_hash(cfg)
     assert h == config_hash({**cfg, "live": {"enabled": False}, "llm": {"model": "other.gguf"}})
-    assert h != config_hash(apply_overrides(cfg, ["asr.blank_penalty=1.0"]))
+    other = round(float(cfg["asr"].get("blank_penalty", 0.0)) + 0.37, 2)  # always differs from the config value
+    assert h != config_hash(apply_overrides(cfg, [f"asr.blank_penalty={other}"]))

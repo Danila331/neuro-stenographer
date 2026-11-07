@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
  * поэтому запрещаем такие конструкции статически во всех модулях обработки.
  */
 class AndroidRegexGuardTest {
-    private val modules = listOf("core", "audio", "engine-sherpa", "engine-llm", "app")
+    private val modules = listOf("core", "audio", "engine-sherpa", "engine-llm", "engine-embed", "store-objectbox", "app")
     private val inlineUnicodeFlag = Regex("""\(\?[a-zA-Z]*U[a-zA-Z]*[):]""")
 
     @Test

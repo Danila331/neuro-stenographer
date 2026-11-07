@@ -59,7 +59,7 @@ include(":core")
 // Корневой скрипт зависит от режима: плагины AGP и Kotlin обязаны загружаться вместе (один classloader)
 rootProject.buildFileName = if (includeAndroid) "build.android.gradle.kts" else "build.gradle.kts"
 if (includeAndroid) {
-    include(":audio", ":engine-sherpa", ":engine-llm", ":app")
+    include(":audio", ":engine-sherpa", ":engine-llm", ":engine-embed", ":store-objectbox", ":app")
     if (!File(rootDir, "third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx").isDirectory) {
         throw GradleException("Нет sherpa-onnx AAR: выполните src/android/scripts/fetch_sherpa_onnx.sh (или -Pneurosteno.android=false)")
     }

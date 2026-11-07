@@ -24,26 +24,32 @@ class AppGraph(private val context: Context) {
 
     val settings: SettingsRepository by lazy { SettingsRepository(context) }
 
-    /** Выжимка записей (B50): запуск из ProcessingService, состояние для экрана выжимки. */
-    val summary: ru.neurosteno.app.summary.SummaryRunner by lazy { ru.neurosteno.app.summary.SummaryRunner(context, this) }
+    /** AI-поиск (B51): индекс записей, эмбеддер, хранилище векторов. */
+    val search: ru.neurosteno.app.search.SearchService by lazy { ru.neurosteno.app.search.SearchService(context, this) }
+
+    /** Выжимка (B50); эмбеддер реплик для долин -- общий с поиском (выгружается по простою). */
+    val summary: ru.neurosteno.app.summary.SummaryRunner by lazy { ru.neurosteno.app.summary.SummaryRunner(context, this) { search.embedder.get() } }
 
     /** Порт выжимки для экрана (B50): настоящий движок через [summary]. */
     val summaryRepository: ru.neurosteno.app.insight.SummaryRepository by lazy { ru.neurosteno.app.insight.GraphSummaryRepository(context, this) }
 
     /**
-     * Порт поиска для экрана «AI-поиск» (B51). Движок поиска ещё не слит: в debug-сборке работает фейк (подсчёт совпавших основ слов по
-     * реплика истории, шаблонный «ответ»), в release -- `null`, и плитка «AI-поиск» остаётся неактивной («СКОРО»): выдавать
-     * имитацию ИИ за настоящую функцию нельзя.
+     * Порт поиска для экрана «AI-поиск» (B51): настоящий гибридный поиск и ответ LLM ([ru.neurosteno.app.insight.RealSearchRepository]).
+     * Фейк ([ru.neurosteno.app.insight.FakeSearchRepository]) остаётся для превью и UI-тестов, в приложении не используется.
      */
-    val searchRepository: ru.neurosteno.app.insight.SearchRepository? by lazy {
-        if (BuildConfig.DEBUG) ru.neurosteno.app.insight.FakeSearchRepository {
-            history.entries.value.mapNotNull { e ->
-                history.loadTranscript(e.id)?.let { st -> ru.neurosteno.app.insight.SearchRecord(e.id, e.title, st.toTranscript().utterances, st.speakerNames) }
-            }
-        } else null
-    }
+    val searchRepository: ru.neurosteno.app.insight.SearchRepository by lazy { ru.neurosteno.app.insight.RealSearchRepository(this) }
 
-    val history: HistoryRepository by lazy { HistoryRepository(File(context.filesDir, "history")) }
+    val history: HistoryRepository by lazy {
+        HistoryRepository(File(context.filesDir, "history")).also { repo ->
+            // индекс AI-поиска следит за историей: новые записи индексируются в фоне, удалённые уходят из индекса сразу
+            repo.listener = object : HistoryRepository.Listener {
+                override fun onAdded(id: String) = search.onAdded(id)
+                override fun onSaved(id: String) = search.onSaved(id)
+                override fun onDeleted(id: String) = search.onDeleted(id)
+                override fun onCleared() = search.onCleared()
+            }
+        }
+    }
 
     /** Каталог наборов для загрузки (assets/model_sets.json; в debug-сборке его можно подменить файлом в files/). */
     val catalog: Catalog by lazy { Catalog.load(context, allowOverride = BuildConfig.DEBUG) }

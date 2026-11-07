@@ -172,7 +172,8 @@ class Pipeline:
                 np.save(ck.with_suffix(".npy"), E)
         dur = np.array([u[1] - u[0] for u in units])
         diag: dict = {}
-        lab = label_units(E, dur, p, diag, stock_is_single(tt, p.k1_stock_min_share))
+        lab = label_units(E, dur, p, diag, stock_is_single(tt, p.k1_stock_min_share),
+                          np.array([[u[0], u[1]] for u in units]))
         out = [SpeakerTurn(int(l), u[0], u[1]) for u, l in zip(units, lab)]
         return out, {"units": len(units), "k": int(len(set(int(l) for l in lab))),
                      "silhouettes": {str(k): round(v, 4) for k, v in diag.get("silhouettes", {}).items()},

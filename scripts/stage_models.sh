@@ -2,7 +2,7 @@
 # Наполняет assets варианта моделями из общего кэша: $ROOT/.cache/models -> src/android/app/src/<tier>/assets/models/<tier>/
 # Список файлов берётся из config/tiers/<tier>.json (те же пути, что читает приложение и Python-эталон):
 # vad.model, audio.denoise.model, asr.model_dir, asr.second_pass.model_dir, asr_en.model_dir, language.lid_model,
-# diarization.segmentation/embedding, punctuation.model, live.model_dir, llm.model. Рядом создаётся manifest.json набора (id, размеры, sha256).
+# diarization.segmentation/embedding, punctuation.model, live.model_dir, search.embedder.model/tokenizer (необязательны), llm.model. Рядом создаётся manifest.json набора (id, размеры, sha256).
 #
 #   scripts/stage_models.sh <lite|medium|hard|online> [--allow-missing] [--skip-llm]
 #
@@ -87,6 +87,11 @@ add((cfg.get("punctuation") or {}).get("model"))
 live = cfg.get("live") or {}
 if live.get("enabled"):
     add(live.get("model_dir"))
+srch = cfg.get("search") or {}
+if srch.get("enabled", True):
+    emb = srch.get("embedder") or {}
+    add(emb.get("model"))
+    add(emb.get("tokenizer"))
 if not skip_llm:
     add((cfg.get("llm") or {}).get("model"))
 print("\n".join(out))
@@ -99,12 +104,18 @@ while IFS= read -r line; do [ -n "$line" ] && PATHS+=("$line"); done < <(mapfile
 # Необязательная модель живой расшифровки (live.model_dir): если её нет в кэше -- предупреждение, набор собирается без неё
 # (превью выключится само). Остальные отсутствующие модели -- ошибка, как раньше.
 LIVE_PATH="$(python3 -I -c 'import json,sys; c=json.load(open(sys.argv[1],encoding="utf-8")); l=c.get("live") or {}; print(l.get("model_dir") or "" if l.get("enabled") else "")' "$CONFIG")"
+# Необязательные модели AI-поиска (search.embedder.model/tokenizer): без них поиск работает только по BM25 (без векторов)
+SEARCH_PATHS="$(python3 -I -c 'import json,sys; c=json.load(open(sys.argv[1],encoding="utf-8")); s=c.get("search") or {}; e=s.get("embedder") or {}; print("\n".join(x for x in (e.get("model"), e.get("tokenizer")) if x) if s.get("enabled", True) else "")' "$CONFIG")"
 MISSING=()
 for p in "${PATHS[@]}"; do
   alt="$(alt_for "$p")"
   [ -e "$MODELS_ROOT/$p" ] || { [ -n "$alt" ] && [ -e "$MODELS_ROOT/$alt" ]; } && continue
   if [ -n "$LIVE_PATH" ] && [ "$p" = "$LIVE_PATH" ]; then
     echo "ВНИМАНИЕ: нет модели живой расшифровки $p -- набор без превью записи (см. --map)." >&2
+    continue
+  fi
+  if printf '%s\n' "$SEARCH_PATHS" | grep -qxF "$p"; then
+    echo "ВНИМАНИЕ: нет модели эмбеддингов $p -- AI-поиск будет работать только по BM25 (python -m bench_rag.export_onnx, см. scripts/fetch_models.py)." >&2
     continue
   fi
   MISSING+=("$p")

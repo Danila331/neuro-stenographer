@@ -74,6 +74,15 @@ def config_paths(tier: str) -> list[str]:
     live = c.get("live") or {}
     if live.get("enabled") and live.get("model_dir"):  # потоковая модель живой расшифровки (B13); как в TierConfig.requiredModelPaths
         out.append(live["model_dir"])
+    # эмбеддер AI-поиска (B51): ONNX -- наш экспорт без публичного URL, пока его не опубликуют, в онлайн-наборы не входит (поиск тогда по BM25)
+    search = c.get("search") or {}
+    emb = search.get("embedder") or {}
+    if search.get("enabled", True) and emb.get("model") and emb.get("tokenizer"):
+        src = source_index().get(emb["model"])
+        if src is not None and not src.exported:
+            out += [emb["model"], emb["tokenizer"]]
+        else:
+            print(f"[{tier}] {emb['model']}: нет публичного URL (экспорт) -- набор для загрузки без эмбеддера, поиск только по BM25", file=sys.stderr)
     return list(dict.fromkeys(out))
 
 

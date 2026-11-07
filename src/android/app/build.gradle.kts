@@ -165,6 +165,8 @@ dependencies {
     implementation(project(":audio"))
     implementation(project(":engine-sherpa"))
     implementation(project(":engine-llm"))
+    implementation(project(":engine-embed"))
+    implementation(project(":store-objectbox"))
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.core.ktx)

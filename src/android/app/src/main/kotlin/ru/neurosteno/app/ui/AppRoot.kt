@@ -171,7 +171,7 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
                     onDelete = { vm.deleteEntry(it.id) },
                     onModels = { nav.push(Route.Models) },
                     onSettings = { nav.push(Route.Settings) },
-                    onSearch = if (vm.search != null && entries.isNotEmpty()) ({ nav.push(Route.Search(null)) }) else null,
+                    onSearch = if (entries.isNotEmpty()) ({ nav.push(Route.Search(null)) }) else null,
                 )
             }
         }
@@ -191,7 +191,7 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
                 onStartFragment = host::startFragment,
                 onCancelFragment = host::cancelFragment,
                 onSummary = { nav.push(Route.Summary(route.entryId)) },
-                onSearch = if (vm.search != null) ({ nav.push(Route.Search(route.entryId)) }) else null,
+                onSearch = { nav.push(Route.Search(route.entryId)) },
                 focusMs = focus?.takeIf { it.entryId == route.entryId }?.ms,
                 focusToken = focus?.takeIf { it.entryId == route.entryId }?.token ?: 0L,
                 onFocusConsumed = { focus?.let { vm.consumeFocus(it.token) } },
@@ -224,7 +224,7 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
         }
         is Route.Search -> {
             val controller = vm.search
-            if (controller == null) { LaunchedEffect(Unit) { nav.pop() } } else {
+            run {
                 val ui by controller.ui.collectAsStateWithLifecycle()
                 val session = remember(route.entryId) { route.entryId?.let { vm.session(it) } }
                 val doc = session?.doc?.collectAsStateWithLifecycle()?.value

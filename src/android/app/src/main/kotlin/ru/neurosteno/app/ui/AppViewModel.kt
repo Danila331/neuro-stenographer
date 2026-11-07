@@ -19,8 +19,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Выжимка (B50): порт поверх `AppGraph.summary`. */
     val summary: ru.neurosteno.app.insight.SummaryRepository get() = graph.summaryRepository
 
-    /** Поиск (B51): контроллер экрана; `null`, пока нет движка поиска (release). */
-    val search: ru.neurosteno.app.insight.SearchController? = graph.searchRepository?.let { ru.neurosteno.app.insight.SearchController(it, viewModelScope) }
+    /** Поиск (B51): контроллер экрана поверх `AppGraph.searchRepository`. */
+    val search: ru.neurosteno.app.insight.SearchController = ru.neurosteno.app.insight.SearchController(graph.searchRepository, viewModelScope)
 
     /**
      * Просьба открыть реплику: из выжимки или поиска -- расшифровка [entryId] прокручивается к реплике на времени [ms] и плеер встаёт
@@ -114,6 +114,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         sessions.clear()
         llm.release()
         recorder.cancel()
-        search?.close()
+        search.close()
     }
 }

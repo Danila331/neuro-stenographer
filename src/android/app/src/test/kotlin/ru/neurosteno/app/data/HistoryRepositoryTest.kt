@@ -44,6 +44,37 @@ class HistoryRepositoryTest {
     }
 
     @Test
+    fun listenerIsToldAboutAddSaveDeleteAndClear() {
+        val events = ArrayList<String>()
+        repo.listener = object : HistoryRepository.Listener {
+            override fun onAdded(id: String) { events += "added" }
+            override fun onSaved(id: String) { events += "saved" }
+            override fun onDeleted(id: String) { events += "deleted" }
+            override fun onCleared() { events += "cleared" }
+        }
+        val e = repo.add("a.wav", TestData.dialog())
+        repo.saveTranscript(e.id, repo.loadTranscript(e.id)!!)
+        repo.delete(e.id)
+        repo.add("b.wav", TestData.dialog())
+        repo.clear()
+        assertEquals(listOf("added", "saved", "deleted", "added", "cleared"), events)
+    }
+
+    @Test
+    fun brokenListenerDoesNotBreakTheRepository() {
+        repo.listener = object : HistoryRepository.Listener {
+            override fun onAdded(id: String) = throw IllegalStateException("индекс недоступен")
+            override fun onSaved(id: String) = throw IllegalStateException("индекс недоступен")
+            override fun onDeleted(id: String) = throw IllegalStateException("индекс недоступен")
+            override fun onCleared() = throw IllegalStateException("индекс недоступен")
+        }
+        val e = repo.add("a.wav", TestData.dialog())
+        assertNotNull(repo.get(e.id))
+        repo.delete(e.id)
+        assertNull(repo.get(e.id))
+    }
+
+    @Test
     fun failedAudioCopyDoesNotLoseTranscript() {
         val e = repo.add("a.wav", TestData.dialog(), audio = { throw java.io.IOException("нет доступа") })
         assertNull(e.audioFile)
