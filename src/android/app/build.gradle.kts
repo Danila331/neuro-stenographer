@@ -101,8 +101,6 @@ android {
         jniLibs {
             useLegacyPackaging = false
             pickFirsts += "**/libc++_shared.so"
-            // sherpa-onnx и onnxruntime-android несут по libonnxruntime.so (1.28.2 и 1.28.0, API совместимы) -- берём одну
-            pickFirsts += "**/libonnxruntime.so"
         }
     }
 

@@ -108,6 +108,7 @@ class RealSearchRepository(private val graph: AppGraph, private val service: Sea
         val system = runCatching { graph.appContext.assets.open("prompts/search_answer_system.txt").bufferedReader(Charsets.UTF_8).use { it.readText() } }
             .getOrNull()?.trim()?.takeIf { it.isNotEmpty() } ?: DEFAULT_SYSTEM
         val prompt = PromptBuilder.chatml(system, AnswerBuilder.userMessage(ctx, query))
+        if (ru.neurosteno.app.BuildConfig.DEBUG) Log.d(TAG, "search_answer prompt:\n$prompt") // только debug: в release текст записи в журнал не попадает
         val c = graph.activeConfig()?.first ?: run { send(AnswerEvent.Failed("Нет конфигурации набора моделей.")); return@channelFlow }
         val modelFile = File(graph.modelStore.activeDir() ?: run { send(AnswerEvent.Failed("Набор моделей не установлен.")); return@channelFlow }, c.llm.model ?: "")
         service.setAnswering(true)

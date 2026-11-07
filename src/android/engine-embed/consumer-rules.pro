@@ -1,2 +1,2 @@
-# JNI ONNX Runtime обращается к Java-классам по именам
--keep class ai.onnxruntime.** { *; }
+# JNI эмбеддера (embed_jni.cpp) ищет Kotlin-объект по имени
+-keep class ru.neurosteno.embed.OrtNative { *; }

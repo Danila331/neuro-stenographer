@@ -18,12 +18,9 @@ commons-compress = "1.28.0"
 # Движки
 sherpa-onnx = "2.0.1"
 llama-cpp-tag = "b9000"
-onnxruntime = "1.28.0" # официальный onnxruntime-android (MIT); не новее ORT, вшитого в sherpa-onnx (1.28.2): оба грузят один libonnxruntime.so
 objectbox = "5.4.2"
 
 [libraries]
-onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntime" }
-onnxruntime-desktop = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
 objectbox-android = { module = "io.objectbox:objectbox-android", version.ref = "objectbox" }
 objectbox-processor = { module = "io.objectbox:objectbox-processor", version.ref = "objectbox" }
 objectbox-macos = { module = "io.objectbox:objectbox-macos", version.ref = "objectbox" }

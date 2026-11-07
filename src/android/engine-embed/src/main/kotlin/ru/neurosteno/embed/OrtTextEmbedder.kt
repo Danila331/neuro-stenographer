@@ -1,10 +1,6 @@
 package ru.neurosteno.embed
 
-import ai.onnxruntime.OnnxTensor
-import ai.onnxruntime.OrtEnvironment
-import ai.onnxruntime.OrtSession
 import java.io.File
-import java.nio.LongBuffer
 import kotlin.math.sqrt
 import ru.neurosteno.core.search.EmbedderConfig
 import ru.neurosteno.core.search.TextEmbedder
@@ -18,24 +14,17 @@ import ru.neurosteno.core.search.tokenizer.TextTokenizer
  * Один экземпляр -- одна загруженная модель; [close] освобождает память (эмбеддер, LLM и ASR не бывают в памяти одновременно).
  */
 class OrtTextEmbedder(modelFile: File, tokenizerFile: File, private val cfg: EmbedderConfig, private val batchSize: Int = BATCH) : TextEmbedder, AutoCloseable {
-    private val env: OrtEnvironment = OrtEnvironment.getEnvironment()
-    private val session: OrtSession
+    private val handle: Long
     private val tokenizer: TextTokenizer = tokenizerFile.inputStream().use { TextTokenizer.load(it) }
     private val wantsTypeIds: Boolean
     override val dim: Int = cfg.dim
+    private var out = FloatArray(0)
 
     init {
         require(cfg.pooling == "mean" || cfg.pooling == "cls") { "pooling ${cfg.pooling} не поддерживается" }
-        val opts = OrtSession.SessionOptions().apply {
-            setIntraOpNumThreads(cfg.threads.coerceAtLeast(1))
-            setInterOpNumThreads(1)
-            // динамические длины батчей: без арены и шаблона памяти пик памяти не растёт от разнородных форм
-            setCPUArenaAllocator(false)
-            setMemoryPatternOptimization(false)
-        }
-        session = env.createSession(modelFile.absolutePath, opts)
-        opts.close()
-        wantsTypeIds = "token_type_ids" in session.inputNames
+        OrtNative.ensureLoaded()
+        handle = OrtNative.create(modelFile.absolutePath, cfg.threads.coerceAtLeast(1))
+        wantsTypeIds = "token_type_ids" in OrtNative.inputNames(handle)
     }
 
     @Synchronized
@@ -44,7 +33,7 @@ class OrtTextEmbedder(modelFile: File, tokenizerFile: File, private val cfg: Emb
         val prefix = if (isQuery) cfg.queryPrefix else cfg.docPrefix
         val ids = texts.map { tokenizer.encode(prefix + it, cfg.maxLen) }
         val order = ids.indices.sortedBy { ids[it].size }
-        val out = arrayOfNulls<FloatArray>(texts.size)
+        val res = arrayOfNulls<FloatArray>(texts.size)
         for (batch in order.chunked(batchSize)) {
             val n = batch.maxOf { ids[it].size }
             val b = batch.size
@@ -54,47 +43,36 @@ class OrtTextEmbedder(modelFile: File, tokenizerFile: File, private val cfg: Emb
                 val t = ids[i]
                 for (c in t.indices) { inputIds[r * n + c] = t[c].toLong(); mask[r * n + c] = 1L }
             }
-            val feed = HashMap<String, OnnxTensor>()
-            val shape = longArrayOf(b.toLong(), n.toLong())
-            try {
-                feed["input_ids"] = OnnxTensor.createTensor(env, LongBuffer.wrap(inputIds), shape)
-                feed["attention_mask"] = OnnxTensor.createTensor(env, LongBuffer.wrap(mask), shape)
-                if (wantsTypeIds) feed["token_type_ids"] = OnnxTensor.createTensor(env, LongBuffer.wrap(LongArray(b * n)), shape)
-                session.run(feed).use { res ->
-                    val h = (res[0] as OnnxTensor).floatBuffer
-                    val hd = h.remaining() / (b * n)
-                    check(hd == dim) { "размерность выхода модели $hd != конфиг $dim" }
-                    batch.forEachIndexed { r, i ->
-                        val v = FloatArray(dim)
-                        if (cfg.pooling == "cls") {
-                            h.position(r * n * dim)
-                            h.get(v)
-                        } else {
-                            var cnt = 0
-                            for (c in 0 until n) {
-                                if (mask[r * n + c] == 0L) continue
-                                cnt++
-                                val base = (r * n + c) * dim
-                                for (j in 0 until dim) v[j] += h.get(base + j)
-                            }
-                            val d = maxOf(cnt, 1).toFloat()
-                            for (j in 0 until dim) v[j] /= d
-                        }
-                        var s = 0.0
-                        for (x in v) s += x.toDouble() * x
-                        val nrm = maxOf(sqrt(s).toFloat(), 1e-9f)
-                        for (j in 0 until dim) v[j] /= nrm
-                        out[i] = v
+            if (out.size < b * n * dim) out = FloatArray(b * n * dim)
+            val got = OrtNative.run(handle, inputIds, mask, if (wantsTypeIds) LongArray(b * n) else null, b, n, out)
+            check(got == b * n * dim) { "размерность выхода модели ${got / (b * n)} != конфиг $dim" }
+            batch.forEachIndexed { r, i ->
+                val v = FloatArray(dim)
+                if (cfg.pooling == "cls") {
+                    System.arraycopy(out, r * n * dim, v, 0, dim)
+                } else {
+                    var cnt = 0
+                    for (c in 0 until n) {
+                        if (mask[r * n + c] == 0L) continue
+                        cnt++
+                        val base = (r * n + c) * dim
+                        for (j in 0 until dim) v[j] += out[base + j]
                     }
+                    val d = maxOf(cnt, 1).toFloat()
+                    for (j in 0 until dim) v[j] /= d
                 }
-            } finally {
-                feed.values.forEach { it.close() }
+                var s = 0.0
+                for (x in v) s += x.toDouble() * x
+                val nrm = maxOf(sqrt(s).toFloat(), 1e-9f)
+                for (j in 0 until dim) v[j] /= nrm
+                res[i] = v
             }
         }
-        return out.map { it!! }
+        return res.map { it!! }
     }
 
-    override fun close() = session.close()
+    @Synchronized
+    override fun close() = OrtNative.destroy(handle)
 
     companion object {
         const val BATCH = 8

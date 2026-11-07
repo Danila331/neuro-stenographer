@@ -18,7 +18,7 @@ import ru.neurosteno.app.insight.SearchScope
 /**
  * Только debug (скрипты смоука AI-поиска, B51): запрос без интерфейса. Cyrillic через base64, т. к. `adb shell am` не передаёт UTF-8:
  *   adb shell am broadcast -a ru.neurosteno.app.DEBUG_SEARCH -n ru.neurosteno.app.<tier>/ru.neurosteno.app.DebugSearchReceiver \
- *     --es q_b64 <base64(utf8)> [--es record <id записи>] [--ez answer true] [--es cmd status|release]
+ *     --es q_b64 <base64(utf8)> [--es record <id записи>] [--ez answer true] [--es cmd status|release|list|delete (+ --es record <id>)]
  * Результаты -- строки logcat `search_debug ...` (теги Neurosteno) и PSS процесса после запроса.
  */
 class DebugSearchReceiver : BroadcastReceiver() {
@@ -32,6 +32,18 @@ class DebugSearchReceiver : BroadcastReceiver() {
                     val s = graph.search.engine()
                     Log.i(TAG, "search_debug status indexed=${s?.indexedRecords()?.size} missingVectors=${s?.missingVectors()?.size} store=${graph.search.storeInfo()} " +
                         "progress=${graph.search.progress.value.size} embedderLoaded=${graph.search.embedder.isLoaded} pss_mb=${pssMb()}")
+                    return@launch
+                }
+                if (cmd == "list") {
+                    Log.i(TAG, "search_debug records " + graph.history.entries.value.joinToString(" ") { "${it.id}=${it.sourceName}" })
+                    return@launch
+                }
+                if (cmd == "delete") {
+                    val id = intent.getStringExtra("record") ?: return@launch
+                    graph.history.delete(id)
+                    kotlinx.coroutines.delay(1500)
+                    val e = graph.search.engine()
+                    Log.i(TAG, "search_debug deleted $id indexed=${e?.indexedRecords()} vectors=${e?.missingVectors()} pss_mb=${pssMb()}")
                     return@launch
                 }
                 if (cmd == "release") { graph.search.embedder.release(); Log.i(TAG, "search_debug released pss_mb=${pssMb()}"); return@launch }

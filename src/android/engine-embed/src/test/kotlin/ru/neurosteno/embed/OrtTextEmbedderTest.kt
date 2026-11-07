@@ -39,6 +39,7 @@ class OrtTextEmbedderTest {
     private fun check(model: String, tier: String) {
         val models = root()
         assumeTrue(models != null && File(models, "embed/$model/model.int8.onnx").isFile)
+        assumeTrue("нет хостовой JNI (scripts/build_host_embed_jni.sh)", HostOrt.load())
         val cfg = repoConfig(tier).search.embedder
         val e = OrtTextEmbedder.createOrNull(models!!, cfg) { throw it }!!
         try {

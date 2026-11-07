@@ -62,6 +62,7 @@ class SearchEvalTest {
         val base = root()
         val evalFile = base?.let { File(it, ".cache/search-eval/eval.json") }
         assumeTrue(evalFile != null && evalFile.isFile)
+        assumeTrue("нет хостовой JNI (scripts/build_host_embed_jni.sh)", HostOrt.load())
         val models = File(base, ".cache/models")
         val doc = Json.parseToJsonElement(evalFile!!.readText()).jsonObject
         val report = StringBuilder()

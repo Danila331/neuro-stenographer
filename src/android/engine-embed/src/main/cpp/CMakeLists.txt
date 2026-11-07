@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(neurosteno_embed CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+find_package(JNI QUIET)
+add_library(neurosteno_embed SHARED embed_jni.cpp)
+target_include_directories(neurosteno_embed PRIVATE third_party/onnxruntime)
+if(ANDROID)
+  target_link_libraries(neurosteno_embed PRIVATE log dl)
+  # 16 КБ страницы (Android 15+): выравнивание сегментов
+  target_link_options(neurosteno_embed PRIVATE -Wl,-z,max-page-size=16384)
+else()
+  if(JNI_FOUND)
+    target_include_directories(neurosteno_embed PRIVATE ${JNI_INCLUDE_DIRS})
+  endif()
+  target_link_libraries(neurosteno_embed PRIVATE ${CMAKE_DL_LIBS})
+endif()
