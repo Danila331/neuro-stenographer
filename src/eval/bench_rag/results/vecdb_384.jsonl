@@ -1,0 +1,16 @@
+{"backend": "numpy-f32", "n": 10000, "dim": 384, "build_s": 0.0, "size_mb": 14.6, "recall10": 1.0, "q_p50_ms": 0.24, "q_p95_ms": 0.34, "rss_delta_mb": 7.0}
+{"backend": "numpy-i8", "n": 10000, "dim": 384, "build_s": 0.0, "size_mb": 3.7, "recall10": 0.929, "q_p50_ms": 1.52, "q_p95_ms": 1.97, "rss_delta_mb": 12.0}
+{"backend": "usearch-f32", "n": 10000, "dim": 384, "build_s": 5.8, "size_mb": 16.1, "recall10": 1.0, "q_p50_ms": 0.19, "q_p95_ms": 0.27, "rss_delta_mb": 31.0}
+{"backend": "usearch-f16", "n": 10000, "dim": 384, "build_s": 2.7, "size_mb": 8.7, "recall10": 0.999, "q_p50_ms": 0.12, "q_p95_ms": 0.19, "rss_delta_mb": 23.0}
+{"backend": "usearch-i8", "n": 10000, "dim": 384, "build_s": 1.1, "size_mb": 5.1, "recall10": 0.895, "q_p50_ms": 0.05, "q_p95_ms": 0.09, "rss_delta_mb": 20.0}
+{"backend": "objectbox", "n": 10000, "dim": 384, "build_s": 3.0, "size_mb": 19.1, "recall10": 0.955, "q_p50_ms": 0.06, "q_p95_ms": 0.11, "rss_delta_mb": 43.0}
+{"backend": "numpy-f32", "n": 100000, "dim": 384, "build_s": 0.0, "size_mb": 146.5, "recall10": 1.0, "q_p50_ms": 3.51, "q_p95_ms": 4.94, "rss_delta_mb": 7.0}
+{"backend": "numpy-i8", "n": 100000, "dim": 384, "build_s": 0.0, "size_mb": 36.6, "recall10": 0.926, "q_p50_ms": 13.82, "q_p95_ms": 14.41, "rss_delta_mb": 44.0}
+{"backend": "usearch-f32", "n": 100000, "dim": 384, "build_s": 98.2, "size_mb": 160.6, "recall10": 1.0, "q_p50_ms": 0.3, "q_p95_ms": 0.43, "rss_delta_mb": 177.0}
+{"backend": "usearch-f16", "n": 100000, "dim": 384, "build_s": 50.6, "size_mb": 87.4, "recall10": 1.0, "q_p50_ms": 0.2, "q_p95_ms": 0.27, "rss_delta_mb": 103.0}
+{"backend": "usearch-i8", "n": 100000, "dim": 384, "build_s": 20.8, "size_mb": 50.8, "recall10": 0.884, "q_p50_ms": 0.09, "q_p95_ms": 0.13, "rss_delta_mb": 74.0}
+{"backend": "objectbox", "n": 100000, "dim": 384, "build_s": 94.9, "size_mb": 243.0, "recall10": 0.934, "q_p50_ms": 0.09, "q_p95_ms": 0.13, "rss_delta_mb": 88.0}
+{"backend": "sqlitevec", "n": 10000, "dim": 384, "build_s": 0.2, "size_mb": 15.3, "recall10": 1.0, "q_p50_ms": 5.77, "q_p95_ms": 7.86, "rss_delta_mb": 14.0}
+{"backend": "sqlitevec-i8", "n": 10000, "dim": 384, "build_s": 0.0, "size_mb": 4.0, "recall10": 0.931, "q_p50_ms": 3.9, "q_p95_ms": 5.47, "rss_delta_mb": 16.0}
+{"backend": "sqlitevec", "n": 100000, "dim": 384, "build_s": 1.5, "size_mb": 149.4, "recall10": 1.0, "q_p50_ms": 54.45, "q_p95_ms": 70.76, "rss_delta_mb": 8.0}
+{"backend": "sqlitevec-i8", "n": 100000, "dim": 384, "build_s": 0.6, "size_mb": 39.0, "recall10": 0.926, "q_p50_ms": 36.62, "q_p95_ms": 53.24, "rss_delta_mb": 48.0}
