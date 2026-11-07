@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "long_30min.wav",
+  "finished_at_ms": 1794048823756,
+  "audio_duration_ms": 1820511,
+  "processing_ms": 160357,
+  "rtf": 0.088,
+  "language": "ru",
+  "utterances": 251,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 1000,
+    "vad": 10215,
+    "lid": 20291,
+    "asr": 108358,
+    "diarization": 114596,
+    "align": 16,
+    "punctuation": 0,
+    "export": 3,
+    "relabel": 20324,
+    "total": 160357
+  },
+  "peak_pss_mb": 938,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "long_30min.json",
+    "long_30min.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

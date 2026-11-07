@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "synth_0004_meeting_clean.wav",
+  "finished_at_ms": 1794047564805,
+  "audio_duration_ms": 150475,
+  "processing_ms": 16933,
+  "rtf": 0.113,
+  "language": "ru",
+  "utterances": 21,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 173,
+    "vad": 1441,
+    "lid": 2137,
+    "asr": 11131,
+    "diarization": 12378,
+    "align": 3,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 2025,
+    "total": 16933
+  },
+  "peak_pss_mb": 598,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "synth_0004_meeting_clean.json",
+    "synth_0004_meeting_clean.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}
