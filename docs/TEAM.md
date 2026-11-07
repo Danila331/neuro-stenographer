@@ -89,7 +89,9 @@ Mac перегружался (load average > 100 при 12 ядрах), поэт
 
 | Агент | Ветка | Владеет | Дорожка |
 |---|---|---|---|
-| android-ui | `w2/android-ui` | `src/android/app/**` | сборка |
+| android-ui | `w2/android-ui` → `w2/ui-polish` | `src/android/app/**` | сборка |
+| fragment-reprocess | `w2/fragment-reprocess` | новый код в `src/android/core/**` и `src/android/engine-sherpa/**` (без `:app`) | сборка |
+| docs-defense | `w2/docs-defense` | `README.md`, `src/README.md`, `docs/{LIMITATIONS,TEST_RESULTS,MODELS,DEFENSE,INSTALL}.md`, `artifacts/demo/**` (тексты) | тексты |
 
 Очередь дорожки вычислений: `asr-bench` (готово) → `refpipe` (раскладка моделей готова, идёт перебор VAD) ∥
 `diar-bench` (запущен параллельно по решению пользователя 02:50, ≤ 4 потоков каждый) → `llm-bench`.
