@@ -42,6 +42,8 @@ class Params:
     k1_silhouette_thr: float | None = None  # best mean silhouette below this -> ONE speaker (monologue guard); None = off
     k1_require_stock_single: bool = False   # guard fires only if the stock diarizer also sees a single speaker
     k1_stock_min_share: float = 0.10        # ... "sees" = speakers with >= this share of the stock speech time
+    short_flip_margin: float | None = None  # turn-taking prior for SHORT units (< min_reliable_ms); None = off
+    short_flip_gap_ms: int = 2000           # ... the previous unit must end at most this long before the short one starts
 
     @staticmethod
     def from_config(rc: dict) -> "Params":
@@ -182,7 +184,8 @@ def silhouette(Y: np.ndarray, lab: np.ndarray) -> float:
 
 
 # ---- 3-6. labelling -----------------------------------------------------------------------------
-def label_units(E: np.ndarray, dur_ms: np.ndarray, p: Params, diag: dict | None = None, stock_single: bool = False) -> np.ndarray:
+def label_units(E: np.ndarray, dur_ms: np.ndarray, p: Params, diag: dict | None = None, stock_single: bool = False,
+                times_ms: np.ndarray | None = None) -> np.ndarray:
     """diag (optional dict) receives {"silhouettes": {k: value}, "best_k": k, "k1": bool, "reliable": [idx]}."""
     n = len(E)
     if n == 0:
@@ -232,6 +235,18 @@ def label_units(E: np.ndarray, dur_ms: np.ndarray, p: Params, diag: dict | None 
         C = np.stack([(E[out == q] * w[out == q, None]).sum(0) if (out == q).any() else C[q] for q in range(best_k)])
         C = C / (np.linalg.norm(C, axis=1, keepdims=True) + 1e-9)
         out = np.argmax(E @ C.T, axis=1)
+    if p.short_flip_margin is not None and times_ms is not None and best_k >= 2:
+        # Turn-taking prior: a short unit (backchannel, one-word answer) almost never continues the previous speaker.
+        # If its best centroid is the SAME as the label of the previous unit (gap <= short_flip_gap_ms) and the best
+        # centroid wins by less than short_flip_margin (dot-product score), take the second-best centroid.
+        # Units are visited in time order, so the previous label is the already corrected one.
+        sc = E @ C.T
+        for i in range(1, n):
+            if dur_ms[i] >= p.min_reliable_ms or times_ms[i, 0] - times_ms[i - 1, 1] > p.short_flip_gap_ms:
+                continue
+            order = np.argsort(-sc[i], kind="stable")
+            if out[i] == out[i - 1] and sc[i, order[0]] - sc[i, order[1]] < p.short_flip_margin:
+                out[i] = order[1]
     return out
 
 
@@ -251,7 +266,7 @@ def phrase_turns(words, turns, audio, embed, p: Params = Params(), diag: dict | 
         return []
     E = embed_units(audio, units, embed, p)
     dur = np.array([u[1] - u[0] for u in units])
-    lab = label_units(E, dur, p, diag, stock_is_single(turns, p.k1_stock_min_share))
+    lab = label_units(E, dur, p, diag, stock_is_single(turns, p.k1_stock_min_share), np.array([[u[0], u[1]] for u in units]))
     return [(int(l), u[0], u[1]) for u, l in zip(units, lab)]
 
 
