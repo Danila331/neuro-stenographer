@@ -65,6 +65,62 @@ object ResultsAutosave {
         runCatching { File(dir, "$base.error.json").delete() }
     }
 
+    /**
+     * Перед новой обработкой: маркеры И результаты прошлого запуска с тем же именем. Старый `<имя>.json` не должен выдаваться за новый,
+     * если новая запись не удалась (нет места, сбой): скрипт жюри не увидит ни старого JSON, ни старого маркера.
+     */
+    fun clearStale(dir: File, sourceName: String) {
+        clearMarkers(dir, sourceName)
+        val base = baseName(sourceName)
+        runCatching { File(dir, "$base.json").delete() }
+        runCatching { File(dir, "$base.full.json").delete() }
+        runCatching { File(dir, "$base.json.tmp").delete() }
+        runCatching { File(dir, "$base.full.json.tmp").delete() }
+    }
+
+    /** Итог публикации результата: `done`-маркер (обязательный JSON записан) либо `error`-маркер. */
+    sealed class Published {
+        abstract val outcome: Outcome
+
+        class Done(val marker: File, override val outcome: Outcome) : Published()
+
+        /** [message] -- причина; [marker] -- `error`-маркер (null, если не удалось записать и его: тогда остаётся только logcat). */
+        class Failed(val message: String, val marker: File?, override val outcome: Outcome) : Published()
+    }
+
+    /**
+     * Публикует результат обработки для скриптов: пишет `<имя>.json` (ОБЯЗАТЕЛЬНЫЙ) и `<имя>.full.json`, затем ровно один маркер.
+     * `done` -- только если `<имя>.json` записан атомарно; иначе `error` с причиной (старого результата с тем же именем не остаётся:
+     * он удаляется до записи). Сбой необязательного `full.json` не отменяет `done`, но попадает в `problems` маркера.
+     */
+    fun publish(
+        dir: File,
+        sourceName: String,
+        t: EditableTranscript,
+        source: Transcript,
+        run: RunInfo,
+        modelSetId: String?,
+        warnings: List<String>,
+        extras: Map<String, kotlinx.serialization.json.JsonElement> = emptyMap(),
+        finishedAtMs: Long = System.currentTimeMillis(),
+    ): Published {
+        val base = baseName(sourceName)
+        // старый результат под тем же именем уходит до записи нового: при сбое записи он не должен остаться «новым»
+        clearStale(dir, sourceName)
+        val outcome = write(dir, sourceName, t, source, run)
+        if ("$base.json" !in outcome.files) {
+            val why = "Не удалось записать результат $base.json: " + outcome.problems.joinToString("; ").ifBlank { "неизвестная ошибка" }
+            val marker = writeErrorMarker(dir, sourceName, why, run, finishedAtMs).getOrNull()
+            return Published.Failed(why, marker, outcome)
+        }
+        val marker = writeDoneMarker(dir, sourceName, source, t.utterances.size, run, modelSetId, warnings, outcome, finishedAtMs, extras)
+            .getOrElse { e ->
+                val why = "Результат записан, но маркер завершения нет: ${e.javaClass.simpleName}: ${e.message}"
+                return Published.Failed(why, writeErrorMarker(dir, sourceName, why, run, finishedAtMs).getOrNull(), outcome)
+            }
+        return Published.Done(marker, outcome)
+    }
+
     /** Пишет `<имя>.json` и `<имя>.full.json`; сбой одного файла не мешает другому. */
     fun write(dir: File, sourceName: String, t: EditableTranscript, source: Transcript, run: RunInfo? = null): Outcome {
         val base = baseName(sourceName)
@@ -156,12 +212,18 @@ object ResultsAutosave {
             "warnings=$warnings" + (dir?.let { " results=${it.absolutePath}" } ?: "") + if (problems.isEmpty()) "" else " write_problems=$problems"
     }
 
+    /** tmp -> rename: файл либо целиком новый, либо его нет. Если переименовать нельзя -- ошибка, а не запись «поверх» (оборванный JSON). */
     private fun writeAtomic(target: File, text: String) {
         val tmp = File(target.parentFile, target.name + ".tmp")
-        tmp.writeText(text, Charsets.UTF_8)
-        if (!tmp.renameTo(target)) {
-            target.writeText(text, Charsets.UTF_8)
-            tmp.delete()
+        try {
+            tmp.writeText(text, Charsets.UTF_8)
+            if (!tmp.renameTo(target)) {
+                target.delete()
+                if (!tmp.renameTo(target)) throw java.io.IOException("не удалось переименовать ${tmp.name} в ${target.name}")
+            }
+        } catch (e: Throwable) {
+            runCatching { tmp.delete() }
+            throw e
         }
     }
 }

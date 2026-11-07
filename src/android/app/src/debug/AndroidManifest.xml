@@ -22,5 +22,10 @@
                 <action android:name="ru.neurosteno.app.DEBUG_SEARCH" />
             </intent-filter>
         </receiver>
+        <receiver android:name="ru.neurosteno.app.DebugDecodeReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="ru.neurosteno.app.DEBUG_DECODE" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

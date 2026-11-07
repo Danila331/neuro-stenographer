@@ -128,4 +128,62 @@ class ResultsAutosaveTest {
         assertEquals("error", m["status"]!!.jsonPrimitive.content)
         assertEquals("Не хватило памяти", m["error"]!!.jsonPrimitive.content)
     }
+
+    // ---- B58 (P1): маркер done только после успешной записи обязательного JSON ----
+
+    @Test
+    fun publishWritesResultsThenDoneMarkerAndNoErrorMarker() {
+        File(dir, "a.error.json").writeText("{}") // залежавшийся маркер прошлого запуска
+        val p = ResultsAutosave.publish(dir, "a.wav", editable, source, run, "medium", emptyList(), finishedAtMs = 7)
+        assertTrue(p is ResultsAutosave.Published.Done)
+        assertTrue(File(dir, "a.json").isFile && File(dir, "a.full.json").isFile && File(dir, "a.done.json").isFile)
+        assertFalse(File(dir, "a.error.json").exists())
+        assertEquals("done", Json.parseToJsonElement(File(dir, "a.done.json").readText()).jsonObject["status"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun requiredJsonNotWrittenMeansErrorMarkerNotDone() {
+        // на месте обязательного a.json -- непустой каталог: записать файл нельзя (как «нет места»)
+        File(dir, "a.json").apply { mkdirs() }.resolve("x").writeText("x")
+        File(dir, "a.done.json").writeText("""{"status":"done","old":true}""") // маркер прошлого запуска
+        val p = ResultsAutosave.publish(dir, "a.wav", editable, source, run, "medium", emptyList())
+        assertTrue(p is ResultsAutosave.Published.Failed)
+        assertFalse("done-маркера быть не должно", File(dir, "a.done.json").exists())
+        val err = Json.parseToJsonElement(File(dir, "a.error.json").readText()).jsonObject
+        assertEquals("error", err["status"]!!.jsonPrimitive.content)
+        assertTrue(err["error"]!!.jsonPrimitive.content, err["error"]!!.jsonPrimitive.content.contains("a.json"))
+    }
+
+    @Test
+    fun oldResultWithTheSameNameIsNeverPassedOffAsNew() {
+        // прошлый запуск оставил рабочий результат под тем же именем
+        ResultsAutosave.publish(dir, "a.wav", editable, source, run, null, emptyList())
+        val old = File(dir, "a.json").readText()
+        assertTrue(old.isNotEmpty())
+        // новый запуск: запись a.json невозможна. Удалить старый файл нельзя только если на его месте каталог, поэтому имитируем иначе:
+        // каталог для .tmp -- запись tmp падает, старый a.json обязан исчезнуть заранее
+        File(dir, "a.json.tmp").mkdirs().also { File(dir, "a.json.tmp/x").writeText("x") }
+        val p = ResultsAutosave.publish(dir, "a.wav", editable, source, run, null, emptyList())
+        assertTrue(p is ResultsAutosave.Published.Failed)
+        assertFalse("старый a.json не должен остаться за новый", File(dir, "a.json").exists())
+        assertFalse(File(dir, "a.full.json").exists() && File(dir, "a.done.json").exists())
+        assertTrue(File(dir, "a.error.json").isFile)
+    }
+
+    @Test
+    fun failureOfOptionalFullJsonKeepsDoneButReportsProblem() {
+        File(dir, "a.full.json").apply { mkdirs() }.resolve("x").writeText("x")
+        val p = ResultsAutosave.publish(dir, "a.wav", editable, source, run, null, emptyList())
+        assertTrue(p is ResultsAutosave.Published.Done)
+        assertEquals(1, p.outcome.problems.size)
+        val m = Json.parseToJsonElement(File(dir, "a.done.json").readText()).jsonObject
+        assertEquals(1, m["problems"]!!.jsonArray.size)
+    }
+
+    @Test
+    fun clearStaleRemovesMarkersAndResultsOfThatNameOnly() {
+        for (n in listOf("a.json", "a.full.json", "a.done.json", "a.error.json", "b.json", "b.done.json")) File(dir, n).writeText("{}")
+        ResultsAutosave.clearStale(dir, "a.wav")
+        assertEquals(setOf("b.json", "b.done.json"), dir.list()!!.toSet())
+    }
 }
