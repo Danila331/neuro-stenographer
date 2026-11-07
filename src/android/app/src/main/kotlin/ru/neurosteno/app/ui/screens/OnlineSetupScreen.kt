@@ -30,21 +30,21 @@ fun OnlineSetupScreen(
     actions: ModelActions,
     onDismissMessage: () -> Unit,
 ) {
-    Scaffold(topBar = { NeuroTopBar(appName) }) { padding ->
+    Scaffold(containerColor = ru.neurosteno.app.ui.theme.Brutal.bg, topBar = { NeuroTopBar(appName, titleMaxLines = 2) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Text("Выберите набор моделей", style = MaterialTheme.typography.headlineSmall)
+                ru.neurosteno.app.ui.theme.SectionTitle("Выберите набор моделей")
             }
             item {
                 Text(
                     "В этой версии модели не входят в приложение — скачайте один набор (один раз, лучше по Wi-Fi). " +
                         "После этого распознавание работает полностью на устройстве и без интернета. " +
                         "Свободно на устройстве: ${Format.bytes(freeBytes)}.",
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium, color = ru.neurosteno.app.ui.theme.Brutal.muted,
                 )
             }
             if (message != null) item { MessageCard(message, isError = true) }

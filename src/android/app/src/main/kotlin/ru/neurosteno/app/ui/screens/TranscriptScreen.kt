@@ -110,8 +110,30 @@ import ru.neurosteno.app.ui.TranscriptSession
 import ru.neurosteno.app.ui.components.AppIcons
 import ru.neurosteno.app.ui.components.MessageCard
 import ru.neurosteno.app.ui.components.NeuroTopBar
-import ru.neurosteno.app.ui.components.SpeakerDot
-import ru.neurosteno.app.ui.speakerColor
+import ru.neurosteno.app.ui.components.BrutalDialog
+import ru.neurosteno.app.ui.components.BrutalSheet
+import ru.neurosteno.app.ui.components.BrutalSnackbarHost
+import ru.neurosteno.app.ui.components.DialogButton
+import ru.neurosteno.app.ui.theme.Brutal
+import ru.neurosteno.app.ui.theme.BrutalButton
+import ru.neurosteno.app.ui.theme.BrutalButtonStyle
+import ru.neurosteno.app.ui.theme.BrutalCard
+import ru.neurosteno.app.ui.theme.BrutalChip
+import ru.neurosteno.app.ui.theme.BrutalDims
+import ru.neurosteno.app.ui.theme.BrutalDivider
+import ru.neurosteno.app.ui.theme.BrutalIconButton
+import ru.neurosteno.app.ui.theme.BrutalShape
+import ru.neurosteno.app.ui.theme.BrutalSlider
+import ru.neurosteno.app.ui.theme.BrutalSurface
+import ru.neurosteno.app.ui.theme.BrutalTag
+import ru.neurosteno.app.ui.theme.ButtonLabel
+import ru.neurosteno.app.ui.theme.SpeakerChip
+import ru.neurosteno.app.ui.theme.SpeakerSquare
+import ru.neurosteno.app.ui.theme.SectionTitle
+import ru.neurosteno.app.ui.theme.BrutalTextField
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.defaultMinSize
 import ru.neurosteno.core.Utterance
 
 /** Расшифровка: реплики с цветными метками, плеер, поиск, правки, экспорт и протокол. */
@@ -230,15 +252,14 @@ fun TranscriptScreen(
 
     Box(Modifier.fillMaxSize()) {
     Scaffold(
+        containerColor = Brutal.bg,
         topBar = {
           if (selection != null) {
             NeuroTopBar(
                 title = "Выбрано: ${selection.size}",
                 onBack = { selRaw = -1L },
                 actions = {
-                    androidx.compose.material3.TextButton(onClick = { showFragmentSheet = true }, modifier = Modifier.testTag("btn_fragment_reprocess")) {
-                        Text("Обработать заново")
-                    }
+                    BrutalButton(onClick = { showFragmentSheet = true }, height = 48.dp, modifier = Modifier.testTag("btn_fragment_reprocess")) { ButtonLabel("Обработать заново") }
                 },
             )
           } else
@@ -247,17 +268,17 @@ fun TranscriptScreen(
                 onBack = onBack,
                 actions = {
                     if (canUndo) {
-                        IconButton(onClick = { session.undo() }) { Icon(Icons.Default.Refresh, contentDescription = "Отменить последнюю правку") }
+                        BrutalIconButton(onClick = { session.undo() }, contentDescription = "Отменить последнюю правку") { Icon(Icons.Default.Refresh, contentDescription = null) }
                     }
-                    IconButton(onClick = { searching = !searching; if (!searching) session.setQuery("") }) {
-                        Icon(Icons.Default.Search, contentDescription = "Поиск по тексту")
+                    BrutalIconButton(onClick = { searching = !searching; if (!searching) session.setQuery("") }, contentDescription = "Поиск по тексту", fill = if (searching) Brutal.accent else Brutal.bg) {
+                        Icon(Icons.Default.Search, contentDescription = null)
                     }
-                    IconButton(onClick = { showSpeakers = true }) { Icon(Icons.Default.Person, contentDescription = "Говорящие") }
+                    BrutalIconButton(onClick = { showSpeakers = true }, contentDescription = "Говорящие") { Icon(Icons.Default.Person, contentDescription = null) }
                 },
             )
         },
         bottomBar = { if (player.available) PlayerBar(player, session.player) },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { BrutalSnackbarHost(snackbar) },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             if (searching) {
@@ -274,8 +295,8 @@ fun TranscriptScreen(
                 else -> LazyColumn(
                     state = listState,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     item(key = "header") {
                         Header(
@@ -316,7 +337,7 @@ fun TranscriptScreen(
         if (player.playing && !follow) {
             // кнопка возвращает слежение за воспроизведением
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.BottomCenter) {
-                AssistChip(onClick = { follow = true }, label = { Text("К текущей реплике") }, modifier = Modifier.padding(12.dp))
+                BrutalButton(onClick = { follow = true }, height = 44.dp, modifier = Modifier.padding(12.dp)) { ButtonLabel("К текущей реплике") }
             }
         }
     }
@@ -383,9 +404,9 @@ fun TranscriptScreen(
     }
     if (showFormats) {
         val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(onDismissRequest = { showFormats = false }, sheetState = sheet) {
-            Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Экспорт и отправка", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
+        BrutalSheet(onDismissRequest = { showFormats = false }, sheetState = sheet) {
+            Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SectionTitle("Экспорт и отправка")
                 listOf(
                     ExportFormat.TXT to "Текст с именами говорящих и временем",
                     ExportFormat.SRT to "Субтитры SubRip",
@@ -397,7 +418,7 @@ fun TranscriptScreen(
                 FormatRow("Поделиться", "Отправить текст расшифровки в другое приложение") { showFormats = false; onShare() }
                 Text(
                     "«Экспорт JSON» — строго формат ТЗ, в нём всегда speaker_N; имена говорящих попадают в TXT, SRT, VTT и расширенный JSON.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp),
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted, modifier = Modifier.padding(top = 4.dp),
                 )
             }
         }
@@ -408,12 +429,12 @@ private const val HEADER_ITEMS = 1
 
 @Composable
 private fun FormatRow(title: String, hint: String, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 4.dp)
-            .semantics(mergeDescendants = true) { contentDescription = "$title. $hint" },
+    BrutalCard(
+        Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "$title. $hint" },
+        onClick = onClick, shadow = BrutalDims.ShadowSmall + 1.dp,
     ) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        Text(hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        Text(hint, style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
     }
 }
 
@@ -426,30 +447,45 @@ private fun Header(
     onMore: () -> Unit,
     onProtocol: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 4.dp)) {
-        val summary = buildString {
-            append(Format.clock(entry?.durationMs ?: transcript.durationMs))
-            append(" · ").append(Format.plural(transcript.speakerIds.size, "говорящий", "говорящих", "говорящих"))
-            append(" · ").append(Format.plural(transcript.utterances.size, "реплика", "реплики", "реплик"))
-            if (entry?.edited == true) append(" · изменено")
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            BrutalTag(Format.clock(entry?.durationMs ?: transcript.durationMs), fill = Brutal.accent)
+            BrutalTag(Format.plural(transcript.speakerIds.size, "говорящий", "говорящих", "говорящих"))
+            BrutalTag(Format.plural(transcript.utterances.size, "реплика", "реплики", "реплик"))
+            if (entry?.edited == true) BrutalTag("ИЗМЕНЕНО", fill = Brutal.ink)
         }
-        Text(summary, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            Button(onClick = onExportJson, modifier = Modifier.weight(1f).testTag(Tags.EXPORT_JSON)) { Text("Экспорт JSON") }
-            OutlinedButton(onClick = onMore, modifier = Modifier.weight(1f)) { Text("Другие форматы") }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            BrutalButton(onClick = onExportJson, modifier = Modifier.weight(1f).testTag(Tags.EXPORT_JSON)) { ButtonLabel("Экспорт JSON") }
+            BrutalButton(onClick = onMore, style = BrutalButtonStyle.Secondary, modifier = Modifier.weight(1f)) { ButtonLabel("Другие форматы") }
         }
-        FilledTonalButton(onClick = onProtocol, modifier = Modifier.fillMaxWidth().testTag("btn_protocol")) {
-            Icon(AppIcons.Description, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.Start) {
-                Text("Протокол заседания и вопросы")
+        // Инструменты поверх расшифровки: «Протокол и вопросы» уже есть; «Выжимка» (B50) и «AI-поиск» (B51) -- места заложены, экраны появятся позже.
+        BrutalButton(onClick = onProtocol, style = BrutalButtonStyle.Ink, modifier = Modifier.fillMaxWidth().testTag("btn_protocol")) {
+            Icon(AppIcons.Description, contentDescription = null, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(10.dp))
+            Column {
+                ButtonLabel("Протокол заседания и вопросы")
                 if (llmAvailability is LlmAvailability.Unavailable) {
-                    Text("Недоступно на этом устройстве — нажмите, чтобы узнать причину", style = MaterialTheme.typography.labelSmall)
+                    Text("Недоступно на этом устройстве — нажмите, чтобы узнать причину", style = MaterialTheme.typography.labelSmall, color = Brutal.onInk)
                 }
             }
         }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            ToolSlot("Выжимка", Modifier.weight(1f).testTag("slot_summary"))
+            ToolSlot("AI-поиск", Modifier.weight(1f).testTag("slot_ai_search"))
+        }
         entry?.warnings?.takeIf { it.isNotEmpty() }?.let { w ->
-            Text("Предупреждения обработки: ${w.joinToString("; ")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Предупреждения обработки: ${w.joinToString("; ")}", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
+        }
+    }
+}
+
+/** Заложенное место под будущий инструмент (B50/B51): неактивная кнопка с меткой «СКОРО». */
+@Composable
+private fun ToolSlot(label: String, modifier: Modifier = Modifier) {
+    BrutalButton(onClick = {}, enabled = false, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = modifier, contentDescription = "$label: скоро") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            ButtonLabel(label)
+            BrutalTag("СКОРО", textStyle = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -477,17 +513,20 @@ private fun UtteranceCard(
     onMerge: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val color = speakerColor(u.speakerId)
-    val container = when {
-        selected -> MaterialTheme.colorScheme.secondaryContainer
-        highlighted -> MaterialTheme.colorScheme.tertiaryContainer
-        current -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerLow
+    // Заливка отражает состояние: выбрана -- инверсия, только что пересчитана -- акцент, звучит сейчас -- акцент; обычная -- фон.
+    val fill = when {
+        selected -> Brutal.ink
+        highlighted || current -> Brutal.accent
+        else -> Brutal.bg
+    }
+    val fg = when {
+        selected -> Brutal.onInk
+        highlighted || current -> Brutal.onAccent
+        else -> Brutal.ink
     }
     val time = Format.clock(u.startMs)
-    Card(
+    BrutalSurface(
         modifier = Modifier.fillMaxWidth()
-            .then(if (matched) Modifier.border(2.dp, MaterialTheme.colorScheme.tertiary, MaterialTheme.shapes.medium) else Modifier)
             .semantics(mergeDescendants = true) {
                 contentDescription = "$name, $time. ${u.text}" + (if (current) ". Сейчас звучит" else "") +
                     (if (selected) ". Выбрана" else "") + (if (highlighted) ". Обработана заново" else "")
@@ -496,43 +535,49 @@ private fun UtteranceCard(
                 onClickLabel = if (selectionMode) (if (selected) "Снять выбор" else "Выбрать реплику") else "Воспроизвести с этого места",
                 onClick = onClick, onLongClickLabel = "Выбрать для повторной обработки", onLongClick = onLongClick,
             ),
-        colors = CardDefaults.cardColors(containerColor = container),
+        fill = fill, contentColor = fg,
+        shadow = if (matched) 6.dp else BrutalDims.Shadow,
+        borderWidth = if (matched || selected) BrutalDims.BorderThick + 1.dp else BrutalDims.Border,
     ) {
-        Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = 0.dp), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp), verticalAlignment = Alignment.Top) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SpeakerDot(color)
-                    Text(name, style = MaterialTheme.typography.labelLarge, color = color, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                    Text(time, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    SpeakerChip(name, u.speakerId, Modifier.weight(1f, fill = false))
+                    BrutalTag(time, fill = if (selected) Brutal.ink else Brutal.bg)
+                    if (highlighted) BrutalTag("НОВАЯ", fill = Brutal.ink)
                 }
-                Text(highlight(u.text, query), style = MaterialTheme.typography.bodyLarge)
+                Text(highlight(u.text, query), style = MaterialTheme.typography.bodyLarge, color = fg)
             }
             Box {
-                IconButton(onClick = onMenu) { Icon(Icons.Default.MoreVert, contentDescription = "Действия с репликой: $name, $time") }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = onMenuDismiss) {
-                    DropdownMenuItem(text = { Text("Обработать заново") }, leadingIcon = { Icon(Icons.Default.Refresh, null) }, onClick = onReprocess,
+                BrutalIconButton(
+                    onClick = onMenu, contentDescription = "Действия с репликой: $name, $time",
+                    fill = if (selected) Brutal.ink else Brutal.bg,
+                ) { Icon(Icons.Default.MoreVert, contentDescription = null) }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = onMenuDismiss, containerColor = Brutal.bg, shape = BrutalShape, border = BorderStroke(BrutalDims.Border, Brutal.ink)) {
+                    DropdownMenuItem(text = { Text("Обработать заново", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Refresh, null) }, onClick = onReprocess,
                         modifier = Modifier.testTag("menu_reprocess"))
-                    DropdownMenuItem(text = { Text("Править текст") }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = onEdit)
-                    DropdownMenuItem(text = { Text("Сменить говорящего") }, leadingIcon = { Icon(Icons.Default.Person, null) }, onClick = onSpeaker)
-                    if (canMerge) DropdownMenuItem(text = { Text("Объединить со следующей") }, leadingIcon = { Icon(AppIcons.Merge, null) }, onClick = onMerge)
-                    DropdownMenuItem(text = { Text("Удалить реплику") }, leadingIcon = { Icon(Icons.Default.Delete, null) }, onClick = onDelete)
+                    DropdownMenuItem(text = { Text("Править текст", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = onEdit)
+                    DropdownMenuItem(text = { Text("Сменить говорящего", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Person, null) }, onClick = onSpeaker)
+                    if (canMerge) DropdownMenuItem(text = { Text("Объединить со следующей", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(AppIcons.Merge, null) }, onClick = onMerge)
+                    DropdownMenuItem(text = { Text("Удалить реплику", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Delete, null) }, onClick = onDelete)
                 }
             }
         }
     }
 }
 
+/** Найденное в поиске -- чёрная плашка с белым текстом (читается и на акцентной, и на белой заливке карточки). */
 @Composable
 private fun highlight(text: String, query: String): AnnotatedString {
     val ranges = SearchUtil.ranges(text, query)
     if (ranges.isEmpty()) return AnnotatedString(text)
-    val bg = MaterialTheme.colorScheme.tertiaryContainer
-    val fg = MaterialTheme.colorScheme.onTertiaryContainer
+    val bg = Brutal.ink
+    val fg = Brutal.onInk
     return buildAnnotatedString {
         var pos = 0
         for (r in ranges) {
             append(text.substring(pos, r.first))
-            withStyle(SpanStyle(background = bg, color = fg, fontWeight = FontWeight.SemiBold)) { append(text.substring(r.first, r.last + 1)) }
+            withStyle(SpanStyle(background = bg, color = fg, fontWeight = FontWeight.Bold)) { append(text.substring(r.first, r.last + 1)) }
             pos = r.last + 1
         }
         append(text.substring(pos))
@@ -543,16 +588,18 @@ private fun highlight(text: String, query: String): AnnotatedString {
 private fun SearchBar(query: String, count: Int, cursor: Int, onQuery: (String) -> Unit, onStep: (Int) -> Unit, onClose: () -> Unit) {
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            value = query, onValueChange = onQuery, singleLine = true,
-            modifier = Modifier.weight(1f).focusRequester(focus).testTag("search_field"),
-            label = { Text("Поиск по тексту") },
-            supportingText = { Text(if (query.isBlank()) "Введите слово или фразу" else if (count == 0) "Ничего не найдено" else "${cursor + 1} из $count") },
-        )
-        IconButton(onClick = { onStep(-1) }, enabled = count > 0) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Предыдущее совпадение") }
-        IconButton(onClick = { onStep(1) }, enabled = count > 0) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Следующее совпадение") }
-        IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "Закрыть поиск") }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            BrutalTextField(
+                value = query, onValueChange = onQuery,
+                modifier = Modifier.weight(1f).focusRequester(focus).testTag("search_field"),
+                label = "Поиск по тексту", singleLine = true,
+            )
+            BrutalIconButton(onClick = { onStep(-1) }, contentDescription = "Предыдущее совпадение", enabled = count > 0) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = null) }
+            BrutalIconButton(onClick = { onStep(1) }, contentDescription = "Следующее совпадение", enabled = count > 0) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
+            BrutalIconButton(onClick = onClose, contentDescription = "Закрыть поиск") { Icon(Icons.Default.Close, contentDescription = null) }
+        }
+        BrutalTag(if (query.isBlank()) "ВВЕДИТЕ СЛОВО ИЛИ ФРАЗУ" else if (count == 0) "НИЧЕГО НЕ НАЙДЕНО" else "${cursor + 1} ИЗ $count", textStyle = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -561,34 +608,36 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
     var dragging by remember { mutableStateOf<Float?>(null) }
     var speedMenu by remember { mutableStateOf(false) }
     val duration = state.durationMs.coerceAtLeast(1)
-    Surface(tonalElevation = 3.dp, color = MaterialTheme.colorScheme.surfaceContainer) {
-        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp)) {
+    Column(Modifier.fillMaxWidth().background(Brutal.bg)) {
+        BrutalDivider(thickness = BrutalDims.BorderThick)
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(Format.clock(((dragging ?: (state.positionMs.toFloat() / duration)) * duration).toLong()), style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
-                Slider(
+                BrutalTag(Format.clock(((dragging ?: (state.positionMs.toFloat() / duration)) * duration).toLong()), fill = Brutal.ink)
+                BrutalSlider(
                     value = dragging ?: (state.positionMs.toFloat() / duration).coerceIn(0f, 1f),
                     onValueChange = { dragging = it },
                     onValueChangeFinished = { dragging?.let { player.seekTo((it * duration).toLong()) }; dragging = null },
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp).semantics { contentDescription = "Положение в записи" },
                 )
-                Text(Format.clock(state.durationMs), style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
+                BrutalTag(Format.clock(state.durationMs))
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { player.seekBy(-10_000) }) { Icon(AppIcons.Replay10, contentDescription = "Назад на 10 секунд") }
-                FilledIconButton(onClick = { player.toggle() }, modifier = Modifier.size(52.dp).testTag("btn_play_pause")) {
-                    if (state.playing) Icon(AppIcons.Pause, contentDescription = "Пауза") else Icon(Icons.Default.PlayArrow, contentDescription = "Воспроизвести")
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+                BrutalIconButton(onClick = { player.seekBy(-10_000) }, contentDescription = "Назад на 10 секунд") { Icon(AppIcons.Replay10, contentDescription = null) }
+                BrutalIconButton(
+                    onClick = { player.toggle() }, contentDescription = if (state.playing) "Пауза" else "Воспроизвести", fill = Brutal.accent,
+                    modifier = Modifier.size(64.dp).testTag("btn_play_pause"),
+                ) {
+                    if (state.playing) Icon(AppIcons.Pause, contentDescription = null, modifier = Modifier.size(32.dp)) else Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(34.dp))
                 }
-                IconButton(onClick = { player.seekBy(10_000) }) { Icon(AppIcons.Forward10, contentDescription = "Вперёд на 10 секунд") }
-                Spacer(Modifier.width(12.dp))
+                BrutalIconButton(onClick = { player.seekBy(10_000) }, contentDescription = "Вперёд на 10 секунд") { Icon(AppIcons.Forward10, contentDescription = null) }
                 Box {
-                    AssistChip(
-                        onClick = { speedMenu = true },
-                        label = { Text(speedLabel(state.speed)) },
+                    BrutalChip(
+                        selected = false, onClick = { speedMenu = true }, label = speedLabel(state.speed),
                         modifier = Modifier.semantics { contentDescription = "Скорость воспроизведения ${speedLabel(state.speed)}" },
                     )
-                    DropdownMenu(expanded = speedMenu, onDismissRequest = { speedMenu = false }) {
+                    DropdownMenu(expanded = speedMenu, onDismissRequest = { speedMenu = false }, containerColor = Brutal.bg, shape = BrutalShape, border = BorderStroke(BrutalDims.Border, Brutal.ink)) {
                         AudioPlayer.SPEEDS.forEach { s ->
-                            DropdownMenuItem(text = { Text(speedLabel(s)) }, onClick = { player.setSpeed(s); speedMenu = false })
+                            DropdownMenuItem(text = { Text(speedLabel(s), style = MaterialTheme.typography.labelLarge) }, onClick = { player.setSpeed(s); speedMenu = false })
                         }
                     }
                 }
@@ -605,18 +654,18 @@ private fun EditTextDialog(initial: String, onSave: (String) -> Unit, onDismiss:
     var text by rememberSaveable { mutableStateOf(initial) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    AlertDialog(
+    BrutalDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Правка реплики") },
+        title = "Правка реплики",
         text = {
-            OutlinedTextField(
+            BrutalTextField(
                 value = text, onValueChange = { text = it },
                 modifier = Modifier.fillMaxWidth().focusRequester(focus).semantics { testTagsAsResourceId = true }.testTag("edit_text_field"),
-                minLines = 3, maxLines = 8, label = { Text("Текст реплики") },
+                minLines = 3, maxLines = 8, label = "Текст реплики",
             )
         },
-        confirmButton = { TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text("Сохранить") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        confirmButton = { DialogButton("Сохранить", { onSave(text) }, enabled = text.isNotBlank()) },
+        dismissButton = { DialogButton("Отмена", onDismiss, primary = false) },
     )
 }
 
@@ -628,34 +677,35 @@ private fun ChangeSpeakerDialog(
     onPick: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    BrutalDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Кто говорит?") },
+        title = "Кто говорит?",
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 transcript.speakerIds.forEach { id ->
                     SpeakerChoiceRow(id, transcript.displayName(id), selected = id == currentId) { onPick(id) }
                 }
-                SpeakerChoiceRow(newSpeakerId, "Новый говорящий", selected = false, labelOverride = true) { onPick(newSpeakerId) }
+                SpeakerChoiceRow(newSpeakerId, "Новый говорящий", selected = false) { onPick(newSpeakerId) }
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        dismissButton = { DialogButton("Отмена", onDismiss, primary = false) },
     )
 }
 
 @Composable
-private fun SpeakerChoiceRow(id: String, label: String, selected: Boolean, labelOverride: Boolean = false, onClick: () -> Unit) {
+private fun SpeakerChoiceRow(id: String, label: String, selected: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp)
+        Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp)
+            .background(if (selected) Brutal.accent else Brutal.bg, BrutalShape)
+            .border(BrutalDims.Border, Brutal.ink, BrutalShape)
+            .clickable(role = androidx.compose.ui.semantics.Role.RadioButton, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
             .semantics(mergeDescendants = true) { contentDescription = if (selected) "$label, выбран" else label },
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        RadioButton(selected = selected, onClick = null)
-        Spacer(Modifier.width(8.dp))
-        SpeakerDot(speakerColor(id))
-        Spacer(Modifier.width(8.dp))
-        Text(label, style = if (labelOverride) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyLarge)
+        SpeakerSquare(id, 22.dp)
+        Text(label, style = MaterialTheme.typography.labelLarge, color = if (selected) Brutal.onAccent else Brutal.ink)
     }
 }
 
@@ -667,29 +717,29 @@ private fun SpeakersDialog(
     onDismiss: () -> Unit,
 ) {
     val names = remember { mutableStateOf(transcript.speakerIds.associateWith { transcript.speakerNames[it].orEmpty() }) }
-    AlertDialog(
+    BrutalDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Говорящие") },
+        title = "Говорящие",
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()).semantics { testTagsAsResourceId = true }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()).semantics { testTagsAsResourceId = true }, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     "Имена показываются в расшифровке, TXT, SRT, VTT и расширенном JSON. В JSON по ТЗ остаётся speaker_N.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                 )
                 transcript.speakerIds.forEach { id ->
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SpeakerDot(speakerColor(id), 14)
-                        OutlinedTextField(
+                        SpeakerSquare(id, 22.dp)
+                        BrutalTextField(
                             value = names.value[id].orEmpty(),
                             onValueChange = { v -> names.value = names.value + (id to v) },
-                            singleLine = true, label = { Text(EditableTranscript.defaultName(id) + " (" + id + ")") },
+                            singleLine = true, label = EditableTranscript.defaultName(id) + " (" + id + ")",
                             modifier = Modifier.weight(1f).testTag("speaker_name_$id"),
                         )
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onApply(names.value) }) { Text("Готово") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        confirmButton = { DialogButton("Готово", { onApply(names.value) }) },
+        dismissButton = { DialogButton("Отмена", onDismiss, primary = false) },
     )
 }

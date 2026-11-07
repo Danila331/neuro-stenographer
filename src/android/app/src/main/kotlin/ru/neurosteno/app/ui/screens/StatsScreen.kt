@@ -30,6 +30,9 @@ import ru.neurosteno.app.ui.Format
 import ru.neurosteno.app.ui.components.InfoRow
 import ru.neurosteno.app.ui.components.NeuroTopBar
 import ru.neurosteno.app.ui.components.SectionCard
+import ru.neurosteno.app.ui.theme.Brutal
+import ru.neurosteno.app.ui.theme.BrutalProgress
+import ru.neurosteno.app.ui.theme.MonoStyle
 
 /** Подписи ключей `stage_ms` из мета-данных расшифровки. */
 private val STAGE_LABELS = listOf(
@@ -42,7 +45,7 @@ private val STAGE_LABELS = listOf(
 @Composable
 fun StatsScreen(entries: List<HistoryEntry>, deviceTotalMb: Int, tier: String, onBack: () -> Unit) {
     val runs = entries.filter { it.processingMs > 0 && it.durationMs > 0 }
-    Scaffold(topBar = { NeuroTopBar("Статистика обработки", onBack = onBack) }) { padding ->
+    Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Статистика обработки", onBack = onBack) }) { padding ->
         Column(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -76,7 +79,7 @@ fun StatsScreen(entries: List<HistoryEntry>, deviceTotalMb: Int, tier: String, o
                 }
                 Text(
                     "Распознавание и разделение говорящих идут параллельно, поэтому сумма стадий может превышать общее время.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                 )
             }
             SectionCard(title = "Сводка по ${Format.plural(runs.size, "запуску", "запускам", "запускам")}") {
@@ -98,7 +101,7 @@ fun StatsScreen(entries: List<HistoryEntry>, deviceTotalMb: Int, tier: String, o
                         Text(
                             "${df.format(Date(e.createdAt))} · запись ${Format.clock(e.durationMs)} · обработка ${Format.duration(e.processingMs)} · RTF ${Format.rtf(e.rtf)}" +
                                 (if (e.peakPssMb > 0) " · ${e.peakPssMb} МБ" else ""),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                         )
                     }
                 }
@@ -113,10 +116,8 @@ private fun StageBar(label: String, ms: Long, totalMs: Long) {
     Column(Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "$label: ${Format.duration(ms)}, ${(frac * 100).toInt()} процентов" }) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, style = MaterialTheme.typography.bodyMedium)
-            Text("${Format.duration(ms)} · ${(frac * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium)
+            Text("${Format.duration(ms)} · ${(frac * 100).toInt()}%", style = MonoStyle, color = Brutal.ink)
         }
-        Box(Modifier.fillMaxWidth().height(8.dp).background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.small)) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth(frac.coerceAtLeast(0.01f)).background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small))
-        }
+        BrutalProgress(frac.coerceAtLeast(0.01f), height = 14.dp)
     }
 }
