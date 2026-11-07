@@ -6,8 +6,8 @@
 |---|---|
 | Архитектура | **ARM64** (arm64-v8a); x86-эмуляторы не поддерживаются |
 | Android | 8.0+ (minSdk 26), целевой 15 (targetSdk 35) |
-| RAM | рекомендуется 4 ГБ; обработка без LLM укладывается в ≈0,5 ГБ PSS (замер на эмуляторе jury-4g, `docs/TEST_RESULTS.md`) |
-| LLM (протокол, вопросы) | ≥ 3 ГБ RAM и ARM с `dotprod`; иначе кнопка недоступна, причина показана текстом, расшифровка работает |
+| RAM | рекомендуется 4 ГБ; обработка (LLM в ней не участвует) — пик PSS ≈0,5 ГБ (jury-4g: 490–514 МБ, `docs/TEST_RESULTS.md`) |
+| LLM (протокол, вопросы) | ≥ 3 ГБ RAM и ARM с `dotprod`; протокол на Qwen3-1.7B ≈2,2 ГБ PSS; иначе кнопка недоступна, причина показана текстом, расшифровка работает |
 | Память | свободное место ≈ размер APK ещё раз: при первом запуске модели копируются из APK в память приложения (освобождается кнопкой «Удалить встроенный набор») |
 | Сеть | не нужна (только для скачивания наборов в «Моделях») |
 
@@ -59,12 +59,11 @@ APK лежат в `artifacts/apk/` (TODO(финал): итоговые файл�
 ```bash
 source scripts/env.sh                         # JAVA_HOME, ANDROID_HOME, PATH
 src/android/scripts/sdk_setup.sh              # SDK, NDK, образ эмулятора (после sdkmanager --licenses)
-python3 scripts/fetch_models.py --tier medium # модели -> $ROOT/.cache/models (только официальные источники)
+python3 scripts/fetch_models.py --tier medium # модели -> $ROOT/.cache/models по путям из config/tiers (официальные источники, sha256 — config/models.json)
 scripts/stage_models.sh medium                # кэш -> assets варианта + manifest.json (размеры, sha256)
 scripts/build_all.sh                          # lite, medium, hard, online -> artifacts/apk/ (подпись локальным ключом)
 ```
-TODO(финал): `fetch_models.py --tier` пока не знает `asr/gigaam-v3-rnnt-punct-int8` и Parakeet-110m как модели вариантов
-(в кэше они есть), проверить команду загрузки целиком. Подробности и режимы Gradle: `src/android/README.md`.
+Подробности и режимы Gradle: `src/android/README.md`.
 
 ## Тесты и паритет
 
