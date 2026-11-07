@@ -28,6 +28,14 @@ internal object LlamaNative {
     /** UTF-8 байты результата либо null при ошибке/прерывании (см. [lastError]). */
     @JvmStatic external fun generate(handle: Long, prompt: String, maxTokens: Int, callback: TokenCallback?): ByteArray?
 
+    /**
+     * Как [generate], плюс: [grammar] -- GBNF (корень `root`) либо null; [reusePrefix] -- не пересчитывать префикс промпта, общий с
+     * содержимым KV-кэша (после прошлого вызова).
+     */
+    @JvmStatic external fun generateEx(
+        handle: Long, prompt: String, maxTokens: Int, grammar: String?, reusePrefix: Boolean, callback: TokenCallback?,
+    ): ByteArray?
+
     @JvmStatic external fun lastError(): String
 
     @JvmStatic external fun systemInfo(): String

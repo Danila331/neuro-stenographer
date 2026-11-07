@@ -32,6 +32,8 @@ private class WavFileDecoder : AudioDecoder {
 fun main(args: Array<String>) {
     if (args.firstOrNull() == "--reprocess") { runReprocess(args.drop(1)); return } // повторная обработка фрагмента (Reprocess.kt)
     if (args.firstOrNull() == "--llm-bench") { runLlmBench(args.drop(1)); return } // протокол по одной расшифровке: время и RSS (LlmBench.kt)
+    if (args.firstOrNull() == "--summary") { runSummary(args.drop(1)); return } // выжимка B50 на реальной модели (Summary.kt)
+    if (args.firstOrNull() == "--grammar-check") { runGrammarCheck(args.drop(1)); return } // GBNF + KV-кэш префикса в JNI
     if (args.firstOrNull() == "--emb-check") { runEmbCheck(args.drop(1)); return }
     if (args.firstOrNull() == "--llm-raw") { // --llm-raw <model.gguf> <вопрос...>: ChatML без правок
         val llm = LlamaAssistant(File(args[1]), 2048, 4)

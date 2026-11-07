@@ -59,7 +59,7 @@ data class RunInfo(
 )
 
 /**
- * История расшифровок в приватном каталоге приложения: `history/<id>/{entry.json, transcript.json, audio.<ext>, protocol.txt}`.
+ * История расшифровок в приватном каталоге приложения: `history/<id>/{entry.json, transcript.json, audio.<ext>, protocol.txt, summary.json}`.
  * Всё -- обычные файлы без базы данных; чтение/запись под одним замком, список наблюдаемый ([entries]).
  */
 class HistoryRepository(private val root: File, private val clock: () -> Long = System::currentTimeMillis) {
@@ -135,6 +135,19 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
         if (dir(id).isDirectory) File(dir(id), PROTOCOL).writeText(text, Charsets.UTF_8)
     }
 
+    /** `summary.json` записи (B50): [ru.neurosteno.core.summary.SummaryDoc] в JSON; null -- выжимки ещё нет. */
+    fun readSummary(id: String): String? = synchronized(lock) { File(dir(id), SUMMARY).takeIf { it.isFile }?.readText(Charsets.UTF_8) }
+
+    /** Запись атомарна (tmp -> rename): UI может читать файл, пока выжимка дописывается по фрагментам. */
+    fun writeSummary(id: String, json: String) = synchronized(lock) {
+        val d = dir(id)
+        if (d.isDirectory) {
+            val tmp = File(d, "$SUMMARY.tmp")
+            tmp.writeText(json, Charsets.UTF_8)
+            if (!tmp.renameTo(File(d, SUMMARY))) { File(d, SUMMARY).writeText(json, Charsets.UTF_8); tmp.delete() }
+        }
+    }
+
     /** Расшифровка до пересчёта фрагмента -- для «Отменить» (один уровень). */
     fun writeUndo(id: String, stored: StoredTranscript) = synchronized(lock) {
         if (dir(id).isDirectory) File(dir(id), UNDO).writeText(stored.encode(), Charsets.UTF_8)
@@ -199,6 +212,7 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
         private const val ENTRY = "entry.json"
         private const val TRANSCRIPT = "transcript.json"
         private const val PROTOCOL = "protocol.txt"
+        private const val SUMMARY = "summary.json"
         private const val UNDO = "transcript.undo.json"
         private const val PREVIEW_CHARS = 140
         private val JSON = Json { ignoreUnknownKeys = true; encodeDefaults = true }

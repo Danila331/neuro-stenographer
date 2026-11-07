@@ -4,6 +4,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import ru.neurosteno.core.LlmAssistant
+import ru.neurosteno.core.summary.ConstrainedLlm
 
 /**
  * Параметры загрузки llama.cpp из `llm.*` конфига уровня: [noRepack] (`llama_model_params.use_extra_bufts = false`), [flashAttn],
@@ -37,7 +38,7 @@ class LlamaAssistant(
     gpuLayers: Int = 0,
     /** Память и скорость llama.cpp (B48); по умолчанию -- прежнее поведение (repack, f16, без flash attention). */
     options: LlamaOptions = LlamaOptions(),
-) : LlmAssistant {
+) : LlmAssistant, ConstrainedLlm {
 
     private var handle: Long = 0
     private val lock = Any()
@@ -79,6 +80,25 @@ class LlamaAssistant(
         }
         String(out, Charsets.UTF_8)
     }
+
+    /**
+     * Генерация с грамматикой GBNF и/или повторным использованием KV-кэша префикса (B50, [ConstrainedLlm]). Отмена и ошибки --
+     * как у [generate]. Следующий вызов с тем же началом промпта (системный промпт выжимки) не пересчитывает общие токены.
+     */
+    override fun generateConstrained(prompt: String, maxTokens: Int, grammar: String?, reusePrefix: Boolean, onToken: (String) -> Unit): String =
+        synchronized(lock) {
+            check(handle != 0L) { "LlamaAssistant закрыт" }
+            val cb = TokenCallback { bytes ->
+                onToken(String(bytes, Charsets.UTF_8))
+                !Thread.currentThread().isInterrupted
+            }
+            val out = LlamaNative.generateEx(handle, prompt, maxTokens, grammar, reusePrefix, cb)
+            if (out == null) {
+                if (Thread.currentThread().isInterrupted) throw CancellationException("LLM прервана")
+                throw IOException("Ошибка генерации: ${LlamaNative.lastError()}")
+            }
+            String(out, Charsets.UTF_8)
+        }
 
     /** Мгновенно просит остановить текущую генерацию (из другого потока). */
     fun cancel() {

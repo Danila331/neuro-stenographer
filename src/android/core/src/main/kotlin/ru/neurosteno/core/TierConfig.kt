@@ -28,6 +28,8 @@ data class TierConfig(
     val postprocess: PostprocessConfig = PostprocessConfig(),
     /** Живая расшифровка во время записи (B13): потоковая ASR как превью; итог всё равно даёт полная обработка. */
     val live: LiveConfig = LiveConfig(),
+    /** Выжимка записи (B50): темы по говорящим, решения, задачи; блок `summary` конфига. */
+    val summary: ru.neurosteno.core.summary.SummaryConfig = ru.neurosteno.core.summary.SummaryConfig(),
 ) {
     /** Все модели, нужные этому варианту (для проверки наличия assets и для stage_models). */
     fun requiredModelPaths(): List<String> = buildList {

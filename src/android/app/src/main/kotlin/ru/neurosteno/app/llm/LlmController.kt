@@ -81,6 +81,9 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         if (ProcessingState.processing.value is ProcessingUi.Running) {
             return LlmAvailability.Unavailable("Идёт обработка записи. Дождитесь её окончания: модели загружаются по очереди, чтобы хватило памяти.")
         }
+        if (graph.summary.isRunning) {
+            return LlmAvailability.Unavailable("Идёт составление выжимки. Дождитесь её окончания: языковая модель загружается один раз.")
+        }
         val modelPath = cfg.llm.model ?: return LlmAvailability.Unavailable("В активном наборе моделей нет языковой модели (LLM).")
         val dir = graph.modelStore.activeDir() ?: return LlmAvailability.Unavailable("Набор моделей не установлен: откройте раздел «Модели».")
         if (!File(dir, modelPath).isFile) {

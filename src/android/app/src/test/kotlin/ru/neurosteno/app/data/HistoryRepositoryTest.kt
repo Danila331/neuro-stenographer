@@ -105,4 +105,16 @@ class HistoryRepositoryTest {
     fun unsafeIdIsRejected() {
         repo.dir("../x")
     }
+
+    @Test
+    fun summaryIsWrittenAtomicallyAndReadBack() {
+        val e = repo.add("встреча.m4a", TestData.dialog(), audio = { ByteArrayInputStream(ByteArray(2)) })
+        assertNull(repo.readSummary(e.id))
+        repo.writeSummary(e.id, """{"mode":"extractive"}""")
+        repo.writeSummary(e.id, """{"mode":"llm"}""")
+        assertEquals("""{"mode":"llm"}""", repo.readSummary(e.id))
+        assertFalse(java.io.File(repo.dir(e.id), "summary.json.tmp").exists())
+        repo.delete(e.id)
+        assertNull(repo.readSummary(e.id))
+    }
 }
