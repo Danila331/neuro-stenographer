@@ -25,7 +25,7 @@ cd src/eval/stenoeval
 Новый прогон: `refpipe run …` (ПК) или `src/android/scripts/process_on_device.sh …` (устройство), затем
 `stenoeval score --dataset <корень> --run <папка> --split test --csv ../../../artifacts/test-results/results.csv`
 (`--platform android --device jury-4g` для устройства). Сравнение: `stenoeval compare … --run-ids базовый,новый`.
-Отчёт пишется в `REPORT.md`, а не в этот файл, чтобы не затирать текст. Правила артефактов — `artifacts/test-results/README.md`.
+Отчёт пишется в `REPORT.md`, а не в этот файл, чтобы не затирать текст. Текущий `REPORT.md` собран по run_id из таблицы выше (`--run-ids refpipe-medium-baseline,refpipe-medium-rescue,refpipe-medium-norelabel-dev,refpipe-medium-relabel,…,refpipe-bp-robust-test-bp1.0-k1thr030`). Правила артефактов — `artifacts/test-results/README.md`.
 
 ## Наборы данных
 
@@ -54,49 +54,77 @@ Mac M3 Pro, sherpa-onnx, int8, 4 потока, test-части, WER %. Полн�
 Другие замеры: громкость — `final/normalize_gain.md`; чанки — `results/chunk_*.jsonl`; определение языка — `final/lid_*.jsonl`;
 память — `final/mem.jsonl` (GigaAM v3 RNNT punct: 483 МБ пик RSS при чанке 25 с).
 
-## Результаты: сквозной пайплайн (WER, cpWER, DER, метки, RTF)
+## Результаты: сквозной пайплайн (ПК, refpipe, medium)
 
-TODO(финал): таблицы из `REPORT.md` для сдаваемой конфигурации (medium) на **test** — `synth`, `cats`, `en`, по условиям
-(clean/noise/reverb/overlap/phone/farfield), ПК-эталон и Android. Образец вывода (заполнить цифрами команды `stenoeval report`):
+Полный пайплайн на тех же моделях и конфиге, что в приложении (`refpipe`), 2–4 потока, Mac M3 Pro. Наборы `refpipe-baseline-dev` (84 файла: ru-synth, cats, en, mixed;
+подбор параметров) и `refpipe-baseline-test` (31 файл, не использовался при подборе). Источник — `artifacts/test-results/results.csv`, таблицы — `artifacts/test-results/REPORT.md`
+(`stenoeval report`, run_id в первой колонке). Метки: `start MAE` — среднее |Δ начала реплики|, мс; `spk acc` — доля файлов с верным числом говорящих.
 
-| Прогон | Платформа | Файлов | WER norm | WER punct | cpWER | DER ±.25 | start MAE, мс | RTF |
+| run_id | Набор | WER norm | WER punct | cpWER | DER ±.25 | spk acc | start MAE, мс | start<300 мс |
 |---|---|---|---|---|---|---|---|---|
-| TODO final-medium-synth-test | ПК (refpipe) | | | | | | | |
-| TODO final-medium-cats-test | ПК (refpipe) | | | | | | | |
-| TODO final-medium-jury4g | эмулятор jury-4g | | | | | | | |
-| TODO final-medium-pixel10 | Pixel 10 | | | | | | | |
+| `refpipe-medium-baseline` | dev | 24,39 | 58,80 | 52,87 | 27,97 | 33,3 | 374 | 71,0 |
+| `refpipe-medium-rescue` (VAD rescue) | dev | 21,89 | 56,85 | 51,56 | 25,30 | 33,3 | 281 | 72,1 |
+| `refpipe-medium-norelabel-dev` | dev | 22,60 | 55,86 | 54,92 | 28,25 | 29,8 | 315 | 71,7 |
+| `refpipe-medium-relabel` (диаризация по фразам) | dev | 22,60 | 55,86 | 32,14 | 15,97 | 66,7 | 315 | 71,7 |
+| `refpipe-bp-robust-dev-bp1.0` (+ `blank_penalty` 1,0) | dev | 21,87 | 55,29 | 31,30 | 14,64 | 64,3 | 291 | 74,4 |
+| `refpipe-bp-robust-dev-bp1.0-k1thr030` (**итоговая конфигурация**) | dev | 21,87 | 55,29 | 31,03 | 14,54 | 66,7 | 291 | 74,4 |
+| `refpipe-medium-norelabel-test` | test | 21,74 | 53,81 | 49,20 | 23,97 | 41,9 | 268 | 74,3 |
+| `refpipe-medium-relabel-test` | test | 21,74 | 53,81 | 29,85 | 11,69 | 77,4 | 268 | 74,3 |
+| `refpipe-bp-robust-test-bp1.0` | test | 21,38 | 53,48 | 31,42 | 11,71 | 77,4 | 256 | 77,1 |
+| `refpipe-bp-robust-test-bp1.0-k1thr030` (**итоговая конфигурация**) | test | 21,38 | 53,48 | 30,54 | 11,29 | 80,6 | 256 | 77,1 |
 
-Диаризация (DER, число говорящих) — финальные цифры после diar-bench: TODO(финал).
-Промежуточные прогоны refpipe (подбор VAD и громкости) в `results.csv` не являются итогом и в отчёт не входят.
+Что дало каждое улучшение: VAD rescue — WER norm 24,4 → 21,9 (dev); диаризация по фразам — DER ±.25 28,3 → 16,0 (dev), 24,0 → 11,7 (test), число говорящих 42 → 77 % (test);
+`blank_penalty` 1,0 — WER 22,6 → 21,9 и DER 16,0 → 14,6 (dev); порог защиты от монологов 0,30 — DER dev 14,64 → 14,54, test 11,71 → 11,29 (монологи хуже, 19,8 → 22,3 %, B57).
+Устойчивость `blank_penalty` по 115 файлам (`refpipe-bp-robust-*`): 1,0 лучше или равен 0,0 по p90 и максимуму ошибки (B55).
 
-## Паритет Android = эталон (B28)
+Итоговая конфигурация, test по условиям (`refpipe-bp-robust-test-bp1.0-k1thr030`):
 
-Обработка на телефоне — тот же пайплайн и конфиг, что в Python-эталоне. Проверка: `src/android/scripts/parity.sh <набор> <N> medium`
-(падает, если WER norm Android хуже на > 1 п.п.). Результат: расхождение 0,00 п.п. (BACKLOG B28), проверено на текущей модели
-(GigaAM v3 RNNT-punct, `asr_native`, B30; сообщение архитектора 2026-11-07). До исправления чанкинга на чистой записи `cats_c01`
-Android давал WER 40 % против единиц процентов на ПК (резка речи равными кусками).
-TODO(финал): повторить `parity.sh` на финальной конфигурации и приложить `summary.txt`.
+| Условие | Файлов | WER norm | cpWER | DER ±.25 | spk acc |
+|---|---|---|---|---|---|
+| ALL | 31 | 21,38 | 30,54 | 11,29 | 80,6 |
+| clean | 5 | 19,70 | 21,38 | 6,88 | 100 |
+| farfield | 4 | 14,92 | 21,95 | 5,16 | 75,0 |
+| noise | 7 | 14,43 | 24,76 | 8,74 | 71,4 |
+| overlap | 6 | 26,03 | 31,98 | 16,12 | 83,3 |
+| phone | 6 | 23,37 | 54,29 | 21,00 | 66,7 |
+| reverb | 3 | 34,48 | 37,76 | 6,95 | 100 |
+
+Оговорки: RTF в этих строках не годится (часть стадий взята из кэша). `WER punct` высок и сравним только между прогонами: у части файлов (en: LibriSpeech, Golos) эталон без знаков или в верхнем регистре.
+Три записи «диалогов котиков» жюри — на наборах cats; финальные прогоны на устройствах: TODO(финал).
+
+## Паритет Android = эталон (B28, B42, B46, B55)
+
+Обработка на телефоне — тот же пайплайн и конфиг, что в Python-эталоне. Проверка: `src/android/scripts/parity.sh <набор> <N> medium` (падает, если WER norm Android хуже на > 1 п.п.).
+Результат: расхождение WER и DER 0,00 п.п. на cats, synth и ru-en для текущей конфигурации (диаризация по фразам, `blank_penalty`, VAD rescue; `docs/BACKLOG.md`).
+До исправления чанкинга на чистой записи `cats_c01` Android давал WER 40 % против единиц процентов на ПК (резка речи равными кусками).
+TODO(финал): повторить `parity.sh` на финальной сборке и приложить `summary.txt`.
 
 ## Устройства
 
 | Устройство | Условия | Результат | Источник |
 |---|---|---|---|
-| jury-4g (ARM64, 4 ГБ, 4 ядра, без GPU), medium debug, без LLM, B30 | `cats_c01` | WER norm 12,84 %, punct 27,52 %, RTF 0,54, пик PSS 490 МБ | сообщение архитектора 2026-11-07 ~03:20 |
+| jury-4g (ARM64, 4 ГБ, 4 ядра, без GPU), medium debug, без LLM, B30 | `cats_c01` | WER norm 12,84 %, punct 27,52 %, RTF 0,54, пик PSS 490 МБ | сообщение архитектора 2026-11-07 ~03:20 (до диаризации по фразам) |
 | То же | `cats_c04_call_overlap` | WER norm 25,53 %, punct 48,94 %, RTF 0,57 | там же |
 | То же | `synth_0004` | WER norm 8,54 %, punct 26,17 %, RTF 0,50, пик PSS 514 МБ | там же |
-| jury-4g, ранний замер (до LID по фрагментам) | основной путь | RTF ≈ 0,33; с тех пор вырос до 0,5–0,57 из-за LID по каждому фрагменту | `docs/ARCHITECTURE.md` |
+| jury-4g/jury-2g, **release-APK** (предрелиз) | lite, medium | RTF 0,11–0,15, без падений | `docs/BACKLOG.md` B53 |
+| То же | hard | RTF 0,29–0,39 | B53 |
+| То же | запись 30 мин | без OOM, пик PSS ≈ 935 МБ | B53 |
+| Первый запуск (копирование моделей) | medium | пик памяти 1258 → 53 МБ | B44 |
+| jury-4g | живая расшифровка при записи | RTF 0,055 | B13 |
+| jury-4g | повторная обработка фрагмента | 0,6–1,7 с на фрагмент | B37 |
+| хост (Mac), Qwen3-1.7B | протокол, флаги памяти | пик RSS 2,71 → 1,64 ГБ, время ×2–2,5 | B48, `artifacts/test-results/llm-integration/` |
+| jury-4g | протокол на Qwen3-1.7B | пик PSS ≈ 2,2 ГБ (замер android-ui; повторить с флагами памяти — TODO(финал)) | сообщение архитектора |
 | jury-4g, ранний замер | с LLM-пунктуацией (отвергнуто) | пик PSS 2,1 ГБ, RTF 0,75; на 2 ГБ RAM RTF 3,9 | `docs/ARCHITECTURE.md` |
-| jury-4g | протокол на Qwen3-1.7B (после обработки) | пик PSS ≈ 2,2 ГБ | замер android-ui |
-| Pixel 10, **старая сборка** (CTC без знаков) | короткие записи | RTF 0,16–0,23, без падений и ANR | `docs/BACKLOG.md` B36 |
+| Pixel 10, **старая сборка** (CTC без знаков) | короткие записи | RTF 0,16–0,23, без падений и ANR | B36 |
 | Pixel 10, старая сборка | диаризация 882 → 2524 мс при длине ×2,1 | растёт быстрее длины записи | B35 |
 
-TODO(финал): повторить на итоговых APK, включая Pixel 10 на актуальной модели (`process_on_device.sh`: RTF, пик PSS, потоки — в маркере `<имя>.done.json`), все 6 эталонных записей.
+TODO(финал): повторить на итоговых APK, включая Pixel 10 на актуальной модели (`process_on_device.sh`: RTF, пик PSS, потоки — в маркере `<имя>.done.json`), все 6 эталонных записей, WER/DER на устройстве по итоговой конфигурации.
 
 ## Прочие проверки
 
-JVM-тесты `:core` (176) и `:app` (66), 3 UI-теста на эмуляторе, `ArchitectureGuardTest` (в модулях обработки нет сетевого кода),
+JVM-тесты (по BACKLOG: 733 в ядре после порта выжимки, B50; 595 + 118 и 13 UI-тестов на эмуляторе, B54), `ArchitectureGuardTest` (в модулях обработки нет сетевого кода),
 дымовые прогоны через интент (`artifacts/test-results/ui-smoke/`; выгрузки до исправления B28 — не показатель качества).
-Числа тестов — по README `src/android` и `src/android/app`; TODO(финал): прогнать и приложить вывод.
+Числа тестов — со слов BACKLOG; TODO(финал): прогнать `./gradlew :core:test :app:testMediumDebugUnitTest` и приложить вывод.
 
 ## Оговорки
 
