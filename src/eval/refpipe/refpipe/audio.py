@@ -127,7 +127,8 @@ def normalize_gain(x: np.ndarray, cfg: dict | None) -> tuple[np.ndarray, float]:
     lim = cfg.get("apply_if_peak_below_dbfs")  # refpipe extra: normalise only quiet files
     if lim is not None and pk_db >= float(lim):
         return x, 0.0
-    g = float(np.clip(float(cfg.get("peak_dbfs", -1.0)) - pk_db, -6.0, float(cfg.get("max_gain_db", 40.0))))
+    tgt = float(cfg.get("peak_dbfs", cfg.get("target_peak_dbfs", -1.0)))
+    g = float(np.clip(tgt - pk_db, -float(cfg.get("max_attenuation_db", 6.0)), float(cfg.get("max_gain_db", 40.0))))
     g = min(g, -1.0 - pk_db)
     if abs(g) < 1e-6:
         return x, 0.0
