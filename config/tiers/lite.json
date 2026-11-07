@@ -95,7 +95,7 @@
       "k_max": 6,
       "max_cluster_units": 400,
       "refine": 1,
-      "k1_silhouette_thr": 0.35,
+      "k1_silhouette_thr": 0.3,
       "k1_require_stock_single": true,
       "k1_stock_min_share": 0.1
     }

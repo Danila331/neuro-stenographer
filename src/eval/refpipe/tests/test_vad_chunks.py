@@ -52,3 +52,10 @@ def test_rescue_finds_energy_outside_covered_regions():
     out = rescue_segments(x, [(2 * SR, 4 * SR)], {"snr_db": 10, "abs_floor_db": -50})
     assert len(out) == 1 and abs(out[0][0] - 10 * SR) <= 0.1 * SR and abs(out[0][1] - 12 * SR) <= 0.1 * SR
     assert rescue_segments(np.zeros(5 * SR, dtype=np.float32), [], {}) == []
+
+
+def test_isolate_short_pieces_become_their_own_chunks():
+    x = np.zeros(60 * SR, dtype=np.float32)
+    segs = [S(0, 6), S(6.5, 7.3), S(8, 14)]
+    assert pack_chunks(segs, 25.0, 1.0, x) == [S(0, 14)]
+    assert pack_chunks(segs, 25.0, 1.0, x, isolate_short_ms=1500) == [S(0, 6), S(6.5, 7.3), S(8, 14)]

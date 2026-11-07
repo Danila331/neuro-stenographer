@@ -109,7 +109,8 @@ def _quiet_cut(x: np.ndarray, a: int, b: int, mx: int) -> int:
     return lo + int(np.argmin(e)) * w + w // 2
 
 
-def pack_chunks(segs: list[tuple[int, int]], max_s: float, min_s: float, x: np.ndarray) -> list[tuple[int, int]]:
+def pack_chunks(segs: list[tuple[int, int]], max_s: float, min_s: float, x: np.ndarray,
+                isolate_short_ms: int = 0) -> list[tuple[int, int]]:
     if not segs:
         return []
     mx = int(max_s * SR)
@@ -121,14 +122,18 @@ def pack_chunks(segs: list[tuple[int, int]], max_s: float, min_s: float, x: np.n
             a = c
         pieces.append((a, b))
     chunks = [list(pieces[0])]
+    iso = int(isolate_short_ms * SR / 1000)  # refpipe extra: a piece shorter than this is always its own chunk
+    prev_short = bool(iso) and (pieces[0][1] - pieces[0][0]) < iso
     for a, b in pieces[1:]:
-        if b - chunks[-1][0] <= mx:
+        cur_short = bool(iso) and (b - a) < iso
+        if b - chunks[-1][0] <= mx and not (iso and (cur_short or prev_short)):
             chunks[-1][1] = b
         else:
             chunks.append([a, b])
+        prev_short = cur_short
     merged: list[tuple[int, int]] = []
     for a, b in chunks:
-        if merged and (b - a) < min_s * SR and (b - merged[-1][0]) <= mx * 1.2:
+        if merged and not iso and (b - a) < min_s * SR and (b - merged[-1][0]) <= mx * 1.2:
             merged[-1] = (merged[-1][0], b)
         else:
             merged.append((a, b))
@@ -268,7 +273,7 @@ def speech_segments(x: np.ndarray, cfg: dict, vad: "SileroVad") -> list[tuple[in
 
 def chunks_from_segments(segs: list[tuple[int, int]], cfg: dict, x: np.ndarray) -> list[tuple[int, int]]:
     ch = cfg["asr"]["chunk"]
-    return pack_chunks(segs, float(ch["max_s"]), float(ch.get("min_s", 0)), x)
+    return pack_chunks(segs, float(ch["max_s"]), float(ch.get("min_s", 0)), x, int(ch.get("isolate_short_ms", 0)))
 
 
 def speech_chunks(x: np.ndarray, cfg: dict, vad: "SileroVad") -> tuple[list[TimeSpan], list[TimeSpan]]:
