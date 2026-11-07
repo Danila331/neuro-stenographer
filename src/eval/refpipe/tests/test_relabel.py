@@ -23,7 +23,7 @@ def test_case(c):
     E = E / (np.linalg.norm(E, axis=1, keepdims=True) + 1e-9)
     dur = np.array([u[1] - u[0] for u in units])
     diag = {}
-    lab = label_units(E, dur, p, diag)
+    lab = label_units(E, dur, p, diag, bool(c.get("stock_single", False)))
     assert [int(x) for x in lab] == exp["labels"]
     assert [[int(l), u[0], u[1]] for u, l in zip(units, lab)] == exp["turns"]
     assert diag.get("best_k") == exp["diag"]["best_k"] and bool(diag.get("k1", False)) == exp["diag"]["k1"]
@@ -56,3 +56,11 @@ def test_k1_guard_only_triggers_below_threshold():
 def test_params_from_config_ignores_comment_keys():
     p = Params.from_config({"gap_ms": 200, "embed_max_s": 10, "k1_silhouette_thr": 0.1, "_pending_k1": "x", "enabled": True})
     assert p.gap_ms == 200 and p.embed_max_s == 10.0 and p.k1_silhouette_thr == 0.1
+
+
+def test_stock_is_single():
+    from refpipe.relabel import stock_is_single
+
+    assert stock_is_single([(0, 0, 9000), (1, 9000, 9500)])           # 5 % < 10 %
+    assert not stock_is_single([(0, 0, 5000), (1, 5000, 9000)])
+    assert stock_is_single([])

@@ -11,7 +11,9 @@ ASR phrases ("units"):
  3. reliable = units >= min_reliable_ms (if < 3: all); more than max_cluster_units -> the longest ones;
  4. cluster  = ward AHC (Lance-Williams) on the reliable vectors (Euclidean on the unit sphere);
  5. count    = k in [k_min, min(k_max, n-1)] maximising the mean silhouette (1 - cosine); ties -> smaller k.
-               NEW (BACKLOG B46, monologue guard): if that best silhouette < k1_silhouette_thr -> ONE speaker;
+               NEW (BACKLOG B46, monologue guard): if that best silhouette < k1_silhouette_thr (and, with
+               k1_require_stock_single, the stock diarizer sees one speaker: at most one speaker holds >=
+               k1_stock_min_share of the stock speech time) -> ONE speaker;
  6. labels   = duration-weighted L2 centroids; every unit gets the centroid with the largest dot product; `refine`
                rounds of re-estimating the centroids from all units;
  7. turns    = (label, unit.start, unit.end) -- they replace the diarizer turns in front of the Aligner.
@@ -38,6 +40,8 @@ class Params:
     max_cluster_units: int = 400
     refine: int = 1
     k1_silhouette_thr: float | None = None  # best mean silhouette below this -> ONE speaker (monologue guard); None = off
+    k1_require_stock_single: bool = False   # guard fires only if the stock diarizer also sees a single speaker
+    k1_stock_min_share: float = 0.10        # ... "sees" = speakers with >= this share of the stock speech time
 
     @staticmethod
     def from_config(rc: dict) -> "Params":
@@ -178,7 +182,7 @@ def silhouette(Y: np.ndarray, lab: np.ndarray) -> float:
 
 
 # ---- 3-6. labelling -----------------------------------------------------------------------------
-def label_units(E: np.ndarray, dur_ms: np.ndarray, p: Params, diag: dict | None = None) -> np.ndarray:
+def label_units(E: np.ndarray, dur_ms: np.ndarray, p: Params, diag: dict | None = None, stock_single: bool = False) -> np.ndarray:
     """diag (optional dict) receives {"silhouettes": {k: value}, "best_k": k, "k1": bool, "reliable": [idx]}."""
     n = len(E)
     if n == 0:
@@ -202,12 +206,22 @@ def label_units(E: np.ndarray, dur_ms: np.ndarray, p: Params, diag: dict | None 
             best, best_k = s, k
     if diag is not None:
         diag.update(silhouettes=sils, best_k=best_k, reliable=[int(i) for i in idx])
-    if p.k1_silhouette_thr is not None and best < p.k1_silhouette_thr:   # monologue guard: not separable -> 1 speaker
+    if (p.k1_silhouette_thr is not None and best < p.k1_silhouette_thr          # monologue guard: not separable -> 1 speaker
+            and (stock_single or not p.k1_require_stock_single)):
         if diag is not None:
             diag["k1"] = True
         return np.zeros(n, dtype=int)
     lab = cut(len(idx), merges, best_k)
     w = dur_ms.astype(float)
+    if diag is not None:   # diagnostics for the monologue guard: cosine between the duration-weighted centroids
+        for kk, key in ((2, "cos2"), (best_k, "cos_best")):
+            lk = cut(len(idx), merges, kk) if kk <= len(idx) else None
+            if lk is None:
+                continue
+            Ck = np.stack([(Y[lk == q] * w[idx][lk == q, None]).sum(0) for q in range(kk)])
+            Ck = Ck / (np.linalg.norm(Ck, axis=1, keepdims=True) + 1e-9)
+            cm = Ck @ Ck.T
+            diag[key] = float(cm[np.triu_indices(kk, 1)].max())   # most similar pair of clusters
 
     def centroids(assign, sel):
         C = np.stack([(E[sel][assign == q] * w[sel][assign == q, None]).sum(0) for q in range(best_k)])
@@ -221,6 +235,15 @@ def label_units(E: np.ndarray, dur_ms: np.ndarray, p: Params, diag: dict | None 
     return out
 
 
+def stock_is_single(turns, min_share: float = 0.10) -> bool:
+    """True if at most one stock-diarizer speaker has >= min_share of the total stock speech time (turns: (spk, a, b))."""
+    tot: dict = {}
+    for spk, a, b in turns or []:
+        tot[spk] = tot.get(spk, 0) + (b - a)
+    t = sum(tot.values())
+    return sum(1 for v in tot.values() if t > 0 and v >= min_share * t) <= 1
+
+
 def phrase_turns(words, turns, audio, embed, p: Params = Params(), diag: dict | None = None):
     """words: [(start_ms,end_ms)]; turns: [(spk,start_ms,end_ms)] or None. Returns [(label, start_ms, end_ms)]."""
     units = make_units(words, turns, p)
@@ -228,7 +251,7 @@ def phrase_turns(words, turns, audio, embed, p: Params = Params(), diag: dict | 
         return []
     E = embed_units(audio, units, embed, p)
     dur = np.array([u[1] - u[0] for u in units])
-    lab = label_units(E, dur, p, diag)
+    lab = label_units(E, dur, p, diag, stock_is_single(turns, p.k1_stock_min_share))
     return [(int(l), u[0], u[1]) for u, l in zip(units, lab)]
 
 

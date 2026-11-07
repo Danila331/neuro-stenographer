@@ -37,6 +37,7 @@ def words_for(durs, gap=500, t0=0):
 
 def run(case):
     p = Params(**case["params"])
+    ss = bool(case.get("stock_single", False))
     w = [tuple(x) for x in case["words"]]
     tt = [tuple(x) for x in case["turns"]] if case["turns"] else None
     units = make_units(w, tt, p)
@@ -47,7 +48,7 @@ def run(case):
         assert len(E) == len(units), (case["name"], len(E), len(units))
         dur = np.array([u[1] - u[0] for u in units])
         diag = {}
-        lab = label_units(E, dur, p, diag)
+        lab = label_units(E, dur, p, diag, ss)
         res["labels"] = [int(x) for x in lab]
         res["turns"] = [[int(l), u[0], u[1]] for u, l in zip(units, lab)]
         res["diag"] = {"silhouettes": {str(k): round(v, 6) for k, v in diag.get("silhouettes", {}).items()},
@@ -58,12 +59,15 @@ def run(case):
 def main() -> None:
     rng = np.random.default_rng(7)
     base = dict(gap_ms=200, max_unit_ms=12000, split_min_side_ms=300, pad_ms=40, embed_max_s=10.0, min_reliable_ms=800,
-                k_min=2, k_max=6, max_cluster_units=400, refine=1, k1_silhouette_thr=None)
+                k_min=2, k_max=6, max_cluster_units=400, refine=1, k1_silhouette_thr=None,
+                k1_require_stock_single=False, k1_stock_min_share=0.10)
     C = rng.normal(size=(4, 8))
     cases = []
 
-    def add(name, desc, words, turns, params=None, emb=None):
+    def add(name, desc, words, turns, params=None, emb=None, stock_single=None):
         c = {"name": name, "description": desc, "params": {**base, **(params or {})}, "words": words, "turns": turns}
+        if stock_single is not None:
+            c["stock_single"] = stock_single
         if emb is not None:
             c["embeddings"] = r6(emb)
         c["expected"] = run(c)
@@ -100,6 +104,9 @@ def main() -> None:
         words_for(durs), None, None, mono)
     add("monologue_guard", "same data, k1_silhouette_thr=0.5 -> the best silhouette is below it -> everyone is label 0",
         words_for(durs), None, {"k1_silhouette_thr": 0.5}, mono)
+    for ss in (True, False):
+        add(f"monologue_guard_needs_stock_single_{ss}", f"guard thr 0.5 + k1_require_stock_single, stock sees a single speaker: {ss}",
+            words_for(durs), None, {"k1_silhouette_thr": 0.5, "k1_require_stock_single": True}, mono, stock_single=ss)
     add("dialogue_guard_passes", "two speakers: the silhouette is above the guard threshold -> k=2",
         words_for([2500] * 16), None, {"k1_silhouette_thr": 0.1}, clusters(rng, C, [i % 2 for i in range(16)], 0.2))
     add("fewer_than_three_units", "< 3 units -> one label", words_for([2000, 2500]), None, None, C[:2] + 0.05)

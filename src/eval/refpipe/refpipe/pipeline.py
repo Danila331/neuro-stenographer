@@ -27,7 +27,7 @@ from .config import DEFAULTS, canonical, config_hash, deep_merge
 from .diar import Diarizer, SubprocessDiarizer
 from .lid import LanguageId, smooth_languages
 from .punct import make_punctuator
-from .relabel import Params as RelabelParams, UnitEmbedder, embed_units, label_units, make_units
+from .relabel import Params as RelabelParams, UnitEmbedder, embed_units, label_units, make_units, stock_is_single
 from .types import SpeakerTurn, TimeSpan, Utterance, Word
 from .vad import SileroVad, speech_chunks
 
@@ -172,11 +172,11 @@ class Pipeline:
                 np.save(ck.with_suffix(".npy"), E)
         dur = np.array([u[1] - u[0] for u in units])
         diag: dict = {}
-        lab = label_units(E, dur, p, diag)
+        lab = label_units(E, dur, p, diag, stock_is_single(tt, p.k1_stock_min_share))
         out = [SpeakerTurn(int(l), u[0], u[1]) for u, l in zip(units, lab)]
         return out, {"units": len(units), "k": int(len(set(int(l) for l in lab))),
                      "silhouettes": {str(k): round(v, 4) for k, v in diag.get("silhouettes", {}).items()},
-                     "k1": bool(diag.get("k1", False))}
+                     "k1": bool(diag.get("k1", False)), "cos2": diag.get("cos2"), "cos_best": diag.get("cos_best")}
 
     def _diar_gain(self):
         """Diarization only depends on the gain config when the whole signal is normalised (scope all)."""
