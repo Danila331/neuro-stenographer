@@ -337,7 +337,7 @@ fun TranscriptScreen(
                             u = u, name = transcript.displayName(u.speakerId), current = i == currentIndex,
                             matched = query.isNotBlank() && i in matches, query = query,
                             selected = selection != null && i in selection, selectionMode = selection != null,
-                            highlighted = (u.startMs to u.endMs) in highlight || i == flashIndex,
+                            highlighted = (u.startMs to u.endMs) in highlight, flash = i == flashIndex,
                             canMerge = i < utterances.lastIndex, menuOpen = menuIndex == i,
                             onClick = {
                                 if (selection != null) selRaw = selection.toggle(i)?.encode() ?: -1L
@@ -533,6 +533,8 @@ private fun UtteranceCard(
     selected: Boolean,
     selectionMode: Boolean,
     highlighted: Boolean,
+    /** Кратковременная подсветка реплики после перехода из выжимки/поиска (без метки «НОВАЯ»). */
+    flash: Boolean = false,
     canMerge: Boolean,
     menuOpen: Boolean,
     onClick: () -> Unit,
@@ -548,12 +550,12 @@ private fun UtteranceCard(
     // Заливка отражает состояние: выбрана -- инверсия, только что пересчитана -- акцент, звучит сейчас -- акцент; обычная -- фон.
     val fill = when {
         selected -> Brutal.ink
-        highlighted || current -> Brutal.accent
+        highlighted || current || flash -> Brutal.accent
         else -> Brutal.bg
     }
     val fg = when {
         selected -> Brutal.onInk
-        highlighted || current -> Brutal.onAccent
+        highlighted || current || flash -> Brutal.onAccent
         else -> Brutal.ink
     }
     val time = Format.clock(u.startMs)

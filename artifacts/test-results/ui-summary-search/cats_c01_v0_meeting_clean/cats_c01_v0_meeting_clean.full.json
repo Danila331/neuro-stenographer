@@ -742,19 +742,19 @@
     "tier": "medium",
     "language": "ru",
     "audio_duration_ms": 58580,
-    "processing_ms": 11146,
-    "rtf": 0.19,
+    "processing_ms": 7524,
+    "rtf": 0.128,
     "stage_ms": {
-      "decode": 540,
-      "vad": 766,
-      "lid": 1377,
-      "asr": 6950,
-      "diarization": 6984,
+      "decode": 444,
+      "vad": 473,
+      "lid": 1062,
+      "asr": 4559,
+      "diarization": 4817,
       "align": 4,
       "punctuation": 0,
       "export": 1,
-      "relabel": 1431,
-      "total": 11146
+      "relabel": 900,
+      "total": 7524
     },
     "models": {
       "vad": "silero-vad/silero_vad.onnx",
@@ -765,7 +765,7 @@
       "diarization_embedding": "diar/emb-eres2net-base-200k/model.onnx",
       "llm": "llm/qwen3-1.7b-q4_k_m.gguf"
     },
-    "peak_pss_mb": 535,
+    "peak_pss_mb": 540,
     "threads": 4,
     "device_model": "Google sdk_gphone64_arm64",
     "android_sdk": 35,
