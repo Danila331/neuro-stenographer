@@ -16,7 +16,12 @@ package ru.neurosteno.core
  */
 class Aligner(private val config: AlignConfig = AlignConfig()) {
 
-    fun align(words: List<Word>, turns: List<SpeakerTurn>): List<Utterance> {
+    /**
+     * @param renumber true (по умолчанию) -- спикеры перенумеровываются в `speaker_1..N` по первому появлению (§5.5);
+     * false -- `speakerId = speakerLabel(turn.speaker)` как есть (для повторной обработки фрагмента: спикеры уже
+     * глобальные, перенумерация делается один раз на всём транскрипте). Всё остальное идентично.
+     */
+    fun align(words: List<Word>, turns: List<SpeakerTurn>, renumber: Boolean = true): List<Utterance> {
         val ws = words
             .filter { it.text.isNotBlank() }
             .map { it.copy(text = it.text.trim()) }
@@ -28,7 +33,7 @@ class Aligner(private val config: AlignConfig = AlignConfig()) {
         val owns = LongArray(ws.size)
         for (i in ws.indices) assign(ws[i], sortedTurns, speakers, owns, i)
         val smoothed = smooth(ws, speakers, owns)
-        return renumber(group(ws, smoothed))
+        return build(group(ws, smoothed), renumber)
     }
 
     // --- шаг 1 ---
@@ -107,7 +112,7 @@ class Aligner(private val config: AlignConfig = AlignConfig()) {
     }
 
     // --- шаг 5 ---
-    private fun renumber(groups: List<Pair<Int, List<Word>>>): List<Utterance> {
+    private fun build(groups: List<Pair<Int, List<Word>>>, renumber: Boolean): List<Utterance> {
         class Raw(val spk: Int, val start: Long, val end: Long, val words: List<Word>)
         val raw = groups.map { (spk, words) ->
             val start = words.first().startMs
@@ -115,7 +120,7 @@ class Aligner(private val config: AlignConfig = AlignConfig()) {
         }.sortedWith(compareBy({ it.start }, { it.end }))
         val ids = LinkedHashMap<Int, Int>()
         return raw.map { r ->
-            val n = ids.getOrPut(r.spk) { ids.size + 1 }
+            val n = if (renumber) ids.getOrPut(r.spk) { ids.size + 1 } else r.spk
             Utterance(
                 speakerId = speakerLabel(n),
                 startMs = r.start,
