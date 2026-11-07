@@ -46,6 +46,7 @@ class F:
     member: str | None = None  # `url` is a .tar.bz2: extract this file name from it (dest = its name in the cache)
     archive_sha256: str | None = None  # official digest of the archive
     alias: tuple[str, ...] = ()  # existing cache paths (relative to the root) to hard-link if their sha256 matches
+    exported: bool = False  # not downloadable: produced once by our own export (see Model.note); `sha256` pins the exported file
 
 
 @dataclass(frozen=True)
@@ -198,6 +199,28 @@ MODELS: tuple[Model, ...] = (
                   ("tokens.txt", 6388, "93bbbc0bae6b78c0bbb743d4aa9fded3bb5ff3aac5f0200e3a769a5a05e0fdf6")]),
         "Apache-2.0 (alphacep vosk-model-small-streaming-ru)", ("lite", "medium", "hard"), kind="asr",
         note="live transcription while recording (config `live`), streaming zipformer; preview only",
+    ),
+    # ---------------------------------------------------------------- search embeddings (B51)
+    # model.int8.onnx has no official ONNX: it is OUR export (int8 dynamic, per-channel) of the official safetensors, made once with
+    #   cd src/eval/bench_rag && .venv/bin/python -m bench_rag.fetch <name> && .venv/bin/python -m bench_rag.export_onnx <name>
+    # and pinned here by size+sha256 (sha256_source = "exported"). tokenizer.json is the author's official file (no LFS digest: sha computed).
+    Model(
+        "embed/user2-small",
+        (F("", "model.int8.onnx", 35029584, "36b5de87a6e4f8247afdfe689e6f9426df296c4ac3c906eff07bdb61fad0ea7a", exported=True),
+         F(f"{HF}/deepvk/USER2-small/resolve/main/tokenizer.json", "tokenizer.json", 4753524,
+           "8bdc337bdee65a5fdb697df1ac7453b2ae5c34c105125eac5f68c87827395c4e")),
+        "Apache-2.0 (deepvk/USER2-small)", ("medium", "hard"), kind="embed",
+        note="AI search embedder (384-d, mean pooling); model.int8.onnx is our export of model.safetensors "
+             "(137 572 816 B, sha256 f4fb765b2302192d3ac2315fd3ee0951f23efca4ad4ad19636b637e81d790529) via bench_rag.export_onnx; no public URL yet",
+    ),
+    Model(
+        "embed/rubert-tiny-turbo",
+        (F("", "model.int8.onnx", 29273425, "4e5d91c3148c7cf2635b350a8e3b89bc75761f55b8c381fbcd888d57f2bdd949", exported=True),
+         F(f"{HF}/sergeyzh/rubert-tiny-turbo/resolve/main/tokenizer.json", "tokenizer.json", 2413691,
+           "139995a730139fb2158226e69c5879159c020a71c33c87d65124914663f618ad")),
+        "MIT (sergeyzh/rubert-tiny-turbo)", ("lite",), kind="embed",
+        note="AI search embedder for lite (312-d, CLS pooling); model.int8.onnx is our export of model.safetensors "
+             "(116 781 184 B, sha256 92ef89061050e29f478b5037430789109fece437a938fe1c4ab686828441d107) via bench_rag.export_onnx; no public URL yet",
     ),
     # ---------------------------------------------------------------- diarization
     Model(
@@ -377,8 +400,21 @@ def fetch(m: Model, root: Path) -> None:
     tmp.mkdir(parents=True, exist_ok=True)
     print(f"[get ] {key} ({m.license})")
     digests: dict[str, str] = {}
+    exported_ok: dict[str, str] = {}
     for f in m.files:
         t = tmp / f.dest
+        if f.exported:
+            # not downloadable: take our own export from the cache if it is there (checked against the pinned sha256), else tell how to make it
+            have = dest / f.dest
+            if not have.is_file():
+                print(f"    [WARN] {m.dir}/{f.dest}: no public URL; make it with `python -m bench_rag.export_onnx {Path(m.dir).name}` "
+                      "(src/eval/bench_rag/README.md) -- AI search works without it by BM25 only")
+                continue
+            digest = sha256_file(have)
+            if f.sha256 and digest != f.sha256:
+                raise RuntimeError(f"{have}: sha256 {digest[:12]} != pinned export {f.sha256[:12]}")
+            exported_ok[f.dest] = digest
+            continue
         # 1. reuse an existing copy under another name, but only if its sha256 equals the official one
         for al in f.alias:
             ap_ = root / al
@@ -418,9 +454,10 @@ def fetch(m: Model, root: Path) -> None:
         digests[f.dest] = digest
     dest.mkdir(parents=True, exist_ok=True)
     for f in m.files:
-        os.replace(tmp / f.dest, dest / f.dest)  # atomic per file (same filesystem)
+        if not f.exported:
+            os.replace(tmp / f.dest, dest / f.dest)  # atomic per file (same filesystem)
     shutil.rmtree(tmp, ignore_errors=True)
-    write_sha_file(dest, digests)
+    write_sha_file(dest, {**digests, **exported_ok})
 
 
 def select(tier: str, candidates: bool, only: list[str] | None, no_llm: bool) -> list[Model]:
@@ -470,6 +507,9 @@ def config_model_paths(cfg: dict) -> set[str]:
     add((cfg.get("llm") or {}).get("model"))
     add((cfg.get("punctuation") or {}).get("model"))
     add((cfg.get("live") or {}).get("model_dir"))
+    emb = (cfg.get("search") or {}).get("embedder") or {}
+    add(emb.get("model"))
+    add(emb.get("tokenizer"))
     return out
 
 
@@ -550,7 +590,7 @@ def write_models_json(root: Path, out: Path) -> None:
             "path": path,
             "url": f.url if not f.member else f"{f.url}#{f.member}",
             "sha256": rec,
-            "sha256_source": "official" if f.sha256 else ("archive-official+extracted" if f.archive_sha256 else "recorded"),
+            "sha256_source": "exported" if f.exported else "official" if f.sha256 else ("archive-official+extracted" if f.archive_sha256 else "recorded"),
             "size": p.stat().st_size,
             "license": m.license,
             "tiers": [t for t in m.tiers if t] or ["candidate"],
@@ -560,7 +600,8 @@ def write_models_json(root: Path, out: Path) -> None:
     doc = {"_note": "Generated by scripts/fetch_models.py --write-models-json. path is relative to the models root "
                     "(Android assets/models, PC .cache/models) and equals the paths in config/tiers/*.json. "
                     "sha256_source: official = digest published by the source (HF lfs / GitHub digest / checksum.txt); "
-                    "recorded = computed on first download (no digest is published for the file).",
+                    "recorded = computed on first download (no digest is published for the file); "
+                    "exported = produced by our own export of the official weights (bench_rag.export_onnx), pinned by sha256, url is empty until published.",
            "models": items}
     out.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {out} ({len(items)} files)")

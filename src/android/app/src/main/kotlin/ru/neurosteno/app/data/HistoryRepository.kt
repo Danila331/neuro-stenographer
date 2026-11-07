@@ -64,6 +64,16 @@ data class RunInfo(
  */
 class HistoryRepository(private val root: File, private val clock: () -> Long = System::currentTimeMillis) {
 
+    /** Подписчик на изменения истории (индекс AI-поиска). Вызывается после изменения на диске, вне замка. */
+    interface Listener {
+        fun onAdded(id: String)
+        fun onSaved(id: String)
+        fun onDeleted(id: String)
+        fun onCleared()
+    }
+
+    @Volatile var listener: Listener? = null
+
     private val lock = Any()
     private val _entries = MutableStateFlow<List<HistoryEntry>>(emptyList())
     val entries: StateFlow<List<HistoryEntry>> = _entries.asStateFlow()
@@ -111,8 +121,11 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
         val entry = describe(id, sourceName, created, stored, warnings, run, modelSetId, audioName)
         File(dir, ENTRY).writeText(JSON.encodeToString(HistoryEntry.serializer(), entry), Charsets.UTF_8)
         publish(entry)
+        notify { it.onAdded(entry.id) }
         entry
     }
+
+    private inline fun notify(f: (Listener) -> Unit) { listener?.let { l -> runCatching { f(l) } } }
 
     fun loadTranscript(id: String): StoredTranscript? = synchronized(lock) {
         runCatching { StoredTranscript.decode(File(dir(id), TRANSCRIPT).readText(Charsets.UTF_8)) }.getOrNull()
@@ -126,6 +139,7 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
             .copy(processingMs = old.processingMs, stageMs = old.stageMs, tier = old.tier, language = old.language, edited = stored.edited)
         File(dir(id), ENTRY).writeText(JSON.encodeToString(HistoryEntry.serializer(), entry), Charsets.UTF_8)
         publish(entry)
+        notify { it.onSaved(id) }
         entry
     }
 
@@ -162,11 +176,13 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
     fun delete(id: String) {
         synchronized(lock) { dir(id).deleteRecursively() }
         _entries.value = _entries.value.filterNot { it.id == id }
+        notify { it.onDeleted(id) }
     }
 
     fun clear() {
         synchronized(lock) { root.listFiles()?.forEach { it.deleteRecursively() } }
         _entries.value = emptyList()
+        notify { it.onCleared() }
     }
 
     /** Занято на диске, байт. */

@@ -30,6 +30,8 @@ data class TierConfig(
     val live: LiveConfig = LiveConfig(),
     /** Выжимка записи (B50): темы по говорящим, решения, задачи; блок `summary` конфига. */
     val summary: ru.neurosteno.core.summary.SummaryConfig = ru.neurosteno.core.summary.SummaryConfig(),
+    /** AI-поиск по записям (B51): эмбеддер, нарезка на окна, BM25, слияние, хранилище векторов, ответ LLM. */
+    val search: ru.neurosteno.core.search.SearchConfig = ru.neurosteno.core.search.SearchConfig(),
 ) {
     /** Все модели, нужные этому варианту (для проверки наличия assets и для stage_models). */
     fun requiredModelPaths(): List<String> = buildList {
@@ -51,6 +53,10 @@ data class TierConfig(
     /** Необязательные модели варианта (их отсутствие отключает возможность, а не обработку): потоковая ASR превью. */
     fun optionalModelPaths(): List<String> = buildList {
         if (live.enabled) live.modelDir?.let(::add)
+        if (search.enabled) {
+            search.embedder.model?.let(::add)
+            search.embedder.tokenizer?.let(::add)
+        }
     }
 
     /**
