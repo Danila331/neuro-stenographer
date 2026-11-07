@@ -3,6 +3,7 @@ package ru.neurosteno.sherpa
 import com.k2fsa.sherpa.onnx.SileroVadModelConfig
 import com.k2fsa.sherpa.onnx.VadModelConfig
 import ru.neurosteno.core.AudioBuffer
+import ru.neurosteno.core.SampleSpan
 import ru.neurosteno.core.TimeSpan
 import ru.neurosteno.core.Vad
 import ru.neurosteno.core.VadConfig
@@ -19,7 +20,16 @@ class SherpaVad(
     private val numThreads: Int = 1,
 ) : Vad {
 
+    /** Режим legacy: интервалы в мс с паддингом и склейкой (`SpanOps.padAndMerge`). */
     override fun detect(audio: AudioBuffer): List<TimeSpan> {
+        val spans = detectSamples(audio).map {
+            TimeSpan(it.start * 1000L / SAMPLE_RATE, it.end * 1000L / SAMPLE_RATE)
+        }.filter { it.endMs > it.startMs }
+        return SpanOps.padAndMerge(spans, cfg.padMs.toLong(), audio.durationMs)
+    }
+
+    /** Сырые сегменты Silero в отсчётах, без паддинга: окна по 512 отсчётов, хвост короче окна отбрасывается (как в эталоне). */
+    override fun detectSamples(audio: AudioBuffer): List<SampleSpan> {
         require(audio.sampleRate == SAMPLE_RATE) { "VAD ожидает 16 кГц, получено ${audio.sampleRate}" }
         val config = VadModelConfig(
             sileroVadModelConfig = SileroVadModelConfig(
@@ -36,7 +46,7 @@ class SherpaVad(
         )
         val vad = NativeVad(null, config)
         try {
-            val spans = ArrayList<TimeSpan>()
+            val spans = ArrayList<SampleSpan>()
             val samples = audio.samples
             var pos = 0
             while (pos + WINDOW <= samples.size) {
@@ -47,19 +57,17 @@ class SherpaVad(
             }
             vad.flush()
             drain(vad, spans)
-            return SpanOps.padAndMerge(spans, cfg.padMs.toLong(), audio.durationMs)
+            return spans
         } finally {
             vad.release()
         }
     }
 
-    private fun drain(vad: NativeVad, out: MutableList<TimeSpan>) {
+    private fun drain(vad: NativeVad, out: MutableList<SampleSpan>) {
         while (!vad.empty()) {
             val seg = vad.front()
             vad.pop()
-            val startMs = seg.start * 1000L / SAMPLE_RATE
-            val endMs = (seg.start + seg.samples.size) * 1000L / SAMPLE_RATE
-            if (endMs > startMs) out += TimeSpan(startMs, endMs)
+            out += SampleSpan(seg.start, seg.start + seg.samples.size)
         }
     }
 

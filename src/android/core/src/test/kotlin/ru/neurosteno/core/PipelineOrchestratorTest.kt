@@ -369,7 +369,7 @@ class PipelineOrchestratorTest {
                 diarizer = { FakeDiarizer() },
                 languageId = { lid },
             ),
-            settings.copy(languageMode = "auto", supportedLanguages = setOf("ru", "en"), perChunkLanguage = true, chunkMaxMs = 25_000),
+            settings.copy(languageMode = "auto", supportedLanguages = setOf("ru", "en"), perChunkLanguage = true, chunkMaxS = 25.0),
             Dispatchers.IO,
         ).run(input)
         // при max 25 с соседние интервалы не склеиваются (расстояние > 25 с): четыре чанка; LID: ru, ru, en, en
@@ -385,5 +385,59 @@ class PipelineOrchestratorTest {
     fun `numbers are spelled when postprocess numbers is words`() = runBlocking {
         val r = orchestrator(asr = FakeAsr(listOf(Word("в", 0, 100), Word("25", 100, 600), Word("мышей", 600, 900))), s = settings.copy(spellNumbers = true)).run(input)
         assertEquals("в двадцать пять мышей", r.transcript.utterances.single().text)
+    }
+
+    private fun peakOf(a: AudioBuffer) = a.samples.maxOf { kotlin.math.abs(it) }
+
+    @Test
+    fun `normalize scope asr - vad and diarization read the original signal, asr and lid the amplified copy`() = runBlocking {
+        val quiet = AudioBuffer(FloatArray(16_000 * 4) { if (it % 2 == 0) 0.01f else -0.01f })
+        val peaks = java.util.Collections.synchronizedMap(HashMap<String, Float>())
+        val vad = object : Vad {
+            override fun detect(audio: AudioBuffer): List<TimeSpan> { peaks["vad"] = peakOf(audio); return listOf(TimeSpan(0, audio.durationMs)) }
+            override fun close() = Unit
+        }
+        val asr = object : AsrEngine {
+            override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word> {
+                peaks["asr"] = peakOf(audio); return listOf(Word("привет", 100, 600))
+            }
+            override fun close() = Unit
+        }
+        val diar = object : Diarizer {
+            override fun diarize(audio: AudioBuffer, numSpeakers: Int?, progress: ProgressListener): List<SpeakerTurn> { peaks["diar"] = peakOf(audio); return emptyList() }
+            override fun close() = Unit
+        }
+        val ng = NormalizeGainConfig(enabled = true, mode = "peak", scope = "asr")
+        PipelineOrchestrator(FakeDecoder(quiet), EngineProviders(vad = { vad }, asr = { asr }, diarizer = { diar }), settings.copy(normalizeGain = ng), Dispatchers.IO).run(input)
+        assertEquals(0.01f, peaks["vad"]!!, 1e-6f)
+        assertEquals(0.01f, peaks["diar"]!!, 1e-6f)
+        assertEquals(0.891f, peaks["asr"]!!, 0.003f)
+        assertEquals(0.01f, peakOf(quiet), 1e-6f) // исходный буфер не тронут
+    }
+
+    @Test
+    fun `pack chunking passes already planned chunks to asr`() = runBlocking {
+        var got: List<TimeSpan> = emptyList()
+        val asr = object : AsrEngine {
+            override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word> { got = speech; return listOf(Word("да", 1000, 1200)) }
+            override fun close() = Unit
+        }
+        val vad = FakeVad(spans = listOf(TimeSpan(1000, 5000), TimeSpan(6000, 9000)))
+        PipelineOrchestrator(
+            FakeDecoder(AudioBuffer(FloatArray(16_000 * 12) { 0.1f })),
+            EngineProviders(vad = { vad }, asr = { asr }, diarizer = { FakeDiarizer() }),
+            settings.copy(packChunking = true, vadPadMs = 150, chunkMaxS = 25.0, chunkMinS = 1.0),
+            Dispatchers.IO,
+        ).run(input)
+        // паддинг 150 мс; граница с соседом -- середина паузы (5500); оба сегмента влезают в 25 с -> один чанк 850..9150
+        assertEquals(listOf(TimeSpan(850, 9_150)), got)
+    }
+
+    @Test
+    fun `strip dashes runs after numbers and before align`() = runBlocking {
+        val asr = FakeAsr(listOf(Word("Привет.—", 0, 400), Word("—", 400, 450), Word("мир", 500, 900)))
+        val r = orchestrator(asr = asr, s = settings.copy(stripDashes = "after_terminal")).run(input)
+        // «Привет.—» -> «Привет.»; отдельное слово «—» не стоит после знака внутри своего текста и остаётся
+        assertEquals("Привет. — мир", r.transcript.utterances.single().text)
     }
 }

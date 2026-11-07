@@ -40,4 +40,29 @@ object Postprocess {
         }
         return out
     }
+
+    private val DASH_AFTER_TERMINAL = Regex("(?<=[.?!\u2026])[\u2014\u2013]+")
+    private val ANY_DASH = Regex("[\u2014\u2013]+")
+
+    /**
+     * `postprocess.strip_dashes` -- порт `refpipe/postprocess.py::strip_dashes_text`. off | after_terminal | all.
+     * after_terminal: удалить серии длинных/средних тире (U+2014, U+2013) сразу после `.` `?` `!` `…`;
+     * all: все такие тире. Дефис-минус (U+002D) не трогается никогда.
+     */
+    fun stripDashesText(text: String, mode: String): String = when (mode.lowercase()) {
+        "after_terminal" -> DASH_AFTER_TERMINAL.replace(text, "")
+        "all" -> ANY_DASH.replace(text, "")
+        else -> text
+    }
+
+    /** Слова ASR после [spellNumbers] и до Aligner; опустевшее слово удаляется. */
+    fun stripDashes(words: List<Word>, mode: String): List<Word> {
+        if (mode.isBlank() || mode.lowercase() == "off") return words
+        val out = ArrayList<Word>(words.size)
+        for (w in words) {
+            val t = stripDashesText(w.text, mode)
+            if (t.isNotBlank()) out += if (t == w.text) w else w.copy(text = t)
+        }
+        return out
+    }
 }

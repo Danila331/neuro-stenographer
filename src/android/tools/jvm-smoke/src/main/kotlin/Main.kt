@@ -97,6 +97,8 @@ fun main(args: Array<String>) {
             SherpaAsr(if (lang == "en") (cfg.asrEn ?: cfg.asr) else cfg.asr, root, threads, lang,
                 keepPunct = cfg.punctuation.source == "asr_native",
                 dropTinyMaxChars = cfg.postprocess.dropTinyChunks.takeIf { it.enabled }?.maxChars,
+                replanChunks = !cfg.vad.packChunking,
+                chunkGain = cfg.audio.normalizeGain.takeIf { it.active && it.effectiveScope == "asr_chunk" },
                 onRawResult = if (System.getenv("SMOKE_DEBUG_ASR") != null) { text, tokens, ts ->
                     println("RAW text=\"$text\"\n    tokens=$tokens\n    ts=${ts.toList()}")
                 } else null)

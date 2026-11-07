@@ -8,8 +8,7 @@
 #   PARITY_SPLIT=all -- брать и test-файлы (только для проверки паритета, не для подбора параметров).
 #   <dataset> -- имя каталога в $ROOT/.cache/data (например ru-dialog-tts-cats) или путь; tier по умолчанию medium.
 # Пунктуация берётся из конфига (asr_native -- знаки и регистр от модели); для source=llm обе стороны без LLM (plain).
-# Язык ru, одинаковое число потоков (PARITY_THREADS). normalize_gain конфига: Android нормализует сам, refpipe получает
-# нормализованную копию (parity_norm.py). PARITY_CONFIG=путь -- другой конфиг (например, старый, для сравнения «до/после»).
+# Язык ru, одинаковое число потоков (PARITY_THREADS). normalize_gain/VAD rescue/pack/LID теперь реализованы в обеих сторонах. PARITY_CONFIG=путь -- другой конфиг (например, старый, для сравнения «до/после»).
 # Метрики: WER norm (основная для паритета) и WER punct (выводятся для информации, порог только на WER norm).
 # Результаты: $ROOT/.cache/parity/<dataset>-<tier>/{android,refpipe}/ (+ summary.txt). Нужен venv refpipe:
 #   cd src/eval/refpipe && uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -e ".[dev]"
@@ -57,8 +56,7 @@ rm -rf "$OUT"; mkdir -p "$OUT/android" "$OUT/refpipe" "$OUT/wav"
 for id in "${IDS[@]}"; do
   wav="$DATASET/audio/$id.wav"
   echo "--- $id"
-  "$REFPY" "$HERE/parity_norm.py" "$CONFIG" "$wav" "$OUT/wav/$id.wav"
-  "$REFPIPE" run --config "$CONFIG" --models "$MODELS" --input "$OUT/wav/$id.wav" --out "$OUT/refpipe" --language "${PARITY_LANGUAGE:-ru}" \
+  "$REFPIPE" run --config "$CONFIG" --models "$MODELS" --input "$wav" --out "$OUT/refpipe" --language "${PARITY_LANGUAGE:-ru}" \
     --num-threads "$THREADS" ${OVR[@]+"${OVR[@]}"} >/dev/null
   PARITY_THREADS="$THREADS" PARITY_CONFIG="$CONFIG" "$HERE/jvm_smoke.sh" "$wav" "$TIER" "$OUT/android" >/dev/null 2>&1 \
     || { echo "jvm_smoke упал на $id" >&2; exit 1; }

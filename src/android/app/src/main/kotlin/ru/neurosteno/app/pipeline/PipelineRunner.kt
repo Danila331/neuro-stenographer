@@ -85,7 +85,9 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
             asr = { lang ->
                 val asrCfg = if (lang == LanguageConfig.EN && hasEn) cfg.asrEn!! else cfg.asr
                 SherpaAsr(asrCfg, root, threads, lang, keepPunct = cfg.punctuation.source == "asr_native",
-                    dropTinyMaxChars = cfg.postprocess.dropTinyChunks.takeIf { it.enabled }?.maxChars)
+                    dropTinyMaxChars = cfg.postprocess.dropTinyChunks.takeIf { it.enabled }?.maxChars,
+                    replanChunks = !cfg.vad.packChunking,
+                    chunkGain = cfg.audio.normalizeGain.takeIf { it.active && it.effectiveScope == "asr_chunk" })
             },
             diarizer = { SherpaDiarizer(cfg.diarization, root, threads) },
             // Пунктуатор создаётся только после выгрузки ASR/диаризации (оркестратор). Если LLM недоступна (нет файла,

@@ -121,7 +121,13 @@ data class NormalizeGainConfig(
     @SerialName("max_attenuation_db") val maxAttenuationDb: Double = 6.0,
     /** Почти нулевой сигнал (пик ниже порога, dBFS) не трогаем: усиливать нечего. */
     @SerialName("skip_if_peak_below_dbfs") val skipIfPeakBelowDbfs: Double = -85.0,
+    /** Нормализовать только файлы с пиком ниже этого уровня (dBFS); null -- всегда. */
+    @SerialName("apply_if_peak_below_dbfs") val applyIfPeakBelowDbfs: Double? = null,
+    /** all -- каждая стадия видит нормализованный сигнал; asr -- VAD/rescue/диаризация читают ИСХОДНЫЙ, ASR и LID -- копию;
+     *  asr_chunk -- каждый чанк ASR нормализуется по своему пику. */
+    val scope: String = "all",
 ) {
+    val effectiveScope: String get() = when (scope.lowercase()) { "asr" -> "asr"; "asr_chunk" -> "asr_chunk"; else -> "all" }
     val active: Boolean get() = enabled && mode.lowercase() == "peak"
 }
 
@@ -140,6 +146,22 @@ data class VadConfig(
     @SerialName("min_speech_ms") val minSpeechMs: Int = 120,
     @SerialName("pad_ms") val padMs: Int = 150,
     @SerialName("max_speech_s") val maxSpeechS: Double = 25.0,
+    /** Энергетический «спасатель» речи, которую Silero не увидел (тихие/кодированные голоса); по умолчанию выключен. */
+    val rescue: VadRescueConfig = VadRescueConfig(),
+    /** pack -- упаковка как в bench_asr/refpipe (сегменты не склеиваются, резка по минимуму энергии); legacy -- прежний ChunkPlanner. */
+    val chunking: String = "pack",
+) {
+    val packChunking: Boolean get() = chunking.lowercase() != "legacy"
+}
+
+@Serializable
+data class VadRescueConfig(
+    val enabled: Boolean = false,
+    @SerialName("snr_db") val snrDb: Double = 12.0,
+    @SerialName("abs_floor_db") val absFloorDb: Double = -55.0,
+    @SerialName("bridge_ms") val bridgeMs: Int = 300,
+    @SerialName("min_ms") val minMs: Int = 600,
+    @SerialName("margin_ms") val marginMs: Int = 200,
 )
 
 @Serializable
@@ -237,6 +259,8 @@ data class PostprocessConfig(
     /** as_is | words ("25" -> "двадцать пять"). */
     val numbers: String = "as_is",
     @SerialName("drop_tiny_chunks") val dropTinyChunks: DropTinyChunksConfig = DropTinyChunksConfig(),
+    /** off | after_terminal | all -- см. [ru.neurosteno.core.postprocess.Postprocess.stripDashes]. */
+    @SerialName("strip_dashes") val stripDashes: String = "off",
 ) {
     val spellNumbers: Boolean get() = numbers.lowercase() == "words"
 }

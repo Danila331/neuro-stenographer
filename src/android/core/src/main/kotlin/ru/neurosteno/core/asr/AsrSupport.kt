@@ -84,7 +84,11 @@ object TokenWords {
     fun plainWord(t: String): String =
         t.filter { it.isLetterOrDigit() || it == '-' || it == '\'' }.trim('-', '\'').lowercase()
 
-    private class Acc(var text: StringBuilder, val start: Long, var last: Long, var lastDur: Long?)
+    private class Acc(val text: StringBuilder) {
+        var start: Long? = null
+        var last: Long = 0
+        var lastDur: Long? = null
+    }
 
     fun build(
         tokens: List<String>,
@@ -111,11 +115,11 @@ object TokenWords {
             if (lead) flush()
             if (body.isNotEmpty()) {
                 val tMs = chunkStartMs + (timestampsSec[i].toDouble() * 1000 + 0.5).toLong() + startOffsetMs
-                val c = cur ?: Acc(StringBuilder(), tMs, tMs, null).also { cur = it }
+                val c = cur ?: Acc(StringBuilder()).also { cur = it }
                 c.text.append(body)
-                // знак препинания (punct-модели ставят его отдельным токеном позже слова) не сдвигает конец слова
-                val punctOnly = keepPunct && c.text.length > body.length && body.all { it in PUNCT_CHARS }
-                if (!punctOnly) {
+                // знаки препинания не определяют ни границы, ни времена слова (punct-модели ставят их отдельным токеном позже)
+                if (!body.all { it in PUNCT_CHARS }) {
+                    if (c.start == null) c.start = tMs
                     c.last = tMs
                     c.lastDur = if (durationsSec != null && i < durationsSec.size) (durationsSec[i].toDouble() * 1000 + 0.5).toLong() else null
                 }
@@ -124,18 +128,23 @@ object TokenWords {
         }
         flush()
 
-        val out = ArrayList<Word>()
-        for ((k, w) in words.withIndex()) {
-            val text = if (keepPunct) w.text.toString() else plainWord(w.text.toString())
-            if (text.isEmpty()) continue
-            if (keepPunct && out.isNotEmpty() && text.all { it in PUNCT_CHARS }) {
-                val p = out.removeAt(out.size - 1)
-                out += Word(p.text + text, p.startMs, p.endMs, p.confidence)
+        // «слова» из одной пунктуации не имеют времени: приклеиваем к предыдущему (asr_native) или отбрасываем
+        val timed = ArrayList<Acc>()
+        for (w in words) {
+            if (w.start == null) {
+                if (keepPunct && timed.isNotEmpty()) timed.last().text.append(w.text)
                 continue
             }
-            val start = maxOf(chunkStartMs, w.start)
+            timed += w
+        }
+
+        val out = ArrayList<Word>()
+        for ((k, w) in timed.withIndex()) {
+            val text = if (keepPunct) w.text.toString() else plainWord(w.text.toString())
+            if (text.isEmpty()) continue
+            val start = maxOf(chunkStartMs, w.start!!)
             var end = w.last + (w.lastDur?.takeIf { it != 0L } ?: tailMs)
-            if (k + 1 < words.size) end = minOf(end, maxOf(words[k + 1].start, start + 1))
+            if (k + 1 < timed.size) end = minOf(end, maxOf(timed[k + 1].start!!, start + 1))
             end = minOf(maxOf(end, start + 1), maxOf(chunkEndMs, start + 1))
             out += Word(text, start, end, null)
         }
