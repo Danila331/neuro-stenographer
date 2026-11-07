@@ -28,7 +28,9 @@ object LlmDiagnostics {
             "ms=${run.durationMs} peak_pss_mb=${run.peakPssMb} status=${run.status}" +
             if (run.options.isBlank()) "" else " llama_opts=\"${run.options}\""
 
-    fun writeMarker(dir: File, sourceName: String, run: LlmRunMetrics, finishedAtMs: Long = System.currentTimeMillis()): Result<File> = runCatching {
+    fun writeMarker(
+        dir: File, sourceName: String, run: LlmRunMetrics, finishedAtMs: Long = System.currentTimeMillis(), fileSuffix: String = "llm",
+    ): Result<File> = runCatching {
         dir.mkdirs()
         val json = buildJsonObject {
             put("source", sourceName)
@@ -44,7 +46,7 @@ object LlmDiagnostics {
             put("status", run.status)
             if (run.options.isNotBlank()) put("llama_options", run.options)
         }
-        val target = File(dir, "${ResultsAutosave.baseName(sourceName)}.llm.json")
+        val target = File(dir, "${ResultsAutosave.baseName(sourceName)}.$fileSuffix.json")
         val tmp = File(dir, target.name + ".tmp")
         tmp.writeText(json.toString(), Charsets.UTF_8)
         if (!tmp.renameTo(target)) {

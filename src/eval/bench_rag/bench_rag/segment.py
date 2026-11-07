@@ -9,8 +9,9 @@ import numpy as np
 
 def gap_sims(vecs: np.ndarray, k: int = 3) -> np.ndarray:
     """sim[g] = cosine between the mean of the k utterances before gap g and the k after it (gap g is between g and g+1)."""
+    vecs = np.asarray(vecs, dtype=np.float64)     # float64: the Kotlin port (core/summary/TopicSegmenter) is bit-compatible on indices
     n = len(vecs)
-    out = np.ones(max(0, n - 1), dtype=np.float32)
+    out = np.ones(max(0, n - 1), dtype=np.float64)
     for g in range(n - 1):
         a = vecs[max(0, g - k + 1): g + 1].mean(0)
         b = vecs[g + 1: g + 1 + k].mean(0)
@@ -64,7 +65,7 @@ def lexical_vectors(texts: list[str]) -> np.ndarray:
     df = Counter(w for d in docs for w in d)
     vocab = {w: i for i, w in enumerate(df)}
     n = len(texts)
-    m = np.zeros((n, max(1, len(vocab))), dtype=np.float32)
+    m = np.zeros((n, max(1, len(vocab))), dtype=np.float64)
     for i, d in enumerate(docs):
         for w, f in d.items():
             m[i, vocab[w]] = (1 + math.log(f)) * math.log(1 + n / df[w])

@@ -28,6 +28,8 @@ data class TierConfig(
     val postprocess: PostprocessConfig = PostprocessConfig(),
     /** Живая расшифровка во время записи (B13): потоковая ASR как превью; итог всё равно даёт полная обработка. */
     val live: LiveConfig = LiveConfig(),
+    /** Выжимка записи (B50): темы по говорящим, решения, задачи; блок `summary` конфига. */
+    val summary: ru.neurosteno.core.summary.SummaryConfig = ru.neurosteno.core.summary.SummaryConfig(),
 ) {
     /** Все модели, нужные этому варианту (для проверки наличия assets и для stage_models). */
     fun requiredModelPaths(): List<String> = buildList {
@@ -205,6 +207,8 @@ data class AsrConfig(
     @SerialName("max_active_paths") val maxActivePaths: Int = 4,
     @SerialName("hotwords_file") val hotwordsFile: String? = null,
     @SerialName("hotwords_score") val hotwordsScore: Double = 1.5,
+    /** Штраф за blank-токен в greedy-декодировании (sherpa `blank_penalty`); 0 -- выключен. >0 уменьшает удаления на дальнем поле. */
+    @SerialName("blank_penalty") val blankPenalty: Double = 0.0,
     val chunk: ChunkConfig = ChunkConfig(),
     @SerialName("second_pass") val secondPass: SecondPassConfig? = null,
     /** Размер батча чанков (используется только Python-эталоном; на Android чанки декодируются по одному). */

@@ -24,6 +24,9 @@ class AppGraph(private val context: Context) {
 
     val settings: SettingsRepository by lazy { SettingsRepository(context) }
 
+    /** Выжимка записей (B50): запуск из ProcessingService, состояние для экрана выжимки. */
+    val summary: ru.neurosteno.app.summary.SummaryRunner by lazy { ru.neurosteno.app.summary.SummaryRunner(context, this) }
+
     val history: HistoryRepository by lazy { HistoryRepository(File(context.filesDir, "history")) }
 
     /** Каталог наборов для загрузки (assets/model_sets.json; в debug-сборке его можно подменить файлом в files/). */

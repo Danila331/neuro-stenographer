@@ -108,6 +108,18 @@ Relabel (B46, `diarization.relabel.enabled`): `SpeakerRelabeler` — порт `b
 монологов (порог на лучший силуэт). Кейсы паритета из эталона: `src/eval/refpipe/.venv/bin/python src/android/scripts/gen_diar_cases.py`
 → `core/src/test/resources/diar_cases.json` (`SpeakerRelabelerTest`).
 
+Выжимка (B50, 1:1 с `src/eval/bench_rag`): `:core` `ru.neurosteno.core.summary` -- `TopicSegmenter` (долины косинуса; без эмбеддера -- лексические TF-IDF, k = 4),
+`SummaryPlanner` (фрагменты, строки запроса, GBNF «говорящий K цитирует только строки K»), `SummaryValidator` (разбор + проверка и перепривязка
+ссылок), `SummaryMerger`, `ExtractiveSummary` (без LLM), `SummaryEngine` (map-reduce, `SummaryDoc` -- схема `summary.json`), `SummaryText`
+(Snowball Russian + `snow5`, порт `text.py` вместе с особенностями эталона). Контракт для поиска -- `ru.neurosteno.core.search.TextEmbedder`.
+`:engine-llm`: `LlamaAssistant.generateConstrained(prompt, maxTokens, grammar, reusePrefix)` -- GBNF через `llama_sampler_init_grammar` и
+повторное использование общего префикса KV-кэша (системный промпт между фрагментами; ×1.7 к скорости). `:app`: `SummaryRunner`
+(`AppGraph.summary`), `ProcessingService.summaryIntent(context, entryId)`; результат `history/<id>/summary.json` и `results/<имя>.summary.json`.
+Паритетные кейсы из эталона: `src/eval/bench_rag/.venv/bin/python src/android/scripts/gen_summary_cases.py` -> `core/src/test/resources/summary_cases.json`
+(`SummaryCasesTest`, 132 кейса: стеммер, долины, план, GBNF, проверка ссылок, склейка, JSON, extractive -- побитово). Хостовая проверка JNI и
+выжимки на реальной модели: `scripts/build_host_jni.sh`, затем в `tools/jvm-smoke`: `--grammar-check <gguf> <prompts_dir>` и
+`--summary <transcript.json> <gguf> <prompts_dir> [out.json] [overview]`.
+
 ## Модули
 
 | Модуль | Тип | Содержимое |
