@@ -20,8 +20,9 @@ Algorithm
    |Δstart| < 300 ms; same for end.
 
 Hypothesis word times: if ``<id>.full.json`` (extended export with per-word times) lies next to
-the hypothesis, its words are used (``ts=words`` in the notes of results.csv); otherwise the
-proportional split above is used (``ts=utt``).
+the hypothesis, its words are used (``ts=words`` in the notes of results.csv). Both the original
+``utterances[].words`` shape and the app export's ``transcript[].words`` shape are supported;
+otherwise the proportional split above is used (``ts=utt``).
 
 Because only aligned words are used, a deleted first word of an utterance shifts the predicted
 start to the next recognised word; this error is part of the metric (it measures what a user
@@ -81,13 +82,21 @@ def hyp_words_from_utts(utts: Sequence[Utt], mode: str = ALIGN_MODE) -> list[Hyp
 def hyp_words_from_full(obj: object, mode: str = ALIGN_MODE) -> list[HypWord] | None:
     """Real word times from an extended export (`<id>.full.json`, ARCHITECTURE section 1).
 
-    Expected: ``{"utterances":[{"start_ms","end_ms","text","words":[{"text","start_ms","end_ms"}]}]}``.
-    Utterances are ordered by (start_ms, end_ms), words keep their order. A word that normalises
-    to several tokens (e.g. "25" in norm_num) shares its interval proportionally to token length.
-    An utterance without a usable ``words`` list falls back to proportional splitting of its own
-    interval. Returns None if the structure is unusable or yields no words at all.
+    Accepts either ``{"utterances":[...]}`` or the app export
+    ``{"transcript":[...]}``, where each item has ``start_ms``, ``end_ms``, ``text`` and
+    optionally ``words:[{"text","start_ms","end_ms"}]``. Utterances are ordered by
+    (start_ms, end_ms), words keep their order. A word that normalises to several tokens (e.g.
+    "25" in norm_num) shares its interval proportionally to token length. An utterance without a
+    usable ``words`` list falls back to proportional splitting of its own interval. Returns None
+    if the structure is unusable or yields no words at all.
     """
-    utts = obj.get("utterances") if isinstance(obj, dict) else None
+    utts = None
+    if isinstance(obj, dict):
+        for key in ("utterances", "transcript"):
+            candidate = obj.get(key)
+            if isinstance(candidate, list) and candidate:
+                utts = candidate
+                break
     if not isinstance(utts, list):
         return None
 
