@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_name задаётся для каждого варианта в build.gradle.kts (resValue) -->
+    <string name="btn_cancel">Отмена</string>
+    <string name="btn_cancel_processing">Отменить</string>
+    <string name="label_on_device">Обработка выполняется на устройстве</string>
+    <string name="notification_channel">Обработка записи</string>
+    <string name="notification_channel_download">Загрузка моделей</string>
+    <string name="notification_title">Идёт обработка записи</string>
+    <string name="notification_preparing">Подготовка…</string>
+    <string name="notification_download_title">Загрузка моделей: %1$s</string>
+</resources>

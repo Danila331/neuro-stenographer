@@ -1,0 +1,36 @@
+{
+  "status": "done",
+  "source": "cats_c07_v0_meeting_reverb.wav",
+  "finished_at_ms": 1794012457204,
+  "audio_duration_ms": 22730,
+  "processing_ms": 11208,
+  "rtf": 0.493,
+  "language": "ru",
+  "utterances": 11,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 1247,
+    "vad": 420,
+    "lid": 1062,
+    "asr": 6592,
+    "diarization": 8403,
+    "align": 7,
+    "punctuation": 1,
+    "export": 11,
+    "total": 11208
+  },
+  "peak_pss_mb": 491,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "cats_c07_v0_meeting_reverb.json",
+    "cats_c07_v0_meeting_reverb.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

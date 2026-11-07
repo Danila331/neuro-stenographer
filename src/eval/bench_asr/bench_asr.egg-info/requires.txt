@@ -1,0 +1,7 @@
+sherpa-onnx>=2.0.1
+numpy
+soundfile
+psutil
+scipy
+pandas
+pytest

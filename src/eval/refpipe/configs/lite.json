@@ -1,0 +1,71 @@
+{
+  "_note": "Copy of config/tiers/lite.json with real model file names (refpipe/scripts/fetch_models.py). Only llm.model differs.",
+  "tier": "lite",
+  "num_threads": 4,
+  "audio": {
+    "sample_rate": 16000,
+    "denoise": {
+      "enabled": false,
+      "model": null,
+      "snr_threshold_db": 12.0
+    }
+  },
+  "vad": {
+    "model": "silero-vad/silero_vad.onnx",
+    "threshold": 0.45,
+    "min_silence_ms": 300,
+    "min_speech_ms": 120,
+    "pad_ms": 150,
+    "max_speech_s": 25.0
+  },
+  "asr": {
+    "engine": "gigaam_ctc",
+    "model_dir": "asr/gigaam-v2-ctc-int8",
+    "decoding": "greedy_search",
+    "max_active_paths": 4,
+    "hotwords_file": null,
+    "hotwords_score": 1.5,
+    "chunk": {
+      "max_s": 25.0,
+      "min_s": 1.0,
+      "overlap_ms": 0
+    },
+    "second_pass": null
+  },
+  "diarization": {
+    "segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+    "embedding": "diar/embedding/model.onnx",
+    "clustering": {
+      "method": "fast_clustering",
+      "threshold": 0.6,
+      "num_speakers": null,
+      "max_speakers": 8
+    },
+    "min_duration_on_s": 0.2,
+    "min_duration_off_s": 0.3
+  },
+  "align": {
+    "max_gap_ms": 1500,
+    "min_island_words": 1,
+    "min_island_ms": 400
+  },
+  "punctuation": {
+    "source": "llm",
+    "model": null
+  },
+  "llm": {
+    "model": "llm/qwen3-0.6b-q4_0.gguf",
+    "n_ctx": 2048,
+    "n_threads": 4,
+    "gpu_layers": 0,
+    "punctuation": true,
+    "speaker_fix": false,
+    "summary": true,
+    "time_budget_rtf": 0.15
+  },
+  "normalization": {
+    "numbers": "as_is",
+    "yo_to_e": false,
+    "case": "as_is"
+  }
+}

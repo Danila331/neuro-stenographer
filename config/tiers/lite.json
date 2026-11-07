@@ -1,5 +1,5 @@
 {
-  "_note": "Стартовые кандидаты. Значения моделей/порогов уточняются по замерам (docs/TEST_RESULTS.md). Пути — относительно корня моделей.",
+  "_note": "ASR ru: GigaAM v3 RNNT с пунктуацией (int8) — лучший на диалогах и по WER norm (synth test 16.8%), и по WER со знаками (31% против 45% у моделей без знаков; просодия по паузам — 23–25%). Нормализация громкости peak: на тихих записях WER 35%→13%, на обычных без потерь. asr_en: Parakeet-TDT-110m-en. LID: whisper-tiny. Порог диаризации 0.85 — предварительно. Скорость/RAM финально — по отчёту asr-bench и эмулятору.",
   "tier": "lite",
   "num_threads": 4,
   "audio": {
@@ -8,6 +8,14 @@
       "enabled": false,
       "model": null,
       "snr_threshold_db": 12.0
+    },
+    "normalize_gain": {
+      "enabled": false,
+      "mode": "peak",
+      "peak_dbfs": -1.0,
+      "max_gain_db": 40.0,
+      "skip_if_peak_below_dbfs": -85.0,
+      "_pending": "Выключено: в сквозном пайплайне усиливает фон и ухудшает VAD (synth: 40.2→46.8 %). Решение по совместному перебору с vad.threshold (refpipe)."
     }
   },
   "vad": {
@@ -19,8 +27,8 @@
     "max_speech_s": 25.0
   },
   "asr": {
-    "engine": "gigaam_ctc",
-    "model_dir": "asr/gigaam-v2-ctc-int8",
+    "engine": "gigaam_rnnt",
+    "model_dir": "asr/gigaam-v3-rnnt-punct-int8",
     "decoding": "greedy_search",
     "max_active_paths": 4,
     "hotwords_file": null,
@@ -30,19 +38,26 @@
       "min_s": 1.0,
       "overlap_ms": 0
     },
-    "second_pass": null
+    "second_pass": null,
+    "batch_size": 1,
+    "word_tail_ms": 40,
+    "word_start_offset_ms": -30,
+    "language": "ru"
   },
   "diarization": {
     "segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
     "embedding": "diar/embedding/model.onnx",
     "clustering": {
       "method": "fast_clustering",
-      "threshold": 0.6,
+      "threshold": 0.85,
       "num_speakers": null,
       "max_speakers": 8
     },
     "min_duration_on_s": 0.2,
-    "min_duration_off_s": 0.3
+    "min_duration_off_s": 0.3,
+    "enabled": true,
+    "window_shift_ratio": 0.1,
+    "num_threads": null
   },
   "align": {
     "max_gap_ms": 1500,
@@ -50,15 +65,15 @@
     "min_island_ms": 400
   },
   "punctuation": {
-    "source": "llm",
+    "source": "asr_native",
     "model": null
   },
   "llm": {
-    "model": "llm/qwen3-0.6b-q4_k_m.gguf",
+    "model": "llm/qwen3-0.6b-q4_0.gguf",
     "n_ctx": 2048,
     "n_threads": 4,
     "gpu_layers": 0,
-    "punctuation": true,
+    "punctuation": false,
     "speaker_fix": false,
     "summary": true,
     "time_budget_rtf": 0.15
@@ -67,5 +82,29 @@
     "numbers": "as_is",
     "yo_to_e": false,
     "case": "as_is"
+  },
+  "language": {
+    "mode": "auto",
+    "lid_model": "asr/whisper-tiny-int8",
+    "lid_seconds": 10,
+    "per_chunk": true
+  },
+  "asr_en": {
+    "engine": "nemo_tdt",
+    "model_dir": "asr/parakeet-tdt-110m-en-int8",
+    "decoding": "greedy_search",
+    "chunk": {
+      "max_s": 20.0,
+      "min_s": 1.0,
+      "overlap_ms": 0
+    },
+    "language": "en"
+  },
+  "postprocess": {
+    "numbers": "as_is",
+    "drop_tiny_chunks": {
+      "enabled": true,
+      "max_chars": 2
+    }
   }
 }
