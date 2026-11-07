@@ -90,7 +90,21 @@ python3 src/android/app/tools/gen_model_sets.py            # пересобра�
 `tools/uia.py` — минимальный adb+uiautomator (tap/wait/shot/type); кириллицу вводит через буфер обмена debug-сборки
 (`DebugClipReceiver`, только в `src/debug`).
 
+## LLM: протокол и вопросы (B48)
+
+* **Флаги llama.cpp из `llm.*` конфига** (`no_repack`, `flash_attn`, `kv_cache_type`, `use_mmap`) попадают в JNI (`LlamaOptions`, `LlmConfig.toLlamaOptions()`):
+  `no_repack` → `llama_model_params.use_extra_bufts = false`; `use_mmap` → `llama_model_params.load_mode = MMAP | NONE` (в этой версии llama.cpp булево
+  `use_mmap` заменено перечислением `llama_load_mode`); `flash_attn` → `llama_context_params.flash_attn_type`; KV → `type_k = type_v`. Обходы: квантованный KV
+  без flash attention невозможен (контекст не создаётся) — flash включается принудительно; если контекст с такими параметрами не создался, повтор с f16 и flash AUTO.
+  Фактически применённые параметры — `LlamaAssistant.appliedOptions`, в строке `llm_done … llama_opts="…"` и в `<имя>.llm.json`.
+  Хостовая проверка (Qwen3-1.7B, протокол одной расшифровки): пик RSS 2.71 → 1.64 ГБ, время запроса ×2–2.5 — `artifacts/test-results/llm-integration/`.
+* **Протокол** `protocol_mode = chunk_merge` (`ProtocolFlow`): запись режется по бюджету контекста, на каждый фрагмент — тот же `protocol_system.txt` (до 450 токенов),
+  разделы сливаются в коде (`ProtocolMerge.mergeProtocols`, порт `merge_protocols`); иной режим — прежнее «конспект → протокол». `filter_quotes` убирает цитаты, которых
+  нет в расшифровке дословно. Порт 1:1 сверяется с эталоном `bench_llm/android_flow.py` по примерам, посчитанным самим Python-кодом (`tools/gen_llm_cases.py` → `src/test/resources/llm_cases.json`).
+* **Вопросы:** если расшифровка не помещается в бюджет, она режется на фрагменты по `qa_chunk_budget_ratio` (0.25) от бюджета и берётся самый подходящий (≈ 1000 токенов на запрос).
+* **`llm.quality = draft`** (lite, Qwen3-0.6B): над протоколом плашка «Черновой протокол — упрощённая модель», в вопросах — предупреждение.
+* Промпты — ровно файлы `src/eval/bench_llm/prompts/android/` (тест `PromptAssetsTest` сверяет побайтно).
+
 ## Промпты LLM
 
-`assets/prompts/protocol_system.txt`, `qa_system.txt`, `protocol_notes_system.txt` — временные; их можно заменить файлами
-(llm-bench) без правки кода. Длинные записи: конспект по фрагментам → протокол; вопросы — выбор релевантных фрагментов.
+`assets/prompts/protocol_system.txt`, `qa_system.txt`, `protocol_notes_system.txt` — финальные версии llm-bench (`src/eval/bench_llm/prompts/android/`). Длинные записи: конспект по фрагментам → протокол; вопросы — выбор релевантных фрагментов.
