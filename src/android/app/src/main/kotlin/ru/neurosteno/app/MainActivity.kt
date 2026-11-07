@@ -54,6 +54,7 @@ class MainActivity : ComponentActivity(), AppHost {
     private val exportText = exportLauncher("text/plain")
     private val exportSrt = exportLauncher("application/x-subrip")
     private val exportVtt = exportLauncher("text/vtt")
+    private val exportPdf = exportLauncher("application/pdf")
 
     private fun exportLauncher(mime: String) = registerForActivityResult(ActivityResultContracts.CreateDocument(mime)) { uri ->
         val pending = vm.pendingExport
@@ -164,6 +165,7 @@ class MainActivity : ComponentActivity(), AppHost {
             ExportFormat.TXT -> exportText
             ExportFormat.SRT -> exportSrt
             ExportFormat.VTT -> exportVtt
+            ExportFormat.PDF -> exportPdf
         }.launch(name)
     }
 

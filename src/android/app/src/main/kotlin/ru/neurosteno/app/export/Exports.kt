@@ -20,6 +20,8 @@ enum class ExportFormat(val label: String, val extension: String, val mimeType: 
     SRT("Субтитры (SRT)", "srt", "application/x-subrip"),
     VTT("Субтитры (VTT)", "vtt", "text/vtt"),
     FULL_JSON("Расширенный JSON", "full.json", "application/json"),
+    /** Бинарный печатный документ: рендерится [PdfExporter], а не [Exports.render]. */
+    PDF("PDF (расшифровка + протокол)", "pdf", "application/pdf"),
 }
 
 object Exports {
@@ -41,6 +43,7 @@ object Exports {
             ExportFormat.SRT -> SrtExporter(names).export(tr)
             ExportFormat.VTT -> VttExporter(names).export(tr)
             ExportFormat.FULL_JSON -> fullJsonWithSpeakers(t, tr, run)
+            ExportFormat.PDF -> throw UnsupportedOperationException("PDF бинарный: используйте PdfExporter")
         }
     }
 
