@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "Совещание_длинное.wav",
+  "finished_at_ms": 1794037568829,
+  "audio_duration_ms": 411130,
+  "processing_ms": 57241,
+  "rtf": 0.139,
+  "language": "ru",
+  "utterances": 179,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 641,
+    "vad": 4681,
+    "lid": 5723,
+    "asr": 37912,
+    "diarization": 33807,
+    "align": 27,
+    "punctuation": 0,
+    "export": 13,
+    "relabel": 8022,
+    "total": 57241
+  },
+  "peak_pss_mb": 685,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "Совещание_длинное.json",
+    "Совещание_длинное.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}
