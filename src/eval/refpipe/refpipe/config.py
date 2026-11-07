@@ -11,7 +11,9 @@ from typing import Any
 DEFAULTS: dict[str, Any] = {
     "tier": "custom",
     "num_threads": 4,
-    "audio": {"sample_rate": 16000, "denoise": {"enabled": False, "model": None, "snr_threshold_db": 12.0}},
+    "audio": {"sample_rate": 16000, "denoise": {"enabled": False, "model": None, "snr_threshold_db": 12.0},
+              "normalize_gain": {"enabled": False, "mode": "peak", "peak_dbfs": -1.0, "max_gain_db": 40.0,
+                                 "skip_if_peak_below_dbfs": -85.0}},
     "vad": {"model": "silero-vad/silero_vad.onnx", "threshold": 0.45, "min_silence_ms": 300,
             "min_speech_ms": 120, "pad_ms": 150, "max_speech_s": 25.0},
     "asr": {
@@ -35,7 +37,9 @@ DEFAULTS: dict[str, Any] = {
         "enabled": True,          # extra: false -> single speaker, no diarization (ablation)
     },
     # language: refpipe/Android read it as in ARCHITECTURE (auto | ru | en); without lid_model or asr_en -> ru
-    "language": {"mode": "auto", "lid_model": None, "lid_seconds": 10.0},
+    "language": {"mode": "auto", "lid_model": None, "lid_seconds": 10.0, "per_chunk": False,
+                 "switch_min_ms": 6000},  # switch_min_ms = Android CONFIDENT_MS (hysteresis, see lid.smooth_languages)
+    "postprocess": {"numbers": "as_is", "drop_tiny_chunks": {"enabled": False, "max_chars": 2}},
     "asr_en": None,  # same structure as "asr"
     "align": {"max_gap_ms": 1500, "min_island_words": 1, "min_island_ms": 400},
     "punctuation": {"source": "none", "model": None},

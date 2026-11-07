@@ -1,8 +1,10 @@
 """Stage ASR: chunks -> words with ABSOLUTE time (sherpa-onnx OfflineRecognizer).
 
 Engines (`asr.engine`):
-  gigaam_rnnt   GigaAM v2/v3 transducer (NeMo layout: encoder.int8.onnx, decoder.onnx, joiner.onnx)
-  gigaam_ctc    GigaAM v2/v3 CTC (model.int8.onnx)
+  gigaam_rnnt   GigaAM v2/v3 transducer (NeMo layout: encoder.int8.onnx, decoder.onnx, joiner.onnx);
+                the v3 *punct* model emits punctuation and capitals inside the tokens
+  nemo_tdt      NeMo TDT transducer (Parakeet; token durations are used for word ends), alias nemo_transducer
+  gigaam_ctc    GigaAM v2/v3 CTC (model.int8.onnx), alias nemo_ctc
   transducer    any other sherpa transducer (zipformer ...): bpe/char tokens
   whisper       Whisper encoder/decoder (no token timestamps: words are spread over the chunk)
 
@@ -14,6 +16,7 @@ Word timing (documented because the Kotlin port must do the same):
                  TDT models such as Parakeet the real token duration is used instead),
                  clipped to the next word's start (so words never overlap) and to the chunk end.
   * absolute time = chunk.start_ms + round(ts * 1000).
+  * punctuation tokens (punct models) are glued to the word text but ignored for its start/end/confidence;
   * word confidence = mean exp(log p) of its tokens (None if the model gives no log-probs).
   * Whisper (no token timestamps): `enable_segment_timestamps` gives text segments with start/duration;
     words are placed proportionally to their character count inside their segment (coarse, ~0.3 s
@@ -74,24 +77,34 @@ def build_words(tokens: list[str], ts: list[float], log_probs: list[float] | Non
         if body:
             t_ms = chunk.start_ms + int(ts[i] * 1000 + 0.5) + start_offset_ms
             if cur is None:
-                cur = {"text": "", "start": t_ms, "last": t_ms, "probs": []}
+                cur = {"text": "", "start": None, "last": None, "probs": [], "last_dur": None}
             cur["text"] += body
-            cur["last"] = t_ms
-            cur["last_dur"] = int(durations[i] * 1000 + 0.5) if durations is not None and i < len(durations) else None
-            if log_probs is not None and i < len(log_probs):
-                cur["probs"].append(math.exp(log_probs[i]))
+            if not all(c in PUNCT_CHARS for c in body):  # punctuation never defines word boundaries/times
+                if cur["start"] is None:
+                    cur["start"] = t_ms
+                cur["last"] = t_ms
+                cur["last_dur"] = int(durations[i] * 1000 + 0.5) if durations is not None and i < len(durations) else None
+                if log_probs is not None and i < len(log_probs):
+                    cur["probs"].append(math.exp(log_probs[i]))
+            elif cur["start"] is None:
+                cur["punct_only_ts"] = t_ms
         if t[-1:].isspace() and len(t) > 1:
             flush()
     flush()
 
+    # words made of punctuation only have no times: glue them to the previous word (native mode) or drop
+    merged: list[dict] = []
+    for w in words:
+        if w["start"] is None:
+            if keep_punct and merged:
+                merged[-1]["text"] += w["text"]
+            continue
+        merged.append(w)
+    words = merged
     out: list[Word] = []
     for k, w in enumerate(words):
         text = w["text"] if keep_punct else plain_word(w["text"])
         if not text:
-            continue
-        if keep_punct and out and all(c in PUNCT_CHARS for c in text):  # lone punctuation -> previous word
-            p = out[-1]
-            out[-1] = Word(p.text + text, p.start_ms, p.end_ms, p.confidence)
             continue
         start = max(chunk.start_ms, w["start"])
         end = w["last"] + (w["last_dur"] if w.get("last_dur") else tail_ms)  # TDT models give real durations
@@ -133,12 +146,12 @@ class AsrEngine:
         hot = asr_cfg.get("hotwords_file") or ""
         if hot:
             hot = str(models_root / hot)
-        if self.engine == "gigaam_ctc":
+        if self.engine in ("gigaam_ctc", "nemo_ctc"):
             self.rec = so.OfflineRecognizer.from_nemo_ctc(
                 model=_pick(d, "model.int8.onnx", "model.onnx"), tokens=tokens, num_threads=num_threads,
                 decoding_method="greedy_search")
-        elif self.engine in ("gigaam_rnnt", "transducer"):
-            nemo = self.engine == "gigaam_rnnt"
+        elif self.engine in ("gigaam_rnnt", "nemo_tdt", "nemo_transducer", "transducer"):
+            nemo = self.engine != "transducer"
             self.rec = so.OfflineRecognizer.from_transducer(
                 encoder=_pick(d, "encoder.int8.onnx", "encoder.onnx"),
                 decoder=_pick(d, "decoder.int8.onnx", "decoder.onnx"),
@@ -146,8 +159,7 @@ class AsrEngine:
                 tokens=tokens, num_threads=num_threads, decoding_method=dec,
                 max_active_paths=int(asr_cfg.get("max_active_paths", 4)),
                 hotwords_file=hot, hotwords_score=float(asr_cfg.get("hotwords_score", 1.5)),
-                model_type="nemo_transducer" if nemo else "transducer",
-                feature_dim=64 if nemo else 80)
+                model_type="nemo_transducer" if nemo else "transducer")  # feature dim comes from the model
         elif self.engine == "whisper":
             self.rec = so.OfflineRecognizer.from_whisper(
                 encoder=_pick(d, "encoder.int8.onnx", "turbo-encoder.int8.onnx", "encoder.onnx"),
@@ -159,7 +171,7 @@ class AsrEngine:
             raise ValueError(f"unknown asr.engine {self.engine!r}")
         self.has_ts = self.engine != "whisper"
 
-    def recognize(self, x: np.ndarray, chunks: list[TimeSpan]):
+    def recognize(self, x: np.ndarray, chunks: list[TimeSpan], chunk_gain: dict | None = None):
         """Returns list of (chunk, sherpa result) in chunk order."""
         min_n = int(float(self.cfg["chunk"].get("min_s", 0)) * SR)
         bs = max(1, int(self.cfg.get("batch_size", 1)))
@@ -169,6 +181,10 @@ class AsrEngine:
             streams = []
             for c in batch:
                 seg = x[c.start_ms * SR // 1000:c.end_ms * SR // 1000]
+                if chunk_gain:  # normalize_gain.scope = asr_chunk: peak-normalise this chunk alone
+                    from .audio import normalize_gain
+
+                    seg = normalize_gain(seg, {**chunk_gain, "apply_if_peak_below_dbfs": chunk_gain.get("apply_if_peak_below_dbfs")})[0]
                 if len(seg) < min_n:  # pad with silence up to chunk.min_s
                     seg = np.concatenate([seg, np.zeros(min_n - len(seg), dtype=np.float32)])
                 s = self.rec.create_stream()
@@ -178,11 +194,16 @@ class AsrEngine:
             results.extend(zip(batch, (s.result for s in streams)))
         return results
 
-    def transcribe(self, x: np.ndarray, chunks: list[TimeSpan], keep_punct: bool = False) -> list[Word]:
+    def transcribe(self, x: np.ndarray, chunks: list[TimeSpan], keep_punct: bool = False,
+                   drop_tiny_chars: int = 0, chunk_gain: dict | None = None) -> list[Word]:
+        """drop_tiny_chars (postprocess.drop_tiny_chunks.max_chars): chunks whose recognised text has at most
+        that many letters/digits are discarded (hallucinated "а/э/няу" on noise or meowing)."""
         tail = int(self.cfg.get("word_tail_ms", 40))
         off = int(self.cfg.get("word_start_offset_ms", 0))
         words: list[Word] = []
-        for chunk, r in self.recognize(x, chunks):
+        for chunk, r in self.recognize(x, chunks, chunk_gain):
+            if drop_tiny_chars and sum(c.isalnum() for c in r.text) <= drop_tiny_chars:
+                continue
             if self.has_ts and len(r.timestamps) >= len(r.tokens) > 0:
                 lp = list(r.ys_log_probs) if len(r.ys_log_probs) == len(r.tokens) else None
                 du = list(r.durations) if len(r.durations) == len(r.tokens) else None

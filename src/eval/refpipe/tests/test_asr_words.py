@@ -64,3 +64,17 @@ def test_plain_word():
 def test_tdt_durations_replace_the_tail():
     w = build_words(list("да"), [0.0, 0.08], None, TimeSpan(0, 5000), tail_ms=40, durations=[0.08, 0.24])
     assert (w[0].start_ms, w[0].end_ms) == (0, 320)
+
+
+def test_punctuation_tokens_do_not_move_word_boundaries():
+    toks = [" Ни", "чь", "их", ",", " Что"]
+    ts = [0.04, 0.16, 0.36, 0.60, 0.72]
+    w = build_words(toks, ts, None, TimeSpan(0, 5000), tail_ms=40, keep_punct=True)
+    assert [x.text for x in w] == ["Ничьих,", "Что"]
+    assert w[0].end_ms == 400  # last LETTER token (0.36 s) + 40 ms, the comma at 0.60 s is ignored
+    assert w[0].start_ms == 40
+
+
+def test_start_offset_shifts_both_edges():
+    w = build_words(list("да"), [0.2, 0.24], None, TimeSpan(1000, 5000), tail_ms=40, start_offset_ms=-30)
+    assert (w[0].start_ms, w[0].end_ms) == (1170, 1250)
