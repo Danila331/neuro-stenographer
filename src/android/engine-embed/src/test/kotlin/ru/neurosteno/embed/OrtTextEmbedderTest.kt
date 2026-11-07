@@ -39,7 +39,7 @@ class OrtTextEmbedderTest {
     private fun check(model: String, tier: String) {
         val models = root()
         assumeTrue(models != null && File(models, "embed/$model/model.int8.onnx").isFile)
-        assumeTrue("нет хостовой JNI (scripts/build_host_embed_jni.sh)", HostOrt.load())
+        assumeTrue(HostOrt.skipReason() ?: "", HostOrt.load())
         val cfg = repoConfig(tier).search.embedder
         val e = OrtTextEmbedder.createOrNull(models!!, cfg) { throw it }!!
         try {
@@ -77,7 +77,7 @@ class OrtTextEmbedderTest {
     fun modelPathWithEmojiAndCyrillicLoads() {
         val models = root()
         assumeTrue(models != null && File(models, "embed/rubert-tiny-turbo/model.int8.onnx").isFile)
-        assumeTrue("нет хостовой JNI (scripts/build_host_embed_jni.sh)", HostOrt.load())
+        assumeTrue(HostOrt.skipReason() ?: "", HostOrt.load())
         val dir = java.nio.file.Files.createTempDirectory("модель-😀-").toFile()
         try {
             File(models, "embed/rubert-tiny-turbo/model.int8.onnx").copyTo(File(dir, "модель 😀.onnx"))
@@ -92,7 +92,7 @@ class OrtTextEmbedderTest {
 
     @Test
     fun missingModelGivesAManagedErrorNotACrash() {
-        assumeTrue("нет хостовой JNI (scripts/build_host_embed_jni.sh)", HostOrt.load())
+        assumeTrue(HostOrt.skipReason() ?: "", HostOrt.load())
         val tok = File.createTempFile("tok", ".json")
         try {
             val cfg = repoConfig("lite").search.embedder

@@ -16,8 +16,9 @@ import org.junit.Test
 class Utf8JniTest {
     @Before
     fun requireNative() {
-        val ok = try { LlamaNative.systemInfo(); true } catch (e: UnsatisfiedLinkError) { false } catch (e: NoClassDefFoundError) { false }
-        assumeTrue("нет хостовой libneurosteno_llm (LLM_HOST_BUILD)", ok)
+        // нужна сборка с функциями B58: устаревшая хостовая библиотека (без utf8Bytes) -- повод пропустить тест, а не упасть
+        val ok = try { LlamaNative.utf8Bytes(""); true } catch (e: UnsatisfiedLinkError) { false } catch (e: NoClassDefFoundError) { false }
+        assumeTrue("нет актуальной хостовой libneurosteno_llm (LLM_HOST_BUILD=<каталог> scripts/build_host_jni.sh)", ok)
     }
 
     private val emoji = "😀" // U+1F600: в UTF-8 F0 9F 98 80
