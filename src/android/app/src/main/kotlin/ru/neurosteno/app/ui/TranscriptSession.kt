@@ -142,7 +142,7 @@ class TranscriptSession(
         val tr = Transcript(d.transcript.utterances, d.source.meta)
         graph.history.saveTranscript(entryId, StoredTranscript.of(tr, d.transcript.speakerNames, edited = true))
         graph.history.get(entryId)?.let { e ->
-            val base = ResultsAutosave.resultsDir(graph.externalFilesDir(), graph.filesDir())
+            val base = ResultsAutosave.resultsDir(graph.externalFilesDir(), graph.filesDir(), android.os.Process.myUid())
             ResultsAutosave.write(base, e.sourceName, d.transcript, d.source, e.runInfo())
         }
     }

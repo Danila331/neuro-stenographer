@@ -84,6 +84,33 @@ class ResultsAutosaveTest {
     }
 
     @Test
+    fun resultsDirFallsBackWhenStaleDirIsNotWritable() {
+        // воспроизведение B32: `results` остался от другой установки (другой uid) -- писать в него нельзя
+        val external = File(dir, "ext").apply { mkdirs() }
+        val internal = File(dir, "int").apply { mkdirs() }
+        val stale = File(external, "results").apply { mkdirs() }
+        assertEquals(stale, ResultsAutosave.resultsDir(external, internal, 10216)) // пока доступен -- он и берётся
+        assertTrue(stale.setWritable(false))
+        try {
+            if (stale.canWrite()) return // запуск от root: ограничение прав не работает, нечего проверять
+            val chosen = ResultsAutosave.resultsDir(external, internal, 10216)
+            assertEquals(File(external, "results-10216"), chosen)
+            assertTrue(ResultsAutosave.write(chosen, "a.wav", editable, source, run).problems.isEmpty())
+            // и внешняя папка целиком недоступна -> внутренняя
+            val noExternal = ResultsAutosave.resultsDir(null, internal, 1)
+            assertEquals(File(internal, "results"), noExternal)
+        } finally {
+            stale.setWritable(true)
+        }
+    }
+
+    @Test
+    fun doneLineMentionsResultsDir() {
+        val line = ResultsAutosave.doneLine("a.wav", source, run, emptyList(), emptyList(), File("/sdcard/x/results"))
+        assertTrue(line, line.contains("results=/sdcard/x/results"))
+    }
+
+    @Test
     fun clearMarkersRemovesStaleOnesOnly() {
         File(dir, "a.done.json").writeText("{}"); File(dir, "a.error.json").writeText("{}"); File(dir, "a.json").writeText("{}"); File(dir, "b.done.json").writeText("{}")
         ResultsAutosave.clearMarkers(dir, "a.wav")

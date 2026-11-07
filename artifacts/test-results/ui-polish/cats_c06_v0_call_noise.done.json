@@ -1,0 +1,36 @@
+{
+  "status": "done",
+  "source": "cats_c06_v0_call_noise.wav",
+  "finished_at_ms": 1794011209458,
+  "audio_duration_ms": 31937,
+  "processing_ms": 14235,
+  "rtf": 0.446,
+  "language": "ru",
+  "utterances": 9,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 785,
+    "vad": 847,
+    "lid": 2227,
+    "asr": 7961,
+    "diarization": 10277,
+    "align": 1,
+    "punctuation": 0,
+    "export": 2,
+    "total": 14235
+  },
+  "peak_pss_mb": 490,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "cats_c06_v0_call_noise.json",
+    "cats_c06_v0_call_noise.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

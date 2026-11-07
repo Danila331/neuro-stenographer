@@ -81,7 +81,7 @@ class ProcessingService : Service() {
         val graph = (application as NeuroApp).graph
         val startedAt = System.currentTimeMillis()
         val fractions = EnumMap<Stage, Float>(Stage::class.java)
-        val resultsDir = ResultsAutosave.resultsDir(getExternalFilesDir(null), filesDir)
+        val resultsDir = ResultsAutosave.resultsDir(getExternalFilesDir(null), filesDir, android.os.Process.myUid())
         // маркер прошлого запуска с тем же именем не должен «залёживаться»: скрипты ждут именно свежий маркер
         ResultsAutosave.clearMarkers(resultsDir, name)
         ProcessingState.setProcessing(ProcessingUi.Running(sourceName = name, startedAtMs = startedAt))
@@ -136,7 +136,7 @@ class ProcessingService : Service() {
                 // 1) результаты, 2) строка logcat (всегда, даже если запись файлов не удалась), 3) маркер -- последним
                 val editable = EditableTranscript.of(result.transcript)
                 val written = ResultsAutosave.write(resultsDir, name, editable, result.transcript, info)
-                android.util.Log.i("Neurosteno", ResultsAutosave.doneLine(name, result.transcript, info, result.warnings, written.problems))
+                android.util.Log.i("Neurosteno", ResultsAutosave.doneLine(name, result.transcript, info, result.warnings, written.problems, resultsDir))
                 ResultsAutosave.writeDoneMarker(resultsDir, name, result.transcript, editable.utterances.size, info, modelSet, result.warnings, written)
                     .onFailure { android.util.Log.e("Neurosteno", "done marker for $name not written", it) }
                 val entry = runCatching {

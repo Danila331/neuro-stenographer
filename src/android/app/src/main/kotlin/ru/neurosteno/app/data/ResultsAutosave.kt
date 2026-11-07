@@ -26,7 +26,33 @@ import ru.neurosteno.core.Transcript
 object ResultsAutosave {
     private val pretty = Json { prettyPrint = true; prettyPrintIndent = "  " }
 
-    fun resultsDir(base: File?, fallback: File): File = File(base ?: fallback, "results").apply { mkdirs() }
+    /**
+     * Папка результатов: `<files>/results` во внешней app-specific папке; если она недоступна для записи, берётся
+     * `results-<uid>`, затем внутренняя `filesDir/results`.
+     *
+     * Причина (B32): каталог `results` на `/sdcard/Android/data/<pkg>/files` мог остаться от прошлой установки с другим uid
+     * (или быть создан `adb shell`) -- запись в него даёт `EACCES`. Раньше исключение молча глоталось, и ни файлов, ни строки
+     * `done` в logcat не появлялось, хотя расшифровка в приложении была готова.
+     */
+    fun resultsDir(external: File?, internal: File, uid: Int = 0): File {
+        val candidates = buildList {
+            if (external != null) {
+                add(File(external, "results"))
+                add(File(external, "results-$uid"))
+            }
+            add(File(internal, "results"))
+        }
+        return candidates.firstOrNull { isWritableDir(it) } ?: candidates.last().apply { mkdirs() }
+    }
+
+    private fun isWritableDir(dir: File): Boolean = try {
+        dir.mkdirs()
+        val probe = File(dir, ".probe-${System.nanoTime()}")
+        probe.writeText("ok")
+        probe.delete()
+    } catch (e: Throwable) {
+        false
+    }
 
     fun baseName(sourceName: String): String = sourceName.substringBeforeLast('.', sourceName).ifBlank { "transcript" }
 
@@ -89,6 +115,7 @@ object ResultsAutosave {
             put("android_sdk", run.androidSdk)
             put("total_ram_mb", run.totalRamMb)
             put("app_version", run.appVersion.ifBlank { m.appVersion })
+            put("results_dir", dir.absolutePath)
             put("files", JsonArray(outcome.files.map { JsonPrimitive(it) }))
             put("problems", JsonArray(outcome.problems.map { JsonPrimitive(it) }))
             put("warnings", JsonArray(warnings.map { JsonPrimitive(it) }))
@@ -118,12 +145,12 @@ object ResultsAutosave {
     }
 
     /** Строка logcat (тег `Neurosteno`); префикс `done <имя>:` сохранён для совместимости со старыми скриптами. */
-    fun doneLine(sourceName: String, source: Transcript, run: RunInfo, warnings: List<String>, problems: List<String>): String {
+    fun doneLine(sourceName: String, source: Transcript, run: RunInfo, warnings: List<String>, problems: List<String>, dir: File? = null): String {
         val m = source.meta
         return "done $sourceName: duration=${m.audioDurationMs} ms processing=${m.processingMs} ms " +
             "rtf=${String.format(Locale.ROOT, "%.3f", m.rtf)} lang=${m.language} stages=${m.stageMs} " +
             "peak_pss_mb=${run.peakPssMb} threads=${run.threads} device=${run.device} sdk=${run.androidSdk} app=${run.appVersion.ifBlank { m.appVersion }} " +
-            "warnings=$warnings" + if (problems.isEmpty()) "" else " write_problems=$problems"
+            "warnings=$warnings" + (dir?.let { " results=${it.absolutePath}" } ?: "") + if (problems.isEmpty()) "" else " write_problems=$problems"
     }
 
     private fun writeAtomic(target: File, text: String) {

@@ -1,0 +1,10 @@
+{
+  "status": "error",
+  "source": "cats_c01_v0_meeting_clean.wav",
+  "finished_at_ms": 1794012016027,
+  "error": "Не удалось обработать запись: ExceptionInInitializerError",
+  "peak_pss_mb": 508,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "app_version": "0.1.0-medium"
+}

@@ -4,7 +4,7 @@
 # выгрузка JSON в <out-dir>, замер пикового PSS/RSS процесса (dumpsys meminfo, опрос раз в 2 с) и времени.
 # Завершение определяется по ФАЙЛУ-МАРКЕРУ <имя>.done.json (пишется приложением последним, когда результаты уже на диске) или
 # <имя>.error.json (сбой); строка logcat `done …` -- запасной признак (на части устройств, напр. Pixel 10, она ненадёжна, B32).
-#   src/android/scripts/process_on_device.sh <apk> <audio.wav> [out-dir] [timeout-sec]
+#   [SKIP_INSTALL=1] src/android/scripts/process_on_device.sh <apk> <audio.wav> [out-dir] [timeout-sec]
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../../../scripts/env.sh
@@ -19,7 +19,8 @@ PKG="$("$ANDROID_HOME"/build-tools/*/aapt2 dump packagename "$APK" | tail -1)"
 NAME="$(basename "$AUDIO")"
 BASE="${NAME%.*}"
 
-adb install -r -g "$APK" >/dev/null
+# SKIP_INSTALL=1 -- не переустанавливать (APK medium ~1.6 ГБ, а на эмуляторе с 12 ГБ /data замена установленного не помещается)
+[ "${SKIP_INSTALL:-0}" = 1 ] || adb install -r -g "$APK" >/dev/null
 adb shell am force-stop "$PKG"
 # файл кладётся в app-specific внешнюю папку приложения (читается без разрешений; работает и для release-APK)
 IN_DIR="/sdcard/Android/data/$PKG/files"
@@ -27,8 +28,10 @@ adb shell am start -n "$PKG/ru.neurosteno.app.MainActivity" >/dev/null   # пр�
 sleep 4
 adb shell am force-stop "$PKG"
 adb push "$AUDIO" "$IN_DIR/$NAME" >/dev/null
-RES="$IN_DIR/results"
-adb shell rm -f "$RES/$BASE.json" "$RES/$BASE.full.json" "$RES/$BASE.done.json" "$RES/$BASE.error.json" >/dev/null 2>&1 || true
+RES="$IN_DIR/results"   # если эта папка недоступна приложению (остаток прошлой установки с другим uid), оно пишет в results-<uid>
+for D in $(adb shell "ls -d $IN_DIR/results* 2>/dev/null" | tr -d '\r'); do
+  adb shell rm -f "$D/$BASE.json" "$D/$BASE.full.json" "$D/$BASE.done.json" "$D/$BASE.error.json" >/dev/null 2>&1 || true
+done
 adb logcat -c
 
 START=$(date +%s)
@@ -44,11 +47,18 @@ while [ $(( $(date +%s) - START )) -lt "$TIMEOUT" ]; do
     [ -n "$RSS" ] && [ "$RSS" -gt "$PEAK_RSS" ] && PEAK_RSS=$RSS
   fi
   # основной признак -- файл-маркер рядом с результатом
-  if [ "$(adb shell "[ -f '$RES/$BASE.done.json' ] && echo 1" | tr -d '\r')" = 1 ]; then STATUS=done; break; fi
-  if [ "$(adb shell "[ -f '$RES/$BASE.error.json' ] && echo 1" | tr -d '\r')" = 1 ]; then STATUS=failed; break; fi
+  for D in $(adb shell "ls -d $IN_DIR/results* 2>/dev/null" | tr -d '\r'); do
+    if [ "$(adb shell "[ -f '$D/$BASE.done.json' ] && echo 1" | tr -d '\r')" = 1 ]; then STATUS=done; RES="$D"; break 2; fi
+    if [ "$(adb shell "[ -f '$D/$BASE.error.json' ] && echo 1" | tr -d '\r')" = 1 ]; then STATUS=failed; RES="$D"; break 2; fi
+  done
   # запасной: logcat
   LOG="$(adb logcat -d -s Neurosteno:I AndroidRuntime:E 2>/dev/null)"
-  if echo "$LOG" | grep -q "done $NAME"; then sleep 1; STATUS=done; break; fi
+  if echo "$LOG" | grep -q "done $NAME"; then
+    sleep 1; STATUS=done
+    LOGDIR="$(echo "$LOG" | grep "done $NAME" | tail -1 | grep -o ' results=[^ ]*' | sed 's/^ results=//')"
+    [ -n "$LOGDIR" ] && RES="$LOGDIR"
+    break
+  fi
   if echo "$LOG" | grep -qE "processing failed|pipeline failed|failed $NAME|FATAL EXCEPTION"; then STATUS=failed; break; fi
   sleep 2
 done
