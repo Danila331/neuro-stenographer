@@ -440,4 +440,22 @@ class PipelineOrchestratorTest {
         // «Привет.—» -> «Привет.»; отдельное слово «—» не стоит после знака внутри своего текста и остаётся
         assertEquals("Привет. — мир", r.transcript.utterances.single().text)
     }
+
+    @Test
+    fun `relabel stage is timed separately and replaces turns`() = runBlocking {
+        val words = (0 until 6).map { Word("w$it", it * 3000L, it * 3000L + 2000) }
+        var calls = 0
+        val embedder = object : SpeakerEmbedder {
+            override fun embed(segment: FloatArray) = if (calls++ % 2 == 0) floatArrayOf(1f, 0.05f, 0f) else floatArrayOf(0f, 1f, 0.05f)
+            override fun close() = Unit
+        }
+        val r = PipelineOrchestrator(
+            FakeDecoder(AudioBuffer(FloatArray(16_000 * 20) { 0.1f })),
+            EngineProviders(vad = { FakeVad() }, asr = { FakeAsr(words) }, diarizer = { FakeDiarizer() }, speakerEmbedder = { embedder }),
+            settings.copy(relabel = RelabelConfig(enabled = true, gapMs = 300)),
+            Dispatchers.IO,
+        ).run(input)
+        assertTrue(r.transcript.meta.stageMs.containsKey("relabel"), "${r.transcript.meta.stageMs}")
+        assertEquals(2, r.transcript.utterances.map { it.speakerId }.toSet().size)
+    }
 }

@@ -24,7 +24,8 @@ class CatalogTest {
         assertTrue(hosts.toString(), hosts.all { it == "huggingface.co" || it == "github.com" })
         val repos = catalog.sets.flatMap { it.files }.mapNotNull { it.url }.filter { it.contains("huggingface.co") }
             .map { it.substringAfter("huggingface.co/").substringBefore("/", "").let { owner -> owner } }.toSet()
-        assertTrue(repos.toString(), repos.all { it == "csukuangfj" || it == "ggml-org" })
+        // Qwen -- официальный репозиторий автора GGUF-моделей Qwen3 (hard)
+        assertTrue(repos.toString(), repos.all { it == "csukuangfj" || it == "ggml-org" || it == "Qwen" })
     }
 
     @Test

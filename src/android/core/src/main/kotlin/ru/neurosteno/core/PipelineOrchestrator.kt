@@ -253,7 +253,9 @@ class PipelineOrchestrator(
                 }
             }
             if (relabelled != null) finalTurns = relabelled
-            stageMs[Stage.DIARIZATION.key] = (stageMs[Stage.DIARIZATION.key] ?: 0L) + (nanoTime() - r0) / 1_000_000
+            val relabelMs = (nanoTime() - r0) / 1_000_000
+            stageMs[Stage.DIARIZATION.key] = (stageMs[Stage.DIARIZATION.key] ?: 0L) + relabelMs
+            stageMs["relabel"] = relabelMs // отдельная строка: время эмбеддингов юнитов + ward + силуэт
         }
 
         // ---- align ----
@@ -416,6 +418,7 @@ class PipelineOrchestrator(
         val total = (nanoTime() - t0) / 1_000_000
         val ordered = LinkedHashMap<String, Long>()
         Stage.entries.forEach { s -> stageMs[s.key]?.let { ordered[s.key] = it } }
+        stageMs["relabel"]?.let { ordered["relabel"] = it }
         ordered["total"] = total
         val meta = TranscriptMeta(
             tier = settings.tier,

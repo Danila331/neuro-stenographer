@@ -4,7 +4,9 @@ import android.content.Context
 import java.io.File
 import ru.neurosteno.app.data.HistoryRepository
 import ru.neurosteno.app.data.SettingsRepository
+import ru.neurosteno.app.models.ApkModelSource
 import ru.neurosteno.app.models.AssetModelSource
+import ru.neurosteno.core.models.ModelSource
 import ru.neurosteno.app.models.Catalog
 import ru.neurosteno.app.models.ModelsStatus
 import ru.neurosteno.core.TierConfig
@@ -35,7 +37,11 @@ class AppGraph(private val context: Context) {
         }
     }
 
-    fun bundledSource(): AssetModelSource? = bundledSetId?.let { AssetModelSource(context.assets, it) }
+    /** Источник встроенного набора: чтение APK через ZipFile (без mmap, B44); если не получилось -- AssetManager. */
+    fun bundledSource(): ModelSource? = bundledSetId?.let { id ->
+        val apk = java.io.File(context.applicationInfo.sourceDir)
+        if (ApkModelSource.available(apk, id)) ApkModelSource(apk, id) else AssetModelSource(context.assets, id)
+    }
 
     /** Конфиг уровня [tier] (`assets/tiers/<tier>.json`); для встроенного уровня запасной путь -- `assets/tier.json`. */
     fun configFor(tier: String): Pair<TierConfig, String>? {
