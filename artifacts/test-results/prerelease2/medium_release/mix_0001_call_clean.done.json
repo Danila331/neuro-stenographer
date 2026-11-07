@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "mix_0001_call_clean.wav",
+  "finished_at_ms": 1794047620935,
+  "audio_duration_ms": 127724,
+  "processing_ms": 14647,
+  "rtf": 0.115,
+  "language": "ru",
+  "utterances": 23,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 162,
+    "vad": 1399,
+    "lid": 1739,
+    "asr": 9848,
+    "diarization": 10201,
+    "align": 2,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 1476,
+    "total": 14647
+  },
+  "peak_pss_mb": 547,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "mix_0001_call_clean.json",
+    "mix_0001_call_clean.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

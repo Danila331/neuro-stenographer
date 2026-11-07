@@ -1,0 +1,2147 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 2116,
+      "end_ms": 2916,
+      "text": "У него не хватит сил",
+      "words": [
+        {
+          "text": "У",
+          "start_ms": 2116,
+          "end_ms": 2156,
+          "confidence": null
+        },
+        {
+          "text": "него",
+          "start_ms": 2196,
+          "end_ms": 2356,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 2396,
+          "end_ms": 2436,
+          "confidence": null
+        },
+        {
+          "text": "хватит",
+          "start_ms": 2516,
+          "end_ms": 2756,
+          "confidence": null
+        },
+        {
+          "text": "сил",
+          "start_ms": 2796,
+          "end_ms": 2916,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 3156,
+      "end_ms": 7276,
+      "text": "в деревню ехать? Отец с матерью померли, братья убиты, земля загрошена.",
+      "words": [
+        {
+          "text": "в",
+          "start_ms": 3156,
+          "end_ms": 3196,
+          "confidence": null
+        },
+        {
+          "text": "деревню",
+          "start_ms": 3276,
+          "end_ms": 3636,
+          "confidence": null
+        },
+        {
+          "text": "ехать?",
+          "start_ms": 3756,
+          "end_ms": 3916,
+          "confidence": null
+        },
+        {
+          "text": "Отец",
+          "start_ms": 4236,
+          "end_ms": 4396,
+          "confidence": null
+        },
+        {
+          "text": "с",
+          "start_ms": 4516,
+          "end_ms": 4556,
+          "confidence": null
+        },
+        {
+          "text": "матерью",
+          "start_ms": 4676,
+          "end_ms": 4876,
+          "confidence": null
+        },
+        {
+          "text": "померли,",
+          "start_ms": 4996,
+          "end_ms": 5316,
+          "confidence": null
+        },
+        {
+          "text": "братья",
+          "start_ms": 5636,
+          "end_ms": 5876,
+          "confidence": null
+        },
+        {
+          "text": "убиты,",
+          "start_ms": 5956,
+          "end_ms": 6196,
+          "confidence": null
+        },
+        {
+          "text": "земля",
+          "start_ms": 6476,
+          "end_ms": 6716,
+          "confidence": null
+        },
+        {
+          "text": "загрошена.",
+          "start_ms": 6796,
+          "end_ms": 7276,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 7476,
+      "end_ms": 10476,
+      "text": "The Is do why a a a a a a it the ross, and the parie. Ах, Боже мой,",
+      "words": [
+        {
+          "text": "The",
+          "start_ms": 7476,
+          "end_ms": 7596,
+          "confidence": null
+        },
+        {
+          "text": "Is",
+          "start_ms": 7676,
+          "end_ms": 7796,
+          "confidence": null
+        },
+        {
+          "text": "do",
+          "start_ms": 7836,
+          "end_ms": 7916,
+          "confidence": null
+        },
+        {
+          "text": "why",
+          "start_ms": 7956,
+          "end_ms": 8036,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 8076,
+          "end_ms": 8077,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 8076,
+          "end_ms": 8077,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 8076,
+          "end_ms": 8077,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 8076,
+          "end_ms": 8077,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 8076,
+          "end_ms": 8116,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 8116,
+          "end_ms": 8156,
+          "confidence": null
+        },
+        {
+          "text": "it",
+          "start_ms": 8276,
+          "end_ms": 8356,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 8476,
+          "end_ms": 8556,
+          "confidence": null
+        },
+        {
+          "text": "ross,",
+          "start_ms": 8636,
+          "end_ms": 8916,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 9116,
+          "end_ms": 9236,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 9316,
+          "end_ms": 9396,
+          "confidence": null
+        },
+        {
+          "text": "parie.",
+          "start_ms": 9476,
+          "end_ms": 9796,
+          "confidence": null
+        },
+        {
+          "text": "Ах,",
+          "start_ms": 9876,
+          "end_ms": 9996,
+          "confidence": null
+        },
+        {
+          "text": "Боже",
+          "start_ms": 10076,
+          "end_ms": 10236,
+          "confidence": null
+        },
+        {
+          "text": "мой,",
+          "start_ms": 10316,
+          "end_ms": 10476,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 10756,
+      "end_ms": 12596,
+      "text": "какие могли быть дела важнее Катюшиной любви?",
+      "words": [
+        {
+          "text": "какие",
+          "start_ms": 10756,
+          "end_ms": 10796,
+          "confidence": null
+        },
+        {
+          "text": "могли",
+          "start_ms": 11036,
+          "end_ms": 11236,
+          "confidence": null
+        },
+        {
+          "text": "быть",
+          "start_ms": 11276,
+          "end_ms": 11316,
+          "confidence": null
+        },
+        {
+          "text": "дела",
+          "start_ms": 11476,
+          "end_ms": 11516,
+          "confidence": null
+        },
+        {
+          "text": "важнее",
+          "start_ms": 11676,
+          "end_ms": 11956,
+          "confidence": null
+        },
+        {
+          "text": "Катюшиной",
+          "start_ms": 12036,
+          "end_ms": 12436,
+          "confidence": null
+        },
+        {
+          "text": "любви?",
+          "start_ms": 12476,
+          "end_ms": 12596,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 13996,
+      "end_ms": 17796,
+      "text": "It's a supe lissen to se him again. Just want tou wis feeling s of only.",
+      "words": [
+        {
+          "text": "It's",
+          "start_ms": 13996,
+          "end_ms": 14156,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 14196,
+          "end_ms": 14236,
+          "confidence": null
+        },
+        {
+          "text": "supe",
+          "start_ms": 14356,
+          "end_ms": 14596,
+          "confidence": null
+        },
+        {
+          "text": "lissen",
+          "start_ms": 14596,
+          "end_ms": 14836,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 14916,
+          "end_ms": 14996,
+          "confidence": null
+        },
+        {
+          "text": "se",
+          "start_ms": 15036,
+          "end_ms": 15156,
+          "confidence": null
+        },
+        {
+          "text": "him",
+          "start_ms": 15236,
+          "end_ms": 15356,
+          "confidence": null
+        },
+        {
+          "text": "again.",
+          "start_ms": 15436,
+          "end_ms": 15716,
+          "confidence": null
+        },
+        {
+          "text": "Just",
+          "start_ms": 16036,
+          "end_ms": 16276,
+          "confidence": null
+        },
+        {
+          "text": "want",
+          "start_ms": 16396,
+          "end_ms": 16556,
+          "confidence": null
+        },
+        {
+          "text": "tou",
+          "start_ms": 16556,
+          "end_ms": 16636,
+          "confidence": null
+        },
+        {
+          "text": "wis",
+          "start_ms": 16676,
+          "end_ms": 16836,
+          "confidence": null
+        },
+        {
+          "text": "feeling",
+          "start_ms": 16876,
+          "end_ms": 17156,
+          "confidence": null
+        },
+        {
+          "text": "s",
+          "start_ms": 17196,
+          "end_ms": 17236,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 17276,
+          "end_ms": 17396,
+          "confidence": null
+        },
+        {
+          "text": "only.",
+          "start_ms": 17476,
+          "end_ms": 17796,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 18036,
+      "end_ms": 25831,
+      "text": "Вот настоящее оружие на войне. Ты не хотел меня видеть. Кинул взгляд в гостиную справа. Воздух снаружи оказался холодным, как лёд. Не знаю, что он понимает под этим.",
+      "words": [
+        {
+          "text": "Вот",
+          "start_ms": 18036,
+          "end_ms": 18076,
+          "confidence": null
+        },
+        {
+          "text": "настоящее",
+          "start_ms": 18236,
+          "end_ms": 18636,
+          "confidence": null
+        },
+        {
+          "text": "оружие",
+          "start_ms": 18676,
+          "end_ms": 18956,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 19036,
+          "end_ms": 19076,
+          "confidence": null
+        },
+        {
+          "text": "войне.",
+          "start_ms": 19156,
+          "end_ms": 19316,
+          "confidence": null
+        },
+        {
+          "text": "Ты",
+          "start_ms": 19436,
+          "end_ms": 19476,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 19556,
+          "end_ms": 19596,
+          "confidence": null
+        },
+        {
+          "text": "хотел",
+          "start_ms": 19636,
+          "end_ms": 19676,
+          "confidence": null
+        },
+        {
+          "text": "меня",
+          "start_ms": 19916,
+          "end_ms": 19956,
+          "confidence": null
+        },
+        {
+          "text": "видеть.",
+          "start_ms": 20116,
+          "end_ms": 20356,
+          "confidence": null
+        },
+        {
+          "text": "Кинул",
+          "start_ms": 20636,
+          "end_ms": 20836,
+          "confidence": null
+        },
+        {
+          "text": "взгляд",
+          "start_ms": 20956,
+          "end_ms": 21196,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 21236,
+          "end_ms": 21276,
+          "confidence": null
+        },
+        {
+          "text": "гостиную",
+          "start_ms": 21356,
+          "end_ms": 21596,
+          "confidence": null
+        },
+        {
+          "text": "справа.",
+          "start_ms": 21716,
+          "end_ms": 21916,
+          "confidence": null
+        },
+        {
+          "text": "Воздух",
+          "start_ms": 22231,
+          "end_ms": 22551,
+          "confidence": null
+        },
+        {
+          "text": "снаружи",
+          "start_ms": 22591,
+          "end_ms": 22871,
+          "confidence": null
+        },
+        {
+          "text": "оказался",
+          "start_ms": 22951,
+          "end_ms": 23231,
+          "confidence": null
+        },
+        {
+          "text": "холодным,",
+          "start_ms": 23431,
+          "end_ms": 23751,
+          "confidence": null
+        },
+        {
+          "text": "как",
+          "start_ms": 23871,
+          "end_ms": 23911,
+          "confidence": null
+        },
+        {
+          "text": "лёд.",
+          "start_ms": 24071,
+          "end_ms": 24271,
+          "confidence": null
+        },
+        {
+          "text": "Не",
+          "start_ms": 24511,
+          "end_ms": 24551,
+          "confidence": null
+        },
+        {
+          "text": "знаю,",
+          "start_ms": 24631,
+          "end_ms": 24671,
+          "confidence": null
+        },
+        {
+          "text": "что",
+          "start_ms": 24911,
+          "end_ms": 24951,
+          "confidence": null
+        },
+        {
+          "text": "он",
+          "start_ms": 25031,
+          "end_ms": 25071,
+          "confidence": null
+        },
+        {
+          "text": "понимает",
+          "start_ms": 25151,
+          "end_ms": 25311,
+          "confidence": null
+        },
+        {
+          "text": "под",
+          "start_ms": 25511,
+          "end_ms": 25551,
+          "confidence": null
+        },
+        {
+          "text": "этим.",
+          "start_ms": 25671,
+          "end_ms": 25831,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 30431,
+      "end_ms": 31351,
+      "text": "Засунули вы вообще во что-нибудь?",
+      "words": [
+        {
+          "text": "Засунули",
+          "start_ms": 30431,
+          "end_ms": 30711,
+          "confidence": null
+        },
+        {
+          "text": "вы",
+          "start_ms": 30791,
+          "end_ms": 30831,
+          "confidence": null
+        },
+        {
+          "text": "вообще",
+          "start_ms": 30911,
+          "end_ms": 30951,
+          "confidence": null
+        },
+        {
+          "text": "во",
+          "start_ms": 31111,
+          "end_ms": 31151,
+          "confidence": null
+        },
+        {
+          "text": "что-нибудь?",
+          "start_ms": 31191,
+          "end_ms": 31351,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 35460,
+      "end_ms": 39340,
+      "text": "Он открыл дверь в спальню, где после смерти Кати, он никогда не ночевал.",
+      "words": [
+        {
+          "text": "Он",
+          "start_ms": 35460,
+          "end_ms": 35500,
+          "confidence": null
+        },
+        {
+          "text": "открыл",
+          "start_ms": 35620,
+          "end_ms": 35900,
+          "confidence": null
+        },
+        {
+          "text": "дверь",
+          "start_ms": 35940,
+          "end_ms": 36100,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 36140,
+          "end_ms": 36180,
+          "confidence": null
+        },
+        {
+          "text": "спальню,",
+          "start_ms": 36260,
+          "end_ms": 36620,
+          "confidence": null
+        },
+        {
+          "text": "где",
+          "start_ms": 36900,
+          "end_ms": 36940,
+          "confidence": null
+        },
+        {
+          "text": "после",
+          "start_ms": 37300,
+          "end_ms": 37340,
+          "confidence": null
+        },
+        {
+          "text": "смерти",
+          "start_ms": 37540,
+          "end_ms": 37780,
+          "confidence": null
+        },
+        {
+          "text": "Кати,",
+          "start_ms": 37900,
+          "end_ms": 38100,
+          "confidence": null
+        },
+        {
+          "text": "он",
+          "start_ms": 38380,
+          "end_ms": 38420,
+          "confidence": null
+        },
+        {
+          "text": "никогда",
+          "start_ms": 38580,
+          "end_ms": 38620,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 38860,
+          "end_ms": 38900,
+          "confidence": null
+        },
+        {
+          "text": "ночевал.",
+          "start_ms": 38980,
+          "end_ms": 39340,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 44580,
+      "end_ms": 46900,
+      "text": "Осенний ветер над Катей, лежащей в земле.",
+      "words": [
+        {
+          "text": "Осенний",
+          "start_ms": 44580,
+          "end_ms": 44980,
+          "confidence": null
+        },
+        {
+          "text": "ветер",
+          "start_ms": 45100,
+          "end_ms": 45260,
+          "confidence": null
+        },
+        {
+          "text": "над",
+          "start_ms": 45380,
+          "end_ms": 45540,
+          "confidence": null
+        },
+        {
+          "text": "Катей,",
+          "start_ms": 45580,
+          "end_ms": 45940,
+          "confidence": null
+        },
+        {
+          "text": "лежащей",
+          "start_ms": 46220,
+          "end_ms": 46580,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 46620,
+          "end_ms": 46660,
+          "confidence": null
+        },
+        {
+          "text": "земле.",
+          "start_ms": 46700,
+          "end_ms": 46900,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 51860,
+      "end_ms": 55900,
+      "text": "Здесь я родился и ходил в школу. За что и почему шли за него такие?",
+      "words": [
+        {
+          "text": "Здесь",
+          "start_ms": 51860,
+          "end_ms": 52020,
+          "confidence": null
+        },
+        {
+          "text": "я",
+          "start_ms": 52060,
+          "end_ms": 52100,
+          "confidence": null
+        },
+        {
+          "text": "родился",
+          "start_ms": 52220,
+          "end_ms": 52420,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 52620,
+          "end_ms": 52660,
+          "confidence": null
+        },
+        {
+          "text": "ходил",
+          "start_ms": 52820,
+          "end_ms": 52940,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 53060,
+          "end_ms": 53100,
+          "confidence": null
+        },
+        {
+          "text": "школу.",
+          "start_ms": 53140,
+          "end_ms": 53380,
+          "confidence": null
+        },
+        {
+          "text": "За",
+          "start_ms": 53820,
+          "end_ms": 53860,
+          "confidence": null
+        },
+        {
+          "text": "что",
+          "start_ms": 53980,
+          "end_ms": 54020,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 54340,
+          "end_ms": 54380,
+          "confidence": null
+        },
+        {
+          "text": "почему",
+          "start_ms": 54540,
+          "end_ms": 54580,
+          "confidence": null
+        },
+        {
+          "text": "шли",
+          "start_ms": 54940,
+          "end_ms": 55140,
+          "confidence": null
+        },
+        {
+          "text": "за",
+          "start_ms": 55220,
+          "end_ms": 55260,
+          "confidence": null
+        },
+        {
+          "text": "него",
+          "start_ms": 55380,
+          "end_ms": 55500,
+          "confidence": null
+        },
+        {
+          "text": "такие?",
+          "start_ms": 55580,
+          "end_ms": 55900,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 56495,
+      "end_ms": 59575,
+      "text": "I dout to souch for o red home, how I shout and chy day?",
+      "words": [
+        {
+          "text": "I",
+          "start_ms": 56495,
+          "end_ms": 56535,
+          "confidence": null
+        },
+        {
+          "text": "dout",
+          "start_ms": 56695,
+          "end_ms": 56855,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 56895,
+          "end_ms": 56975,
+          "confidence": null
+        },
+        {
+          "text": "souch",
+          "start_ms": 57015,
+          "end_ms": 57375,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 57455,
+          "end_ms": 57535,
+          "confidence": null
+        },
+        {
+          "text": "o",
+          "start_ms": 57695,
+          "end_ms": 57735,
+          "confidence": null
+        },
+        {
+          "text": "red",
+          "start_ms": 57775,
+          "end_ms": 57935,
+          "confidence": null
+        },
+        {
+          "text": "home,",
+          "start_ms": 57975,
+          "end_ms": 58215,
+          "confidence": null
+        },
+        {
+          "text": "how",
+          "start_ms": 58335,
+          "end_ms": 58495,
+          "confidence": null
+        },
+        {
+          "text": "I",
+          "start_ms": 58575,
+          "end_ms": 58615,
+          "confidence": null
+        },
+        {
+          "text": "shout",
+          "start_ms": 58695,
+          "end_ms": 58895,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 58935,
+          "end_ms": 59055,
+          "confidence": null
+        },
+        {
+          "text": "chy",
+          "start_ms": 59095,
+          "end_ms": 59255,
+          "confidence": null
+        },
+        {
+          "text": "day?",
+          "start_ms": 59335,
+          "end_ms": 59575,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 59775,
+      "end_ms": 66575,
+      "text": "Потом взошёл на лестницу телескопа, нашёл искателя Марс, поднявшегося уже над Петербургом, и долго глядел на небольшой, ясный,",
+      "words": [
+        {
+          "text": "Потом",
+          "start_ms": 59775,
+          "end_ms": 59975,
+          "confidence": null
+        },
+        {
+          "text": "взошёл",
+          "start_ms": 60015,
+          "end_ms": 60255,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 60375,
+          "end_ms": 60415,
+          "confidence": null
+        },
+        {
+          "text": "лестницу",
+          "start_ms": 60495,
+          "end_ms": 60815,
+          "confidence": null
+        },
+        {
+          "text": "телескопа,",
+          "start_ms": 60855,
+          "end_ms": 61295,
+          "confidence": null
+        },
+        {
+          "text": "нашёл",
+          "start_ms": 61575,
+          "end_ms": 61735,
+          "confidence": null
+        },
+        {
+          "text": "искателя",
+          "start_ms": 61895,
+          "end_ms": 62255,
+          "confidence": null
+        },
+        {
+          "text": "Марс,",
+          "start_ms": 62375,
+          "end_ms": 62615,
+          "confidence": null
+        },
+        {
+          "text": "поднявшегося",
+          "start_ms": 62855,
+          "end_ms": 63415,
+          "confidence": null
+        },
+        {
+          "text": "уже",
+          "start_ms": 63455,
+          "end_ms": 63495,
+          "confidence": null
+        },
+        {
+          "text": "над",
+          "start_ms": 63575,
+          "end_ms": 63695,
+          "confidence": null
+        },
+        {
+          "text": "Петербургом,",
+          "start_ms": 63735,
+          "end_ms": 64295,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 64575,
+          "end_ms": 64615,
+          "confidence": null
+        },
+        {
+          "text": "долго",
+          "start_ms": 64735,
+          "end_ms": 64975,
+          "confidence": null
+        },
+        {
+          "text": "глядел",
+          "start_ms": 65055,
+          "end_ms": 65255,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 65375,
+          "end_ms": 65415,
+          "confidence": null
+        },
+        {
+          "text": "небольшой,",
+          "start_ms": 65495,
+          "end_ms": 65895,
+          "confidence": null
+        },
+        {
+          "text": "ясный,",
+          "start_ms": 66295,
+          "end_ms": 66575,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 66855,
+      "end_ms": 74444,
+      "text": "тёплый шарик. A for ish little speech to make to the dark. Fautusy polivis only at tand the hart and goo, traint to to he tuitie.",
+      "words": [
+        {
+          "text": "тёплый",
+          "start_ms": 66855,
+          "end_ms": 67215,
+          "confidence": null
+        },
+        {
+          "text": "шарик.",
+          "start_ms": 67295,
+          "end_ms": 67575,
+          "confidence": null
+        },
+        {
+          "text": "A",
+          "start_ms": 67735,
+          "end_ms": 67775,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 67895,
+          "end_ms": 68015,
+          "confidence": null
+        },
+        {
+          "text": "ish",
+          "start_ms": 68175,
+          "end_ms": 68255,
+          "confidence": null
+        },
+        {
+          "text": "little",
+          "start_ms": 68335,
+          "end_ms": 68535,
+          "confidence": null
+        },
+        {
+          "text": "speech",
+          "start_ms": 68615,
+          "end_ms": 68895,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 68975,
+          "end_ms": 69055,
+          "confidence": null
+        },
+        {
+          "text": "make",
+          "start_ms": 69095,
+          "end_ms": 69295,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 69375,
+          "end_ms": 69455,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 69535,
+          "end_ms": 69575,
+          "confidence": null
+        },
+        {
+          "text": "dark.",
+          "start_ms": 69655,
+          "end_ms": 69975,
+          "confidence": null
+        },
+        {
+          "text": "Fautusy",
+          "start_ms": 70274,
+          "end_ms": 70804,
+          "confidence": null
+        },
+        {
+          "text": "polivis",
+          "start_ms": 71004,
+          "end_ms": 71524,
+          "confidence": null
+        },
+        {
+          "text": "only",
+          "start_ms": 71604,
+          "end_ms": 71804,
+          "confidence": null
+        },
+        {
+          "text": "at",
+          "start_ms": 71884,
+          "end_ms": 71964,
+          "confidence": null
+        },
+        {
+          "text": "tand",
+          "start_ms": 72004,
+          "end_ms": 72204,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 72244,
+          "end_ms": 72284,
+          "confidence": null
+        },
+        {
+          "text": "hart",
+          "start_ms": 72324,
+          "end_ms": 72484,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 72564,
+          "end_ms": 72604,
+          "confidence": null
+        },
+        {
+          "text": "goo,",
+          "start_ms": 72684,
+          "end_ms": 72844,
+          "confidence": null
+        },
+        {
+          "text": "traint",
+          "start_ms": 73164,
+          "end_ms": 73564,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 73604,
+          "end_ms": 73684,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 73724,
+          "end_ms": 73804,
+          "confidence": null
+        },
+        {
+          "text": "he",
+          "start_ms": 73884,
+          "end_ms": 73964,
+          "confidence": null
+        },
+        {
+          "text": "tuitie.",
+          "start_ms": 74044,
+          "end_ms": 74444,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 74684,
+      "end_ms": 80124,
+      "text": "Лось показал Гусеву механизм движения и важнейшие приборы. Гусев оказался ловким и сметливым человеком.",
+      "words": [
+        {
+          "text": "Лось",
+          "start_ms": 74684,
+          "end_ms": 74884,
+          "confidence": null
+        },
+        {
+          "text": "показал",
+          "start_ms": 75004,
+          "end_ms": 75244,
+          "confidence": null
+        },
+        {
+          "text": "Гусеву",
+          "start_ms": 75284,
+          "end_ms": 75684,
+          "confidence": null
+        },
+        {
+          "text": "механизм",
+          "start_ms": 75764,
+          "end_ms": 76164,
+          "confidence": null
+        },
+        {
+          "text": "движения",
+          "start_ms": 76204,
+          "end_ms": 76444,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 76564,
+          "end_ms": 76604,
+          "confidence": null
+        },
+        {
+          "text": "важнейшие",
+          "start_ms": 76684,
+          "end_ms": 77084,
+          "confidence": null
+        },
+        {
+          "text": "приборы.",
+          "start_ms": 77164,
+          "end_ms": 77444,
+          "confidence": null
+        },
+        {
+          "text": "Гусев",
+          "start_ms": 77724,
+          "end_ms": 78084,
+          "confidence": null
+        },
+        {
+          "text": "оказался",
+          "start_ms": 78284,
+          "end_ms": 78604,
+          "confidence": null
+        },
+        {
+          "text": "ловким",
+          "start_ms": 78804,
+          "end_ms": 79084,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 79164,
+          "end_ms": 79204,
+          "confidence": null
+        },
+        {
+          "text": "сметливым",
+          "start_ms": 79284,
+          "end_ms": 79804,
+          "confidence": null
+        },
+        {
+          "text": "человеком.",
+          "start_ms": 79844,
+          "end_ms": 80124,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 82924,
+      "end_ms": 84164,
+      "text": "Долго носил хозяин в кармане.",
+      "words": [
+        {
+          "text": "Долго",
+          "start_ms": 82924,
+          "end_ms": 83084,
+          "confidence": null
+        },
+        {
+          "text": "носил",
+          "start_ms": 83124,
+          "end_ms": 83364,
+          "confidence": null
+        },
+        {
+          "text": "хозяин",
+          "start_ms": 83444,
+          "end_ms": 83684,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 83804,
+          "end_ms": 83844,
+          "confidence": null
+        },
+        {
+          "text": "кармане.",
+          "start_ms": 83884,
+          "end_ms": 84164,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 84444,
+      "end_ms": 92059,
+      "text": "Hollowly the Parklooksad and rate confusion, aftraite ed. In like it. An maby this is the consicence of the nights fun.",
+      "words": [
+        {
+          "text": "Hollowly",
+          "start_ms": 84444,
+          "end_ms": 84924,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 85004,
+          "end_ms": 85084,
+          "confidence": null
+        },
+        {
+          "text": "Parklooksad",
+          "start_ms": 85124,
+          "end_ms": 86404,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 86444,
+          "end_ms": 86564,
+          "confidence": null
+        },
+        {
+          "text": "rate",
+          "start_ms": 86604,
+          "end_ms": 86844,
+          "confidence": null
+        },
+        {
+          "text": "confusion,",
+          "start_ms": 86884,
+          "end_ms": 87444,
+          "confidence": null
+        },
+        {
+          "text": "aftraite",
+          "start_ms": 87604,
+          "end_ms": 88204,
+          "confidence": null
+        },
+        {
+          "text": "ed.",
+          "start_ms": 88204,
+          "end_ms": 88324,
+          "confidence": null
+        },
+        {
+          "text": "In",
+          "start_ms": 88619,
+          "end_ms": 88739,
+          "confidence": null
+        },
+        {
+          "text": "like",
+          "start_ms": 88819,
+          "end_ms": 89059,
+          "confidence": null
+        },
+        {
+          "text": "it.",
+          "start_ms": 89219,
+          "end_ms": 89339,
+          "confidence": null
+        },
+        {
+          "text": "An",
+          "start_ms": 89579,
+          "end_ms": 89699,
+          "confidence": null
+        },
+        {
+          "text": "maby",
+          "start_ms": 89819,
+          "end_ms": 90099,
+          "confidence": null
+        },
+        {
+          "text": "this",
+          "start_ms": 90139,
+          "end_ms": 90299,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 90339,
+          "end_ms": 90459,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 90499,
+          "end_ms": 90579,
+          "confidence": null
+        },
+        {
+          "text": "consicence",
+          "start_ms": 90619,
+          "end_ms": 91099,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 91179,
+          "end_ms": 91259,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 91299,
+          "end_ms": 91419,
+          "confidence": null
+        },
+        {
+          "text": "nights",
+          "start_ms": 91539,
+          "end_ms": 91819,
+          "confidence": null
+        },
+        {
+          "text": "fun.",
+          "start_ms": 91899,
+          "end_ms": 92059,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 92259,
+      "end_ms": 103299,
+      "text": "Накинул пальто и зашагал через пустырь на Большую Монетную улицу, к себе на квартиру, где полгода тому назад умерла Кать, Гусев и Маша жили в одной комнате, когда-то роскошном, огромном, теперь заброшенном доме.",
+      "words": [
+        {
+          "text": "Накинул",
+          "start_ms": 92259,
+          "end_ms": 92539,
+          "confidence": null
+        },
+        {
+          "text": "пальто",
+          "start_ms": 92699,
+          "end_ms": 92939,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 93059,
+          "end_ms": 93099,
+          "confidence": null
+        },
+        {
+          "text": "зашагал",
+          "start_ms": 93179,
+          "end_ms": 93539,
+          "confidence": null
+        },
+        {
+          "text": "через",
+          "start_ms": 93619,
+          "end_ms": 93659,
+          "confidence": null
+        },
+        {
+          "text": "пустырь",
+          "start_ms": 93819,
+          "end_ms": 94139,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 94259,
+          "end_ms": 94299,
+          "confidence": null
+        },
+        {
+          "text": "Большую",
+          "start_ms": 94379,
+          "end_ms": 94619,
+          "confidence": null
+        },
+        {
+          "text": "Монетную",
+          "start_ms": 94699,
+          "end_ms": 95059,
+          "confidence": null
+        },
+        {
+          "text": "улицу,",
+          "start_ms": 95139,
+          "end_ms": 95379,
+          "confidence": null
+        },
+        {
+          "text": "к",
+          "start_ms": 95539,
+          "end_ms": 95579,
+          "confidence": null
+        },
+        {
+          "text": "себе",
+          "start_ms": 95619,
+          "end_ms": 95659,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 95859,
+          "end_ms": 95899,
+          "confidence": null
+        },
+        {
+          "text": "квартиру,",
+          "start_ms": 95979,
+          "end_ms": 96299,
+          "confidence": null
+        },
+        {
+          "text": "где",
+          "start_ms": 96579,
+          "end_ms": 96619,
+          "confidence": null
+        },
+        {
+          "text": "полгода",
+          "start_ms": 96739,
+          "end_ms": 97099,
+          "confidence": null
+        },
+        {
+          "text": "тому",
+          "start_ms": 97179,
+          "end_ms": 97339,
+          "confidence": null
+        },
+        {
+          "text": "назад",
+          "start_ms": 97419,
+          "end_ms": 97619,
+          "confidence": null
+        },
+        {
+          "text": "умерла",
+          "start_ms": 97699,
+          "end_ms": 97979,
+          "confidence": null
+        },
+        {
+          "text": "Кать,",
+          "start_ms": 98099,
+          "end_ms": 98259,
+          "confidence": null
+        },
+        {
+          "text": "Гусев",
+          "start_ms": 98419,
+          "end_ms": 98699,
+          "confidence": null
+        },
+        {
+          "text": "и",
+          "start_ms": 98819,
+          "end_ms": 98859,
+          "confidence": null
+        },
+        {
+          "text": "Маша",
+          "start_ms": 98939,
+          "end_ms": 99139,
+          "confidence": null
+        },
+        {
+          "text": "жили",
+          "start_ms": 99379,
+          "end_ms": 99499,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 99579,
+          "end_ms": 99619,
+          "confidence": null
+        },
+        {
+          "text": "одной",
+          "start_ms": 99699,
+          "end_ms": 99899,
+          "confidence": null
+        },
+        {
+          "text": "комнате,",
+          "start_ms": 99939,
+          "end_ms": 100219,
+          "confidence": null
+        },
+        {
+          "text": "когда-то",
+          "start_ms": 100499,
+          "end_ms": 100779,
+          "confidence": null
+        },
+        {
+          "text": "роскошном,",
+          "start_ms": 100939,
+          "end_ms": 101379,
+          "confidence": null
+        },
+        {
+          "text": "огромном,",
+          "start_ms": 101619,
+          "end_ms": 101979,
+          "confidence": null
+        },
+        {
+          "text": "теперь",
+          "start_ms": 102219,
+          "end_ms": 102259,
+          "confidence": null
+        },
+        {
+          "text": "заброшенном",
+          "start_ms": 102459,
+          "end_ms": 102979,
+          "confidence": null
+        },
+        {
+          "text": "доме.",
+          "start_ms": 103059,
+          "end_ms": 103299,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 103698,
+      "end_ms": 108898,
+      "text": "He meant to go away before that, so then think his heart is broken or mind what Sidne Tatler say.",
+      "words": [
+        {
+          "text": "He",
+          "start_ms": 103698,
+          "end_ms": 103858,
+          "confidence": null
+        },
+        {
+          "text": "meant",
+          "start_ms": 103938,
+          "end_ms": 104098,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 104178,
+          "end_ms": 104258,
+          "confidence": null
+        },
+        {
+          "text": "go",
+          "start_ms": 104258,
+          "end_ms": 104418,
+          "confidence": null
+        },
+        {
+          "text": "away",
+          "start_ms": 104498,
+          "end_ms": 104738,
+          "confidence": null
+        },
+        {
+          "text": "before",
+          "start_ms": 104738,
+          "end_ms": 104818,
+          "confidence": null
+        },
+        {
+          "text": "that,",
+          "start_ms": 105058,
+          "end_ms": 105298,
+          "confidence": null
+        },
+        {
+          "text": "so",
+          "start_ms": 105458,
+          "end_ms": 105618,
+          "confidence": null
+        },
+        {
+          "text": "then",
+          "start_ms": 105698,
+          "end_ms": 105858,
+          "confidence": null
+        },
+        {
+          "text": "think",
+          "start_ms": 105938,
+          "end_ms": 106098,
+          "confidence": null
+        },
+        {
+          "text": "his",
+          "start_ms": 106178,
+          "end_ms": 106338,
+          "confidence": null
+        },
+        {
+          "text": "heart",
+          "start_ms": 106338,
+          "end_ms": 106498,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 106578,
+          "end_ms": 106738,
+          "confidence": null
+        },
+        {
+          "text": "broken",
+          "start_ms": 106738,
+          "end_ms": 107218,
+          "confidence": null
+        },
+        {
+          "text": "or",
+          "start_ms": 107378,
+          "end_ms": 107538,
+          "confidence": null
+        },
+        {
+          "text": "mind",
+          "start_ms": 107618,
+          "end_ms": 107778,
+          "confidence": null
+        },
+        {
+          "text": "what",
+          "start_ms": 107858,
+          "end_ms": 107938,
+          "confidence": null
+        },
+        {
+          "text": "Sidne",
+          "start_ms": 108018,
+          "end_ms": 108338,
+          "confidence": null
+        },
+        {
+          "text": "Tatler",
+          "start_ms": 108338,
+          "end_ms": 108818,
+          "confidence": null
+        },
+        {
+          "text": "say.",
+          "start_ms": 108818,
+          "end_ms": 108898,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 110738,
+      "end_ms": 112578,
+      "text": "Utterly done with and laid upon the shell.",
+      "words": [
+        {
+          "text": "Utterly",
+          "start_ms": 110738,
+          "end_ms": 111138,
+          "confidence": null
+        },
+        {
+          "text": "done",
+          "start_ms": 111218,
+          "end_ms": 111378,
+          "confidence": null
+        },
+        {
+          "text": "with",
+          "start_ms": 111378,
+          "end_ms": 111458,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 111618,
+          "end_ms": 111778,
+          "confidence": null
+        },
+        {
+          "text": "laid",
+          "start_ms": 111778,
+          "end_ms": 111938,
+          "confidence": null
+        },
+        {
+          "text": "upon",
+          "start_ms": 112018,
+          "end_ms": 112178,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 112258,
+          "end_ms": 112338,
+          "confidence": null
+        },
+        {
+          "text": "shell.",
+          "start_ms": 112338,
+          "end_ms": 112578,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 112818,
+      "end_ms": 113378,
+      "text": "On blue is",
+      "words": [
+        {
+          "text": "On",
+          "start_ms": 112818,
+          "end_ms": 112978,
+          "confidence": null
+        },
+        {
+          "text": "blue",
+          "start_ms": 112978,
+          "end_ms": 113218,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 113298,
+          "end_ms": 113378,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 114258,
+      "end_ms": 121338,
+      "text": "Pauli felt a very cordial friendship for mister Sidney, but not one particle of the love which is the only coin in which love can be truly paid.",
+      "words": [
+        {
+          "text": "Pauli",
+          "start_ms": 114258,
+          "end_ms": 114658,
+          "confidence": null
+        },
+        {
+          "text": "felt",
+          "start_ms": 114658,
+          "end_ms": 114898,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 114898,
+          "end_ms": 114978,
+          "confidence": null
+        },
+        {
+          "text": "very",
+          "start_ms": 115058,
+          "end_ms": 115138,
+          "confidence": null
+        },
+        {
+          "text": "cordial",
+          "start_ms": 115138,
+          "end_ms": 115458,
+          "confidence": null
+        },
+        {
+          "text": "friendship",
+          "start_ms": 115618,
+          "end_ms": 115938,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 116018,
+          "end_ms": 116098,
+          "confidence": null
+        },
+        {
+          "text": "mister",
+          "start_ms": 116098,
+          "end_ms": 116338,
+          "confidence": null
+        },
+        {
+          "text": "Sidney,",
+          "start_ms": 116418,
+          "end_ms": 116818,
+          "confidence": null
+        },
+        {
+          "text": "but",
+          "start_ms": 117218,
+          "end_ms": 117378,
+          "confidence": null
+        },
+        {
+          "text": "not",
+          "start_ms": 117378,
+          "end_ms": 117538,
+          "confidence": null
+        },
+        {
+          "text": "one",
+          "start_ms": 117618,
+          "end_ms": 117778,
+          "confidence": null
+        },
+        {
+          "text": "particle",
+          "start_ms": 117778,
+          "end_ms": 118178,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 118178,
+          "end_ms": 118258,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 118338,
+          "end_ms": 118498,
+          "confidence": null
+        },
+        {
+          "text": "love",
+          "start_ms": 118498,
+          "end_ms": 118658,
+          "confidence": null
+        },
+        {
+          "text": "which",
+          "start_ms": 118818,
+          "end_ms": 118978,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 119058,
+          "end_ms": 119218,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 119298,
+          "end_ms": 119458,
+          "confidence": null
+        },
+        {
+          "text": "only",
+          "start_ms": 119458,
+          "end_ms": 119538,
+          "confidence": null
+        },
+        {
+          "text": "coin",
+          "start_ms": 119538,
+          "end_ms": 119858,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 119938,
+          "end_ms": 120098,
+          "confidence": null
+        },
+        {
+          "text": "which",
+          "start_ms": 120098,
+          "end_ms": 120258,
+          "confidence": null
+        },
+        {
+          "text": "love",
+          "start_ms": 120258,
+          "end_ms": 120418,
+          "confidence": null
+        },
+        {
+          "text": "can",
+          "start_ms": 120578,
+          "end_ms": 120658,
+          "confidence": null
+        },
+        {
+          "text": "be",
+          "start_ms": 120658,
+          "end_ms": 120738,
+          "confidence": null
+        },
+        {
+          "text": "truly",
+          "start_ms": 120818,
+          "end_ms": 121058,
+          "confidence": null
+        },
+        {
+          "text": "paid.",
+          "start_ms": 121138,
+          "end_ms": 121338,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 123138,
+      "end_ms": 124258,
+      "text": "No writes",
+      "words": [
+        {
+          "text": "No",
+          "start_ms": 123138,
+          "end_ms": 123218,
+          "confidence": null
+        },
+        {
+          "text": "writes",
+          "start_ms": 124098,
+          "end_ms": 124258,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 126578,
+      "end_ms": 127058,
+      "text": "does that.",
+      "words": [
+        {
+          "text": "does",
+          "start_ms": 126578,
+          "end_ms": 126658,
+          "confidence": null
+        },
+        {
+          "text": "that.",
+          "start_ms": 126978,
+          "end_ms": 127058,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-medium",
+    "tier": "medium",
+    "language": "ru",
+    "audio_duration_ms": 127724,
+    "processing_ms": 14647,
+    "rtf": 0.115,
+    "stage_ms": {
+      "decode": 162,
+      "vad": 1399,
+      "lid": 1739,
+      "asr": 9848,
+      "diarization": 10201,
+      "align": 2,
+      "punctuation": 0,
+      "export": 0,
+      "relabel": 1476,
+      "total": 14647
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/emb-eres2net-base-200k/model.onnx",
+      "llm": "llm/qwen3-1.7b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 547,
+    "threads": 4,
+    "device_model": "Google sdk_gphone64_arm64",
+    "android_sdk": 35,
+    "total_ram_mb": 3920
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1",
+    "speaker_2": "Говорящий 2",
+    "speaker_3": "Говорящий 3"
+  }
+}

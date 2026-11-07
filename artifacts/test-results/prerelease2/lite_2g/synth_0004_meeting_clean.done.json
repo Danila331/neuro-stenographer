@@ -1,0 +1,39 @@
+{
+  "status": "done",
+  "source": "synth_0004_meeting_clean.wav",
+  "finished_at_ms": 1794049793940,
+  "audio_duration_ms": 150475,
+  "processing_ms": 15816,
+  "rtf": 0.105,
+  "language": "ru",
+  "utterances": 25,
+  "tier": "lite",
+  "model_set": "lite",
+  "stage_ms": {
+    "decode": 308,
+    "vad": 1346,
+    "lid": 2212,
+    "asr": 10220,
+    "diarization": 7745,
+    "align": 3,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 1703,
+    "total": 15816
+  },
+  "peak_pss_mb": 498,
+  "threads": 2,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 2472,
+  "app_version": "0.1.0-lite",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.lite/files/results",
+  "files": [
+    "synth_0004_meeting_clean.json",
+    "synth_0004_meeting_clean.full.json"
+  ],
+  "problems": [],
+  "warnings": [
+    "Ресурсы: ядер (2) меньше, чем потоков в конфиге (4)"
+  ]
+}
