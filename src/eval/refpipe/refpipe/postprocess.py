@@ -49,15 +49,33 @@ _DASH_AFTER_TERMINAL = re.compile("(?<=[.?!…])[—–]+")
 _ANY_DASH = re.compile("[—–]+")
 
 
+_DASH_RUN = re.compile("[—–]+")
+
+
+def _split_dashes(text: str, ch: str) -> str:
+    """Put a space on both sides of every run of em/en dashes and write it as `ch` ("X—Y", "X—", "—Y" -> "X ch Y")."""
+    return re.sub(r"\s{2,}", " ", _DASH_RUN.sub(f" {ch} ", text)).strip()
+
+
 def strip_dashes_text(text: str, mode: str) -> str:
-    """mode off | after_terminal | all.
+    """mode off | after_terminal | all | split | split_hyphen | after_terminal_split.
     after_terminal: delete every run of em/en dashes (U+2014, U+2013) that directly follows . ? ! or the ellipsis char
                     ("Уточните.— Синий" -> "Уточните. Синий" at the word level: "Уточните.—" -> "Уточните.").
-    all:            delete all em/en dashes (the hyphen-minus U+002D is never touched)."""
+    all:            delete all em/en dashes (the hyphen-minus U+002D is never touched).
+    split:          every run of em/en dashes becomes a separate token written as "—" (spaces on both sides):
+                    "Мыши—" -> "Мыши —", "кто—то" -> "кто — то".
+    split_hyphen:   like split but the token is the hyphen-minus "-".
+    after_terminal_split: after_terminal first, then split for the remaining dashes."""
     if mode == "after_terminal":
         return _DASH_AFTER_TERMINAL.sub("", text)
     if mode == "all":
-        return _ANY_DASH.sub("", text)
+        return re.sub(r"\s{2,}", " ", _ANY_DASH.sub("", text)).strip()
+    if mode == "split":
+        return _split_dashes(text, "—")
+    if mode == "split_hyphen":
+        return _split_dashes(text, "-")
+    if mode == "after_terminal_split":
+        return _split_dashes(_DASH_AFTER_TERMINAL.sub("", text), "—")
     return text
 
 

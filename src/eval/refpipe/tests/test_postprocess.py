@@ -41,3 +41,19 @@ def test_strip_dashes_modes():
     assert strip_dashes_text("x—", "off") == "x—"
     ws = [Word("—", 0, 10), Word("а", 10, 20)]
     assert [w.text for w in strip_dashes(ws, "all")] == ["а"]
+
+
+def test_dash_cases_file_replays():
+    import json
+    from pathlib import Path
+
+    from refpipe.postprocess import strip_dashes_text
+
+    doc = json.loads((Path(__file__).parent / "dash_cases.json").read_text(encoding="utf-8"))
+    for c in doc["cases"]:
+        assert strip_dashes_text(c["in"], c["mode"]) == c["out"], c
+    # spot checks of the documented examples
+    got = {(c["mode"], c["in"]): c["out"] for c in doc["cases"]}
+    assert got[("after_terminal", "Уточните.—")] == "Уточните."
+    assert got[("split", "Мыши—")] == "Мыши —" and got[("all", "Мыши—")] == "Мыши"
+    assert got[("after_terminal", "кто-то")] == "кто-то"
