@@ -155,5 +155,60 @@
       "max_chars": 2
     },
     "strip_dashes": "after_terminal"
+  },
+  "summary": {
+    "mode": "extractive",
+    "fragment_chars": 1500,
+    "max_new_tokens": 700,
+    "n_ctx": 4096,
+    "min_support_point": 0.3,
+    "min_support_item": 0.5,
+    "merge_title_sim": 0.45,
+    "segmenter": {
+      "k": 3,
+      "alpha": 0.0,
+      "min_utts": 3,
+      "min_chars": 300
+    },
+    "overview": false,
+    "auto": false,
+    "show_extractive_first": true
+  },
+  "search": {
+    "enabled": true,
+    "embedder": {
+      "model": "embed/rubert-tiny-turbo/model.int8.onnx",
+      "tokenizer": "embed/rubert-tiny-turbo/tokenizer.json",
+      "dim": 312,
+      "pooling": "cls",
+      "query_prefix": "",
+      "doc_prefix": "",
+      "max_len": 256,
+      "threads": 2
+    },
+    "chunk": "win3s1",
+    "bm25": {
+      "k1": 1.2,
+      "b": 0.75,
+      "stemmer": "snow5"
+    },
+    "fusion": {
+      "method": "rrf",
+      "k": 60,
+      "dense_weight": 0.5
+    },
+    "speaker_filter": "soft",
+    "top_k": 5,
+    "store": {
+      "kind": "bruteforce",
+      "fallback": "bruteforce",
+      "metric": "cosine"
+    },
+    "answer": {
+      "enabled": false,
+      "top_chunks": 3,
+      "max_context_chars": 3200,
+      "max_new_tokens": 160
+    }
   }
 }
