@@ -1,0 +1,14 @@
+{
+  "medium": {
+    "file": "neurosteno-minimal-medium-0.1.0.apk",
+    "bytes": 1913196156,
+    "sha256": "cf56a9b17c0a3d0b0759cb5ac9d32c736b79620a2abe3567bac95369d9b2648b",
+    "package": "ru.neurosteno.minimal.medium"
+  },
+  "online": {
+    "file": "neurosteno-minimal-online-0.1.0.apk",
+    "bytes": 52579829,
+    "sha256": "14677035b55a0e5a2489a4a3eebf5438f9f3f6e650711a65036214a37af9d6d8",
+    "package": "ru.neurosteno.minimal.online"
+  }
+}

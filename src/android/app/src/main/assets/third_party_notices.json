@@ -24,9 +24,9 @@
     "purpose": "Распознавание английской речи",
     "license": "CC-BY-4.0",
     "license_file": "CC-BY-4.0.txt",
-    "text_complete": false,
+    "text_complete": true,
     "source": "https://huggingface.co/nvidia/parakeet_tdt_ctc_110m",
-    "note": "Атрибуция: NVIDIA; изменения: квантизация int8 и экспорт ONNX (k2-fsa). Вложена справка со ссылкой, не полный юридический текст.",
+    "note": "Атрибуция: NVIDIA; изменения: квантизация int8 и экспорт ONNX (k2-fsa).",
     "tiers": [
       "lite",
       "medium",

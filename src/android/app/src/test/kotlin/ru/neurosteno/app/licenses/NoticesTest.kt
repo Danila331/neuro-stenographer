@@ -41,7 +41,7 @@ class NoticesTest {
         for (f in listOf("OFL-unbounded.txt", "OFL-golostext.txt", "OFL-jetbrainsmono.txt")) assertTrue(f, text(f).contains("SIL OPEN FONT LICENSE Version 1.1"))
         // справки без полного юридического текста помечены в реестре и называют ссылку на полный текст
         val linkOnly = notices.filter { !it.textComplete }
-        assertEquals(setOf("asr/parakeet-tdt-110m-en-int8", "objectbox-native"), linkOnly.map { it.id }.toSet())
+        assertEquals(setOf("objectbox-native"), linkOnly.map { it.id }.toSet())
         for (n in linkOnly) assertTrue(n.id, text(n.licenseFile).contains("https://") && n.note.isNotBlank())
     }
 

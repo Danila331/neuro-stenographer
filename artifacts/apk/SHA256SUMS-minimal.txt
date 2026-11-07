@@ -1,0 +1,2 @@
+cf56a9b17c0a3d0b0759cb5ac9d32c736b79620a2abe3567bac95369d9b2648b  neurosteno-minimal-medium-0.1.0.apk
+14677035b55a0e5a2489a4a3eebf5438f9f3f6e650711a65036214a37af9d6d8  neurosteno-minimal-online-0.1.0.apk

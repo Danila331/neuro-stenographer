@@ -46,7 +46,7 @@ items = [
           "salute-developers/GigaAM; ONNX int8 -- k2-fsa", ["lite", "medium", "hard"]),
     entry(M, "asr/parakeet-tdt-110m-en-int8", "NVIDIA Parakeet-TDT 110M (English, int8)", "36000 steps", "Распознавание английской речи",
           ("CC-BY-4.0", "CC-BY-4.0.txt"), "https://huggingface.co/nvidia/parakeet_tdt_ctc_110m",
-          "Атрибуция: NVIDIA; изменения: квантизация int8 и экспорт ONNX (k2-fsa). Вложена справка со ссылкой, не полный юридический текст.", ["lite", "medium", "hard"], complete=False),
+          "Атрибуция: NVIDIA; изменения: квантизация int8 и экспорт ONNX (k2-fsa).", ["lite", "medium", "hard"]),
     entry(M, "asr/streaming-zipformer-small-ru-int8", "vosk-model-small-streaming-ru (zipformer, int8)", "2025-08-16", "Живая расшифровка во время записи (превью)",
           APACHE, "https://huggingface.co/alphacep/vosk-model-small-streaming-ru", "alphacep/vosk; ONNX int8 -- csukuangfj (sherpa-onnx)", ["lite", "medium", "hard"]),
     entry(M, "asr/whisper-tiny-int8", "Whisper tiny, multilingual (int8)", "tiny", "Определение языка речи (русский/английский)",

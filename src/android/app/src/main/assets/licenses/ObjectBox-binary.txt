@@ -1,6 +1,8 @@
 ObjectBox -- лицензионная справка
 
-ВНИМАНИЕ: в приложение вложена краткая справка, а не полный текст бинарной лицензии ObjectBox GmbH (локального текста нет).
+ВНИМАНИЕ: здесь краткая справка, а не полный текст бинарной лицензии ObjectBox GmbH: отдельного текста лицензии на официальной странице
+(https://objectbox.io/faq/, проверено 07.11.2026) разработчик не публикует. Там сказано: языковые привязки (Java/Kotlin) -- Apache 2.0, нативная
+библиотека -- «ObjectBox Binary License»; базовая база данных ObjectBox бесплатна («will always be free to use»).
 
 Компоненты (версия 5.4.2):
   - Java/Kotlin API ObjectBox (io.objectbox:objectbox-android, objectbox-kotlin) -- лицензия Apache-2.0 (полный текст: Apache-2.0).

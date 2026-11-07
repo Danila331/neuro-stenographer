@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "Заседание.wav",
+  "finished_at_ms": 1794067714336,
+  "audio_duration_ms": 58580,
+  "processing_ms": 6597,
+  "rtf": 0.113,
+  "language": "ru",
+  "utterances": 14,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 99,
+    "vad": 598,
+    "lid": 1123,
+    "asr": 3920,
+    "diarization": 4168,
+    "align": 4,
+    "punctuation": 0,
+    "export": 1,
+    "relabel": 794,
+    "total": 6597
+  },
+  "peak_pss_mb": 529,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.minimal.medium/files/results",
+  "files": [
+    "Заседание.json",
+    "Заседание.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}
