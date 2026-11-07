@@ -157,6 +157,7 @@ class AsrEngine:
                 decoder=_pick(d, "decoder.int8.onnx", "decoder.onnx"),
                 joiner=_pick(d, "joiner.int8.onnx", "joiner.onnx"),
                 tokens=tokens, num_threads=num_threads, decoding_method=dec,
+                blank_penalty=float(asr_cfg.get("blank_penalty", 0.0)),
                 max_active_paths=int(asr_cfg.get("max_active_paths", 4)),
                 hotwords_file=hot, hotwords_score=float(asr_cfg.get("hotwords_score", 1.5)),
                 model_type="nemo_transducer" if nemo else "transducer")  # feature dim comes from the model

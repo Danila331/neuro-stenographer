@@ -22,6 +22,7 @@ DEFAULTS: dict[str, Any] = {
         "chunk": {"max_s": 25.0, "min_s": 1.0, "overlap_ms": 0},
         "second_pass": None,
         # refpipe extras (not in the architect's files; forward-compatible, Kotlin should mirror):
+        "blank_penalty": 0.0,     # transducer: penalty on the blank logit (sherpa blank_penalty)
         "batch_size": 1,          # chunks per decode call (1 = same as the Android per-chunk call)
         "word_tail_ms": 40,       # end of a word = last token start + tail (clipped by next word start)
         "word_start_offset_ms": 0,  # shift of all token timestamps (calibrate on aligned data)
