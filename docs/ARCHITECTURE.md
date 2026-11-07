@@ -24,22 +24,28 @@ Android-приложение «Нейро-стенографист»: полно
 
 ## Компоненты
 
+Актуальный пайплайн (07.11, все шаги есть и в Android, и в refpipe; паритет WER/DER 0.00 п.п.):
+
 ```
-Uri (SAF) / микрофон
+Uri (SAF) / VIEW / SEND / микрофон
   → AudioDecoder        MediaExtractor+MediaCodec → mono → 16 kHz float PCM (anti-aliased resample)
-  → [Denoiser]          опционально, только если оценка SNR < порога
-  → Vad                 Silero VAD → речевые интервалы
-  → LanguageId          ru | en по первым ~10 с речи (или ручной выбор) → выбор ASR-модели
-  ├→ AsrEngine          по чанкам (границы чанков — паузы VAD) → слова с абсолютным временем
-  └→ Diarizer           pyannote-segmentation-3.0 + speaker embedding + кластеризация → turns
-  → Aligner             слова × turns → реплики (чистый Kotlin, детерминированный)
-  → Punctuator          источник: asr_native | punct_model | llm (+ guard неизменности слов)
-  → TranscriptExporter  JSON по ТЗ (+ расширенный JSON, TXT, SRT, VTT)
-  → [LlmAssistant]      «Протокол заседания», вопросы по расшифровке — после показа результата,
-                        не входит во время основной обработки
+  → GainNormalizer      peak по файлу; scope=asr: копия только для LID/ASR, VAD и диаризация — исходник
+  → Vad                 Silero (порог 0.30) + rescue: энергетический дозабор речи, которую Silero не слышит
+  → ChunkPacker         pack: границы — середины пауз, резка по минимуму энергии, ≤ 25 с
+  → LanguageId          whisper-tiny на каждом чанке + сглаживание (LanguageSmoother) → ru | en
+  ├→ AsrEngine          ru: GigaAM v3 RNNT-punct (знаки и регистр сами); en: Parakeet-TDT-110m
+  │                     → слова с абсолютным временем; postprocess: tiny-drop, strip_dashes, numbers
+  └→ Diarizer           pyannote-seg-3.0, window_shift 1.0 → «точки смены» говорящего
+  → SpeakerRelabeler    юниты-фразы из слов → эмбеддинг на фразу → ward + силуэт (k 2..6,
+                        защита от монологов) → turns
+  → Aligner             слова × turns → реплики (детерминированный, §5)
+  → TranscriptExporter  JSON по ТЗ + .full.json + .done.json (автосохранение) + TXT/SRT/VTT
+  → [LlmAssistant]      Qwen3 (llama.cpp): протокол по фрагментам + слияние, вопросы — по кнопке,
+                        после сохранения JSON; в основной путь не входит
 ```
 
-ASR и диаризация независимы и выполняются **параллельно** (два потока, делят ядра).
+ASR и диаризация выполняются **параллельно**; модель эмбеддингов грузится после их выгрузки.
+Повторная обработка фрагмента (`FragmentReprocessor`) — тот же пайплайн на отрезке.
 
 ### Варианты сборки (product flavors)
 
