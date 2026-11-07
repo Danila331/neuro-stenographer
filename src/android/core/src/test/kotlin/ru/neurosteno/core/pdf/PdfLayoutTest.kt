@@ -190,4 +190,64 @@ class PdfLayoutTest {
         )
         assertEquals(emptyList<ProtocolBlock>(), ProtocolText.parse("Решения:\nЦитаты:"))
     }
+
+    private fun summary(topics: Int, llm: Boolean = true, overview: String = "Обсудили закупку мисок и дежурство.") = PdfSummary(
+        llm = llm, overview = overview,
+        topics = (0 until topics).map { i ->
+            PdfSummaryTopic(
+                "Тема номер $i про мышей на складе", i * 20_000L, i * 20_000L + 18_000,
+                listOf(
+                    PdfSummaryItem(PdfSummaryItem.Kind.POINT, "speaker_1", "Мурзик", "", "Насчитали сорок семь мышей на складе", i * 20_000L + 2_000),
+                    PdfSummaryItem(PdfSummaryItem.Kind.POINT, "speaker_2", "Говорящий 2", "", "Предложил назначить дежурного " + "и проверить склад ".repeat(8), i * 20_000L + 9_000),
+                    PdfSummaryItem(PdfSummaryItem.Kind.DECISION, null, "", "", "Дежурной назначили Багиру", i * 20_000L + 12_000),
+                    PdfSummaryItem(PdfSummaryItem.Kind.TASK, null, "", "Говорящий 2", "составить отчёт к утру", i * 20_000L + 15_000),
+                    PdfSummaryItem(PdfSummaryItem.Kind.TASK, null, "", "", "проверить сметану", null),
+                ),
+            )
+        },
+    )
+
+    @Test
+    fun `summary section sits between legend and transcript with all item kinds and timecodes`() {
+        val pages = PdfLayout.layout(model(3).copy(summary = summary(2)), metrics, geo)
+        val all = pages.allText()
+        assertTrue(all.contains("ВЫЖИМКА"))
+        assertTrue(all.indexOf("ГОВОРЯЩИЕ") < all.indexOf("ВЫЖИМКА") && all.indexOf("ВЫЖИМКА") < all.indexOf("РАСШИФРОВКА"))
+        assertTrue(all.contains("ИИ-выжимка. Черновик"))
+        assertTrue(all.contains("Обсудили закупку мисок"))
+        assertTrue(all.contains("Мурзик:") && all.contains("Решение:") && all.contains("Задача (Говорящий 2):") && all.contains("Задача:"))
+        assertTrue(all.contains("00:00–00:18") && all.contains("00:20–00:38"))
+        assertTrue(all.contains("[00:02]") || all.contains("[00:02]".trim()))
+        pages.forEach { p -> p.texts().forEach { assertTrue(it.x + metrics.width(it.text, it.font, it.size) <= geo.right + 0.5f, "вышло за поля: '${it.text}'") } }
+    }
+
+    @Test
+    fun `quick summary is labelled and omitted when absent`() {
+        assertTrue(PdfLayout.layout(model(2).copy(summary = summary(1, llm = false)), metrics, geo).allText().contains("Быстрая выжимка (без ИИ)"))
+        assertFalse(PdfLayout.layout(model(2), metrics, geo).allText().contains("ВЫЖИМКА"))
+    }
+
+    @Test
+    fun `summary only document has no transcript or protocol and long summary paginates`() {
+        val m = model(50, protocol = "Решения:\n- один").copy(summary = summary(60), includeTranscript = false)
+        val pages = PdfLayout.layout(m, metrics, geo)
+        val all = pages.allText()
+        assertFalse(all.contains("РАСШИФРОВКА") || all.contains("ПРОТОКОЛ"))
+        assertTrue(pages.size >= 4, "страниц ${pages.size}")
+        pages.forEachIndexed { i, p ->
+            assertTrue(p.texts().any { it.text == "Стр. ${i + 1} из ${pages.size}" })
+            p.texts().filter { it.font != PdfFont.SMALL }.forEach { assertTrue(it.baseline <= geo.bottom + 0.5f) }
+        }
+        // заголовок темы не остаётся один внизу страницы: после него на той же странице есть строка пункта
+        pages.forEach { p ->
+            val heads = p.texts().filter { it.font == PdfFont.MONO && it.text.contains("–") }
+            heads.forEach { h -> assertTrue(p.texts().any { it.baseline > h.baseline }, "заголовок темы без пунктов") }
+        }
+    }
+
+    @Test
+    fun `empty summary still prints heading and note without crashing`() {
+        val pages = PdfLayout.layout(model(1).copy(summary = PdfSummary(false, "", emptyList())), metrics, geo)
+        assertTrue(pages.allText().contains("ВЫЖИМКА"))
+    }
 }

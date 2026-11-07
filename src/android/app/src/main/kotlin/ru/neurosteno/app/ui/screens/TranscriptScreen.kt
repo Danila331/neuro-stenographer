@@ -148,6 +148,13 @@ fun TranscriptScreen(
     onProtocol: () -> Unit,
     onStartFragment: (FragmentParams) -> Unit = {},
     onCancelFragment: () -> Unit = {},
+    /** Переходы в «Выжимку» (B50) и «AI-поиск» (B51); `null` -- возможность недоступна в этой сборке (плитка «СКОРО»). */
+    onSummary: (() -> Unit)? = null,
+    onSearch: (() -> Unit)? = null,
+    /** Просьба открыть реплику из выжимки/поиска: прокрутка к реплике на времени и плеер на него. */
+    focusMs: Long? = null,
+    focusToken: Long = 0,
+    onFocusConsumed: () -> Unit = {},
 ) {
     val doc by session.doc.collectAsState()
     val highlight by session.highlight.collectAsState()
@@ -196,6 +203,21 @@ fun TranscriptScreen(
             programmatic = true
             try { listState.animateScrollToItem(currentIndex + HEADER_ITEMS, scrollOffset = -80) } finally { programmatic = false }
         }
+    }
+    // переход из выжимки/поиска: к реплике на нужном времени, подсветка на пару секунд, плеер встаёт на это место
+    var flashIndex by remember { mutableStateOf(-1) }
+    LaunchedEffect(focusToken, utterances.size) {
+        val ms = focusMs ?: return@LaunchedEffect
+        if (utterances.isEmpty()) return@LaunchedEffect
+        val i = TranscriptEditor.indexAt(utterances, ms).let { if (it >= 0) it else 0 }
+        programmatic = true
+        try { listState.animateScrollToItem(i + HEADER_ITEMS, scrollOffset = -80) } finally { programmatic = false }
+        flashIndex = i
+        follow = true
+        if (player.available) session.player.playFrom(utterances[i].startMs)
+        onFocusConsumed()
+        kotlinx.coroutines.delay(2_500)
+        if (flashIndex == i) flashIndex = -1
     }
     LaunchedEffect(listState) {
         snapshotFlow { listState.isScrollInProgress }.collect { scrolling -> if (scrolling && !programmatic && player.playing) follow = false }
@@ -302,6 +324,7 @@ fun TranscriptScreen(
                         Header(
                             entry = entry, transcript = transcript, llmAvailability = llmAvailability,
                             onExportJson = { onExport(ExportFormat.JSON) }, onMore = { showFormats = true }, onProtocol = onProtocol,
+                            onSummary = onSummary, onSearch = onSearch,
                         )
                     }
                     if (utterances.isEmpty()) {
@@ -314,7 +337,7 @@ fun TranscriptScreen(
                             u = u, name = transcript.displayName(u.speakerId), current = i == currentIndex,
                             matched = query.isNotBlank() && i in matches, query = query,
                             selected = selection != null && i in selection, selectionMode = selection != null,
-                            highlighted = (u.startMs to u.endMs) in highlight,
+                            highlighted = (u.startMs to u.endMs) in highlight, flash = i == flashIndex,
                             canMerge = i < utterances.lastIndex, menuOpen = menuIndex == i,
                             onClick = {
                                 if (selection != null) selRaw = selection.toggle(i)?.encode() ?: -1L
@@ -447,6 +470,8 @@ private fun Header(
     onExportJson: () -> Unit,
     onMore: () -> Unit,
     onProtocol: () -> Unit,
+    onSummary: (() -> Unit)? = null,
+    onSearch: (() -> Unit)? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -471,13 +496,19 @@ private fun Header(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            ToolSlot("Выжимка", Modifier.weight(1f).testTag("slot_summary"))
-            ToolSlot("AI-поиск", Modifier.weight(1f).testTag("slot_ai_search"))
+            if (onSummary != null) ToolButton("Выжимка", onSummary, Modifier.weight(1f).testTag("btn_summary")) else ToolSlot("Выжимка", Modifier.weight(1f).testTag("slot_summary"))
+            if (onSearch != null) ToolButton("AI-поиск", onSearch, Modifier.weight(1f).testTag("btn_ai_search")) else ToolSlot("AI-поиск", Modifier.weight(1f).testTag("slot_ai_search"))
         }
         entry?.warnings?.takeIf { it.isNotEmpty() }?.let { w ->
             Text("Предупреждения обработки: ${w.joinToString("; ")}", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
         }
     }
+}
+
+/** Рабочая кнопка инструмента поверх расшифровки («Выжимка», «AI-поиск»). */
+@Composable
+private fun ToolButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    BrutalButton(onClick = onClick, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = modifier) { ButtonLabel(label) }
 }
 
 /** Заложенное место под будущий инструмент (B50/B51): неактивная кнопка с меткой «СКОРО». */
@@ -502,6 +533,8 @@ private fun UtteranceCard(
     selected: Boolean,
     selectionMode: Boolean,
     highlighted: Boolean,
+    /** Кратковременная подсветка реплики после перехода из выжимки/поиска (без метки «НОВАЯ»). */
+    flash: Boolean = false,
     canMerge: Boolean,
     menuOpen: Boolean,
     onClick: () -> Unit,
@@ -517,12 +550,12 @@ private fun UtteranceCard(
     // Заливка отражает состояние: выбрана -- инверсия, только что пересчитана -- акцент, звучит сейчас -- акцент; обычная -- фон.
     val fill = when {
         selected -> Brutal.ink
-        highlighted || current -> Brutal.accent
+        highlighted || current || flash -> Brutal.accent
         else -> Brutal.bg
     }
     val fg = when {
         selected -> Brutal.onInk
-        highlighted || current -> Brutal.onAccent
+        highlighted || current || flash -> Brutal.onAccent
         else -> Brutal.ink
     }
     val time = Format.clock(u.startMs)

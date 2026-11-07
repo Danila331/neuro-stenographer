@@ -80,6 +80,27 @@ JSON и в строке logcat `done <имя>: … peak_pss_mb=… threads=… d
   Раскладка чистая (метрики подаются снаружи), поэтому пагинация тестируется на JVM (`PdfLayoutTest`).
 - Проверка на эмуляторе: `app/tools/timeline_pdf_check.sh` (перемотка, экспорт PDF через системный диалог, хост-рендер страниц PyMuPDF через `render_pdf.py`).
 
+## Выжимка и AI-поиск: экраны (B50/B51)
+
+Экраны на портах `:app` `insight/` (UI не знает про движки): `SummaryRepository` (`GraphSummaryRepository` поверх `AppGraph.summary`/`SummaryRunner`;
+`FakeSummaryRepository` -- тесты) и `SearchRepository` (`RealSearchRepository` поверх `SearchService`; `FakeSearchRepository` -- превью и тесты).
+Модели UI -- схема `summary.json` из `:core` (`SummaryDoc`, `SummaryTopic`, ...) и `SearchModel.kt` (`SearchHit` с `HitLine`, `IndexState`, `AnswerCaps`, `AnswerEvent`).
+
+- **«Выжимка»** (`SummaryScreen`): «О чём»; темы-карточки с диапазоном времени; пункты по говорящим (цвет и имя), решения, задачи с исполнителем;
+  тап по пункту/заголовку темы -- расшифровка прокручивается к реплике на времени ссылки, плеер встаёт на него (`AppViewModel.requestFocus`).
+  Метки: «быстрая выжимка · без ИИ» (extractive), «ИИ-выжимка готовится…» с прогрессом и «Остановить» (быстрая версия на экране, итоговая
+  заменяет её), «ИИ-ВЫЖИМКА»; плашка «Черновик — проверьте по репликам». `summary.mode = extractive` (lite) -- пояснение «без ИИ» и выжимка
+  строится сразу при открытии; ИИ недоступен (память/модель) -- быстрая версия и причина; пока на экране «Протокол» идёт генерация (LLM одна),
+  запуск и «Пересоздать» отключены с сообщением. Экспорт: TXT (`SummaryExport`) и PDF (раздел «Выжимка» в `PdfLayout`; только выжимка --
+  `PdfModelBuilder.buildSummaryOnly`; в общий PDF «расшифровка + протокол» выжимка входит, если она составлена).
+- **«AI-поиск»** (`SearchScreen`, `SearchController`): вопрос, подсказки-примеры, «эта запись / вся история» (с главного экрана -- только история);
+  сначала найденные фрагменты (говорящий, время, подсветка совпадений по основам -- `Highlight`), тап -- к реплике записи; затем «Ответить»:
+  ответ ИИ со ссылками `[мм:сс, Говорящий N]`, кликабельными (`CitationParser`, запись определяется по фрагментам). Состояния: ничего не найдено,
+  отказ «В записи нет ответа» (фрагменты остаются), ИИ недоступен или выключен конфигом (только фрагменты), индекс строится (прогресс из `SearchService`).
+- Тесты: `insight/SummaryTest`, `insight/SearchTest`, `export/SummaryExportTest` (JVM); `InsightUiTest` (21 UI-тест на всех состояниях);
+  `InsightScreenshotsTest` снимает все состояния в светлой и тёмной теме (запуск вручную: `adb shell am instrument -w -e class ru.neurosteno.app.InsightScreenshotsTest ...`);
+  `app/tools/insight_check.sh` -- сквозная проверка на эмуляторе на настоящих движках (выжимка, переходы, экспорт TXT/PDF, поиск и ответ).
+
 ## Экраны (`ui/screens`)
 
 | Экран | Что есть |

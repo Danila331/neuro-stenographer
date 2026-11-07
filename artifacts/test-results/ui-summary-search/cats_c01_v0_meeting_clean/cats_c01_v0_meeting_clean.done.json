@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "cats_c01_v0_meeting_clean.wav",
+  "finished_at_ms": 1794045311780,
+  "audio_duration_ms": 58580,
+  "processing_ms": 7524,
+  "rtf": 0.128,
+  "language": "ru",
+  "utterances": 14,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 444,
+    "vad": 473,
+    "lid": 1062,
+    "asr": 4559,
+    "diarization": 4817,
+    "align": 4,
+    "punctuation": 0,
+    "export": 1,
+    "relabel": 900,
+    "total": 7524
+  },
+  "peak_pss_mb": 540,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "cats_c01_v0_meeting_clean.json",
+    "cats_c01_v0_meeting_clean.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

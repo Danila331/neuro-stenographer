@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -81,6 +82,8 @@ fun HomeScreen(
     onDelete: (HistoryEntry) -> Unit,
     onModels: () -> Unit,
     onSettings: () -> Unit,
+    /** «AI-поиск» по всей истории (B51); `null` -- нет движка поиска или история пуста. */
+    onSearch: (() -> Unit)? = null,
 ) {
     var toDelete by remember { mutableStateOf<HistoryEntry?>(null) }
     Scaffold(
@@ -89,6 +92,7 @@ fun HomeScreen(
             NeuroTopBar(
                 title = appName, titleMaxLines = 2,
                 actions = {
+                    if (onSearch != null) BrutalIconButton(onClick = onSearch, contentDescription = "AI-поиск по истории") { Icon(Icons.Default.Search, contentDescription = null) }
                     BrutalIconButton(onClick = onModels, contentDescription = "Модели") { Icon(AppIcons.Memory, contentDescription = null) }
                     BrutalIconButton(onClick = onSettings, contentDescription = "Настройки") { Icon(Icons.Default.Settings, contentDescription = null) }
                 },

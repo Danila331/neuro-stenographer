@@ -10,6 +10,10 @@ sealed interface Route {
     data object Home : Route
     data class Transcript(val entryId: String) : Route
     data class Protocol(val entryId: String) : Route
+    /** «Выжимка» записи (B50). */
+    data class Summary(val entryId: String) : Route
+    /** «AI-поиск» (B51); [entryId] -- запись, из которой открыт поиск (по умолчанию ищем в ней), `null` -- с главного экрана (вся история). */
+    data class Search(val entryId: String?) : Route
     data object Models : Route
     data object Settings : Route
     data object Stats : Route
@@ -20,6 +24,8 @@ fun Route.encode(): String = when (this) {
     Route.Home -> "home"
     is Route.Transcript -> "transcript:$entryId"
     is Route.Protocol -> "protocol:$entryId"
+    is Route.Summary -> "summary:$entryId"
+    is Route.Search -> "search:${entryId.orEmpty()}"
     Route.Models -> "models"
     Route.Settings -> "settings"
     Route.Stats -> "stats"
@@ -29,6 +35,8 @@ fun Route.encode(): String = when (this) {
 fun decodeRoute(s: String): Route = when {
     s.startsWith("transcript:") -> Route.Transcript(s.removePrefix("transcript:"))
     s.startsWith("protocol:") -> Route.Protocol(s.removePrefix("protocol:"))
+    s.startsWith("summary:") -> Route.Summary(s.removePrefix("summary:"))
+    s.startsWith("search:") -> Route.Search(s.removePrefix("search:").ifEmpty { null })
     s == "models" -> Route.Models
     s == "settings" -> Route.Settings
     s == "stats" -> Route.Stats

@@ -24,12 +24,20 @@ class AppGraph(private val context: Context) {
 
     val settings: SettingsRepository by lazy { SettingsRepository(context) }
 
-    /** Выжимка записей (B50): запуск из ProcessingService, состояние для экрана выжимки. */
     /** AI-поиск (B51): индекс записей, эмбеддер, хранилище векторов. */
     val search: ru.neurosteno.app.search.SearchService by lazy { ru.neurosteno.app.search.SearchService(context, this) }
 
     /** Выжимка (B50); эмбеддер реплик для долин -- общий с поиском (выгружается по простою). */
     val summary: ru.neurosteno.app.summary.SummaryRunner by lazy { ru.neurosteno.app.summary.SummaryRunner(context, this) { search.embedder.get() } }
+
+    /** Порт выжимки для экрана (B50): настоящий движок через [summary]. */
+    val summaryRepository: ru.neurosteno.app.insight.SummaryRepository by lazy { ru.neurosteno.app.insight.GraphSummaryRepository(context, this) }
+
+    /**
+     * Порт поиска для экрана «AI-поиск» (B51): настоящий гибридный поиск и ответ LLM ([ru.neurosteno.app.insight.RealSearchRepository]).
+     * Фейк ([ru.neurosteno.app.insight.FakeSearchRepository]) остаётся для превью и UI-тестов, в приложении не используется.
+     */
+    val searchRepository: ru.neurosteno.app.insight.SearchRepository by lazy { ru.neurosteno.app.insight.RealSearchRepository(this) }
 
     val history: HistoryRepository by lazy {
         HistoryRepository(File(context.filesDir, "history")).also { repo ->

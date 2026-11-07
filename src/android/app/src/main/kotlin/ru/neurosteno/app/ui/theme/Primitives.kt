@@ -48,6 +48,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.toggleableState
@@ -143,6 +144,7 @@ fun BrutalButton(
             .defaultMinSize(minHeight = height)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
+                if (!enabled) disabled() // TalkBack и тесты видят недоступную кнопку на внешнем (объединённом) узле
                 if (contentDescription != null) this.contentDescription = contentDescription
             },
         propagateMinConstraints = true, // fillMaxWidth()/weight() вызывающего растягивают и лицо кнопки; без них -- ширина по содержимому
@@ -386,9 +388,12 @@ fun BrutalTextField(
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     enabled: Boolean = true,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default,
+    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
 ) {
     androidx.compose.foundation.text.BasicTextField(
         value = value, onValueChange = onValueChange, enabled = enabled,
+        keyboardOptions = keyboardOptions, keyboardActions = keyboardActions,
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = Brutal.ink),
         cursorBrush = androidx.compose.ui.graphics.SolidColor(Brutal.ink),
         singleLine = singleLine, minLines = minLines, maxLines = maxLines,

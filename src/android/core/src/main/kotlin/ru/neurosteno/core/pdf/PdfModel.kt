@@ -29,6 +29,16 @@ data class PdfSpeaker(val id: String, val name: String)
 /** Реплика для печати: время начала, говорящий и текст. */
 data class PdfUtterance(val speakerId: String, val startMs: Long, val text: String)
 
+/** Пункт выжимки для печати: пункт говорящего, решение или задача; [tMs] -- время реплики-источника (для `[мм:сс]` в конце строки). */
+data class PdfSummaryItem(val kind: Kind, val speakerId: String?, val speakerName: String, val who: String, val text: String, val tMs: Long?) {
+    enum class Kind { POINT, DECISION, TASK }
+}
+
+data class PdfSummaryTopic(val title: String, val startMs: Long, val endMs: Long, val items: List<PdfSummaryItem>)
+
+/** Выжимка (B50) в PDF: [llm] -- ИИ-версия (иначе быстрая, без ИИ), [overview] -- «О чём» (может быть пустым). */
+data class PdfSummary(val llm: Boolean, val overview: String, val topics: List<PdfSummaryTopic>)
+
 /**
  * Всё, что попадает в PDF. [protocol] -- текст протокола LLM, если он уже составлен (иначе `null`/пусто и раздела нет).
  */
@@ -39,6 +49,10 @@ data class PdfDocModel(
     val speakers: List<PdfSpeaker>,
     val utterances: List<PdfUtterance>,
     val protocol: String? = null,
+    /** Выжимка записи (B50): раздел после легенды говорящих; `null` -- выжимки нет, раздела нет. */
+    val summary: PdfSummary? = null,
+    /** `false` -- только шапка, легенда и выжимка (экспорт выжимки без расшифровки и протокола). */
+    val includeTranscript: Boolean = true,
     val footerNote: String = "Нейро-стенографист · обработано на устройстве",
 )
 
