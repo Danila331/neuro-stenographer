@@ -25,6 +25,7 @@ data class TierConfig(
     val punctuation: PunctuationConfig = PunctuationConfig(),
     val llm: LlmConfig = LlmConfig(),
     val normalization: NormalizationConfig = NormalizationConfig(),
+    val postprocess: PostprocessConfig = PostprocessConfig(),
 ) {
     /** Все модели, нужные этому варианту (для проверки наличия assets и для stage_models). */
     fun requiredModelPaths(): List<String> = buildList {
@@ -79,6 +80,8 @@ data class LanguageConfig(
     @SerialName("lid_model") val lidModel: String? = null,
     /** Сколько секунд речи отдавать определителю языка. */
     @SerialName("lid_seconds") val lidSeconds: Int = 10,
+    /** LID на каждом VAD-чанке с гистерезисом (смешанные ru/en диалоги); false -- один язык на файл. */
+    @SerialName("per_chunk") val perChunk: Boolean = false,
 ) {
     val effectiveMode: String
         get() = when (mode.lowercase()) {
@@ -104,14 +107,23 @@ data class AudioConfig(
 
 @Serializable
 data class NormalizeGainConfig(
-    /** none | peak (неизвестное значение трактуется как none). */
-    val mode: String = "none",
-    @SerialName("target_peak_dbfs") val targetPeakDbfs: Double = -1.0,
+    /** Выключено по умолчанию; включается только явно (BACKLOG B24: пока не доказано выигрыша вместе с порогом VAD). */
+    val enabled: Boolean = false,
+    /** peak (другие значения трактуются как «выключено»). */
+    val mode: String = "peak",
+    /** Целевой пик, dBFS. Старый ключ `target_peak_dbfs` тоже читается. */
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+    @kotlinx.serialization.json.JsonNames("target_peak_dbfs")
+    @SerialName("peak_dbfs") val peakDbfs: Double = -1.0,
     /** Максимальное усиление, дБ. */
     @SerialName("max_gain_db") val maxGainDb: Double = 40.0,
     /** Максимальное ослабление, дБ (слишком громкие записи ослабляются не сильнее). */
     @SerialName("max_attenuation_db") val maxAttenuationDb: Double = 6.0,
-)
+    /** Почти нулевой сигнал (пик ниже порога, dBFS) не трогаем: усиливать нечего. */
+    @SerialName("skip_if_peak_below_dbfs") val skipIfPeakBelowDbfs: Double = -85.0,
+) {
+    val active: Boolean get() = enabled && mode.lowercase() == "peak"
+}
 
 @Serializable
 data class DenoiseConfig(
@@ -218,4 +230,20 @@ data class NormalizationConfig(
     @SerialName("yo_to_e") val yoToE: Boolean = false,
     /** as_is | lower */
     val case: String = "as_is",
+)
+
+@Serializable
+data class PostprocessConfig(
+    /** as_is | words ("25" -> "двадцать пять"). */
+    val numbers: String = "as_is",
+    @SerialName("drop_tiny_chunks") val dropTinyChunks: DropTinyChunksConfig = DropTinyChunksConfig(),
+) {
+    val spellNumbers: Boolean get() = numbers.lowercase() == "words"
+}
+
+@Serializable
+data class DropTinyChunksConfig(
+    val enabled: Boolean = false,
+    /** Чанк, у которого весь вывод не длиннее стольких букв/цифр, отбрасывается (галлюцинации «а/э/няу»). */
+    @SerialName("max_chars") val maxChars: Int = 2,
 )

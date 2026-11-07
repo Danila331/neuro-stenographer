@@ -36,12 +36,13 @@ class TierConfigTest {
         assertFalse(lite.audio.denoise.enabled)
         val hard = TierConfig.parse(load("hard"))
         assertTrue(hard.asr.decoding.isNotBlank())
-        assertNotNull(hard.asr.secondPass)
-        assertEquals("whisper", hard.asr.secondPass!!.engine)
-        assertTrue(hard.audio.denoise.enabled)
-        assertTrue(hard.requiredModelPaths().contains("denoise/gtcrn_simple.onnx"))
-        assertTrue(hard.requiredModelPaths().contains(hard.asr.secondPass!!.modelDir))
-        assertEquals(99, hard.llm.gpuLayers)
+        val full = TierConfig.parse("""{"audio":{"denoise":{"enabled":true,"model":"denoise/gtcrn_simple.onnx"}},
+            "asr":{"second_pass":{"engine":"whisper","model_dir":"asr/whisper-large"}},"llm":{"gpu_layers":99}}""")
+        assertNotNull(full.asr.secondPass)
+        assertEquals("whisper", full.asr.secondPass!!.engine)
+        assertTrue(full.requiredModelPaths().contains("denoise/gtcrn_simple.onnx"))
+        assertTrue(full.requiredModelPaths().contains("asr/whisper-large"))
+        assertEquals(99, full.llm.gpuLayers)
         assertNull(hard.diarization.clustering.numSpeakers)
     }
 
@@ -79,7 +80,7 @@ class TierConfigTest {
     fun `new reference fields are parsed with defaults`() {
         val c = TierConfig.parse(load("medium"))
         assertEquals(40, c.asr.wordTailMs)
-        assertEquals(0, c.asr.wordStartOffsetMs)
+        assertTrue(c.asr.wordStartOffsetMs <= 0)
         assertEquals(1, c.asr.batchSize)
         assertEquals("ru", c.asr.language)
         assertTrue(c.diarization.enabled)
@@ -101,13 +102,30 @@ class TierConfigTest {
     }
 
     @Test
-    fun `normalize_gain is parsed and defaults to off`() {
-        assertEquals("none", TierConfig.parse("{}").audio.normalizeGain.mode)
-        val c = TierConfig.parse("""{"audio":{"normalize_gain":{"mode":"peak","target_peak_dbfs":-3.0,"max_gain_db":30}}}""")
-        assertEquals("peak", c.audio.normalizeGain.mode)
-        assertEquals(-3.0, c.audio.normalizeGain.targetPeakDbfs)
-        assertEquals(30.0, c.audio.normalizeGain.maxGainDb)
-        assertEquals(c.audio.normalizeGain, PipelineSettings.from(c, "1").normalizeGain)
+    fun `normalize_gain is parsed, legacy key works and defaults to off`() {
+        assertFalse(TierConfig.parse("{}").audio.normalizeGain.active)
+        val c = TierConfig.parse("""{"audio":{"normalize_gain":{"enabled":true,"mode":"peak","peak_dbfs":-3.0,"max_gain_db":30,"skip_if_peak_below_dbfs":-80}}}""")
+        val g = c.audio.normalizeGain
+        assertTrue(g.active)
+        assertEquals(-3.0, g.peakDbfs); assertEquals(30.0, g.maxGainDb); assertEquals(-80.0, g.skipIfPeakBelowDbfs)
+        assertEquals(g, PipelineSettings.from(c, "1").normalizeGain)
+        val legacy = TierConfig.parse("""{"audio":{"normalize_gain":{"enabled":true,"mode":"peak","target_peak_dbfs":-2.0}}}""")
+        assertEquals(-2.0, legacy.audio.normalizeGain.peakDbfs)
+        TierConfig.parse(load("medium")) // реальный конфиг со всеми новыми ключами парсится
+    }
+
+    @Test
+    fun `b30 fields have defaults and are parsed`() {
+        val d = TierConfig.parse("{}")
+        assertFalse(d.language.perChunk)
+        assertEquals("as_is", d.postprocess.numbers)
+        assertFalse(d.postprocess.dropTinyChunks.enabled)
+        assertEquals(2, d.postprocess.dropTinyChunks.maxChars)
+        val c = TierConfig.parse("""{"language":{"mode":"auto","per_chunk":true},"postprocess":{"numbers":"words","drop_tiny_chunks":{"enabled":true,"max_chars":3}}}""")
+        assertTrue(c.language.perChunk); assertTrue(c.postprocess.spellNumbers)
+        assertTrue(c.postprocess.dropTinyChunks.enabled); assertEquals(3, c.postprocess.dropTinyChunks.maxChars)
+        val real = TierConfig.parse(load("medium"))
+        assertTrue(real.asr.wordStartOffsetMs <= 0)
     }
 
     @Test

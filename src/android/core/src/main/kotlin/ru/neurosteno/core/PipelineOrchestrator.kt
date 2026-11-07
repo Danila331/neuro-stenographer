@@ -9,6 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runInterruptible
+import ru.neurosteno.core.asr.ChunkPlanner
 import kotlin.coroutines.coroutineContext
 
 /** Параметры прогона, не связанные с выбором движков. */
@@ -33,6 +34,12 @@ data class PipelineSettings(
     val diarizationEnabled: Boolean = true,
     /** Пиковая нормализация после декодирования (до denoise/VAD/ASR/диаризации). */
     val normalizeGain: NormalizeGainConfig = NormalizeGainConfig(),
+    /** LID на каждом VAD-чанке (при `languageMode == auto` и наличии английской ASR). */
+    val perChunkLanguage: Boolean = false,
+    /** Максимальная длина чанка основной ASR (мс) -- по ней нарезаются чанки для LID. */
+    val chunkMaxMs: Long = 25_000,
+    /** `postprocess.numbers = words`. */
+    val spellNumbers: Boolean = false,
 ) {
     companion object {
         fun from(cfg: TierConfig, appVersion: String, plan: ResourcePlan? = null): PipelineSettings = PipelineSettings(
@@ -57,6 +64,9 @@ data class PipelineSettings(
             plan = plan,
             diarizationEnabled = cfg.diarization.enabled,
             normalizeGain = cfg.audio.normalizeGain,
+            perChunkLanguage = cfg.language.perChunk,
+            chunkMaxMs = (cfg.asr.chunk.maxS * 1000).toLong(),
+            spellNumbers = cfg.postprocess.spellNumbers,
         )
     }
 }
@@ -171,15 +181,14 @@ class PipelineOrchestrator(
         }
 
         // ---- language id ----
-        val language = timed(Stage.LID) { chooseLanguage(processed, speech, tracker, warnings) }
+        val langPlan = timed(Stage.LID) { planLanguage(processed, speech, tracker, warnings) }
+        val language = langPlan.language
 
         // ---- asr || diarization ----
-        val (words, turns) = coroutineScope {
+        val (rawWords, turns) = coroutineScope {
             val asrJob = async {
                 timed(Stage.ASR) {
-                    fatal(Stage.ASR) {
-                        blocking(tracker, Stage.ASR) { l -> engines.asr(language).use { it.transcribe(processed, speech, l) } }
-                    }
+                    fatal(Stage.ASR) { transcribeAll(processed, speech, langPlan, tracker) }
                 }
             }
             val diarJob = async {
@@ -197,6 +206,7 @@ class PipelineOrchestrator(
             }
             asrJob.await() to diarJob.await()
         } // здесь ASR и диаризация уже закрыты -- память свободна под LLM
+        val words = if (settings.spellNumbers) ru.neurosteno.core.postprocess.Postprocess.spellNumbers(rawWords) else rawWords
 
         // ---- align ----
         coroutineContext.ensureActive()
@@ -226,6 +236,67 @@ class PipelineOrchestrator(
         }
 
         return finish(punctuated, durationMs, language, t0, stageMs, warnings, tracker)
+    }
+
+    /** План языка: либо один язык на весь файл, либо (per_chunk) раздельные списки чанков ru/en. */
+    private class LangPlan(val language: String, val ruSpans: List<TimeSpan>? = null, val enSpans: List<TimeSpan>? = null) {
+        val perChunk: Boolean get() = ruSpans != null && enSpans != null
+    }
+
+    private suspend fun planLanguage(
+        audio: AudioBuffer,
+        speech: List<TimeSpan>,
+        tracker: Tracker,
+        warnings: MutableList<String>,
+    ): LangPlan {
+        val lidFactory = engines.languageId
+        val perChunk = settings.perChunkLanguage && settings.languageMode == LanguageConfig.AUTO &&
+            LanguageConfig.EN in settings.supportedLanguages && lidFactory != null
+        if (!perChunk) return LangPlan(chooseLanguage(audio, speech, tracker, warnings))
+
+        val chunks = ChunkPlanner.plan(audio.samples, speech, settings.chunkMaxMs)
+        val preds: List<String?>? = soft<List<String?>?>(Stage.LID, warnings, null) {
+            blocking(tracker, Stage.LID) { l ->
+                lidFactory().use { lid ->
+                    chunks.mapIndexed { i, c ->
+                        l.onProgress(Stage.LID, i.toFloat() / chunks.size)
+                        if (c.endMs - c.startMs < LanguageSmoother.MIN_LID_MS) null else lid.detect(audio, listOf(c))
+                    }
+                }
+            }
+        }
+        if (preds == null) return LangPlan(LanguageConfig.RU)
+        val labels = LanguageSmoother.smooth(preds, chunks.map { it.endMs - it.startMs })
+        val ru = chunks.filterIndexed { i, _ -> labels[i] == LanguageConfig.RU }
+        val en = chunks.filterIndexed { i, _ -> labels[i] == LanguageConfig.EN }
+        val enMs = en.sumOf { it.endMs - it.startMs }
+        val ruMs = ru.sumOf { it.endMs - it.startMs }
+        return LangPlan(if (enMs > ruMs) LanguageConfig.EN else LanguageConfig.RU, ru, en)
+    }
+
+    /**
+     * Распознавание. Один язык -- как раньше. Per-chunk: сначала русская ASR на ru-чанках и ВЫГРУЗКА, затем английская
+     * на en-чанках (две ASR не держим в памяти одновременно); слова сливаются по времени.
+     */
+    private suspend fun transcribeAll(audio: AudioBuffer, speech: List<TimeSpan>, plan: LangPlan, tracker: Tracker): List<Word> {
+        if (!plan.perChunk) {
+            return blocking(tracker, Stage.ASR) { l -> engines.asr(plan.language).use { it.transcribe(audio, speech, l) } }
+        }
+        val groups = listOf(LanguageConfig.RU to plan.ruSpans!!, LanguageConfig.EN to plan.enSpans!!).filter { it.second.isNotEmpty() }
+        val total = groups.sumOf { g -> g.second.sumOf { it.endMs - it.startMs } }.coerceAtLeast(1)
+        val out = ArrayList<Word>()
+        var done = 0L
+        for ((lang, spans) in groups) {
+            val share = spans.sumOf { it.endMs - it.startMs }
+            val base = done.toFloat() / total
+            val frac = share.toFloat() / total
+            out += blocking(tracker, Stage.ASR) { l ->
+                val scaled = ProgressListener { s, f -> l.onProgress(s, base + f * frac) }
+                engines.asr(lang).use { it.transcribe(audio, spans, scaled) }
+            }
+            done += share
+        }
+        return out.sortedWith(compareBy({ it.startMs }, { it.endMs }))
     }
 
     private suspend fun chooseLanguage(

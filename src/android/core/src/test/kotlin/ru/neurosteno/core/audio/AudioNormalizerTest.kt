@@ -9,7 +9,7 @@ import ru.neurosteno.core.AudioBuffer
 import ru.neurosteno.core.NormalizeGainConfig
 
 class AudioNormalizerTest {
-    private val peak = NormalizeGainConfig(mode = "peak", targetPeakDbfs = -1.0, maxGainDb = 40.0)
+    private val peak = NormalizeGainConfig(enabled = true, mode = "peak", peakDbfs = -1.0, maxGainDb = 40.0)
 
     private fun peakDb(x: FloatArray) = 20 * log10(AudioNormalizer.peak(x))
 
@@ -45,7 +45,10 @@ class AudioNormalizerTest {
         assertEquals(0.0, AudioNormalizer.apply(AudioBuffer(a), NormalizeGainConfig()), 0.0)
         assertEquals(src.toList(), a.toList())
         val b = src.copyOf()
-        assertEquals(0.0, AudioNormalizer.apply(AudioBuffer(b), NormalizeGainConfig(mode = "rms")), 0.0)
+        assertEquals(0.0, AudioNormalizer.apply(AudioBuffer(b), NormalizeGainConfig(enabled = true, mode = "rms")), 0.0)
+        // mode=peak, но enabled=false (как в config/tiers/*.json) -- ничего не делаем
+        val c = floatArrayOf(0.01f)
+        assertEquals(0.0, AudioNormalizer.apply(AudioBuffer(c), NormalizeGainConfig(enabled = false, mode = "peak")), 0.0)
         val silent = FloatArray(10) { 1e-5f } // -100 dBFS
         assertEquals(0.0, AudioNormalizer.apply(AudioBuffer(silent), peak), 0.0)
         assertEquals(0.0, AudioNormalizer.apply(AudioBuffer(FloatArray(0)), peak), 0.0)

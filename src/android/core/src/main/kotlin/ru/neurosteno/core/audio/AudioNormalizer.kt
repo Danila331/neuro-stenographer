@@ -14,17 +14,16 @@ import ru.neurosteno.core.NormalizeGainConfig
  */
 object AudioNormalizer {
     private const val EPS = 1e-9
-    private const val SILENCE_DB = -85.0
     private const val CEIL_DB = -1.0
 
     private fun db(x: Double) = 20 * log10(maxOf(x, EPS))
 
     /** Усиление в дБ для сигнала с пиком [peak] (0..1); 0, если нормализация выключена или нечего усиливать. */
     fun gainDb(peak: Double, cfg: NormalizeGainConfig): Double {
-        if (cfg.mode.lowercase() != "peak") return 0.0
+        if (!cfg.active) return 0.0
         val pkDb = db(peak)
-        if (pkDb < SILENCE_DB) return 0.0
-        var g = cfg.targetPeakDbfs - pkDb
+        if (pkDb < cfg.skipIfPeakBelowDbfs) return 0.0
+        var g = cfg.peakDbfs - pkDb
         g = g.coerceIn(-cfg.maxAttenuationDb, cfg.maxGainDb)
         return minOf(g, CEIL_DB - pkDb)
     }

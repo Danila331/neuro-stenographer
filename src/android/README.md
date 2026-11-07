@@ -90,6 +90,12 @@ src/android/scripts/parity.sh ru-dialog-synth 5 medium       # падает, е�
 посреди слов). Слишком короткий чанк дополняется тишиной до `chunk.min_s`; для NeMo-transducer `feature_dim = 64`.
 `audio.normalize_gain` (peak) — `AudioNormalizer` (порт `bench_asr/audio_norm.py`), применяется после декодирования.
 
+B30 (поля `TierConfig`, все с дефолтами «выключено»): `language.per_chunk` (LID на каждом VAD-чанке + гистерезис
+`LanguageSmoother`, русская и английская ASR запускаются по очереди и выгружаются), `postprocess.drop_tiny_chunks`
+(чанк с выводом <= `max_chars` букв отбрасывается), `asr.word_start_offset_ms`, знаки у punct-модели не двигают конец слова,
+`postprocess.numbers = words` (`RussianNumbers`, сверено с `stenoeval.textnorm.spell_numbers`).
+`parity.sh`: `PARITY_SPLIT=all`, `PARITY_LANGUAGE`, `PARITY_CONFIG`, `PARITY_TAG`.
+
 ## Модули
 
 | Модуль | Тип | Содержимое |
