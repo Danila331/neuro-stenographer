@@ -1,0 +1,41 @@
+# Entries for scripts/fetch_models.py (F/Model as in that file). Official Hugging Face repos of the authors, no login, no gated files.
+# sha256 = official LFS digests from the HF API (model files) or computed on the downloaded file (small tokenizer.json, no LFS digest).
+# Directory layout must match config/tiers/*.json (search.embedder.model / .tokenizer).
+
+# --- zero-conversion fallback (works as is): multilingual-e5-small, official int8 ONNX (x86-AVX512-VNNI-style dynamic quantisation, runs on ARM; cos to fp32 0.997)
+Model(
+    "embed/e5-small",
+    (F(f"{HF}/intfloat/multilingual-e5-small/resolve/main/onnx/model_qint8_avx512_vnni.onnx", "model.int8.onnx", 118346824,
+       "dd476dd0c2514e9b9be83aeb3853fac0763e0bdf4a71645407587d77c48a2d88"),
+     F(f"{HF}/intfloat/multilingual-e5-small/resolve/main/onnx/tokenizer.json", "tokenizer.json", 17082730,
+       "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39")),
+    "MIT", ("",), kind="embed", note="fallback; Unigram + Precompiled charsmap tokenizer",
+)
+
+# --- recommended (medium/hard): deepvk/USER2-small. No official ONNX: build once with
+#       cd src/eval/bench_rag && .venv/bin/python -m bench_rag.fetch user2-small && .venv/bin/python -m bench_rag.export_onnx user2-small
+#     -> $ROOT/.cache/models/embed/user2-small/{model.int8.onnx (35 029 584 B), tokenizer.json (4 753 524 B)}; already present in the shared cache of this checkout.
+#     Source weights: model.safetensors 137 572 816 B, sha256 f4fb765b2302192d3ac2315fd3ee0951f23efca4ad4ad19636b637e81d790529 (official).
+Model(
+    "embed/user2-small",
+    (F(f"{HF}/deepvk/USER2-small/resolve/main/tokenizer.json", "tokenizer.json", 4753524,
+       "8bdc337bdee65a5fdb697df1ac7453b2ae5c34c105125eac5f68c87827395c4e"),),
+    "Apache-2.0", ("medium", "hard"), kind="embed", note="model.int8.onnx is produced by bench_rag.export_onnx (not downloadable)",
+)
+
+# --- lite: sergeyzh/rubert-tiny-turbo (WordPiece), same procedure
+#     model.safetensors 116 781 184 B, sha256 92ef89061050e29f478b5037430789109fece437a938fe1c4ab686828441d107; model.int8.onnx 29 273 425 B
+Model(
+    "embed/rubert-tiny-turbo",
+    (F(f"{HF}/sergeyzh/rubert-tiny-turbo/resolve/main/tokenizer.json", "tokenizer.json", 2413691,
+       "139995a730139fb2158226e69c5879159c020a71c33c87d65124914663f618ad"),),
+    "MIT", ("lite",), kind="embed", note="model.int8.onnx is produced by bench_rag.export_onnx",
+)
+
+# --- candidate only (not recommended): Qwen3-Embedding-0.6B, +0.02..0.06 MRR, x18 slower, 0.6 GB
+Model(
+    "embed/qwen3-embedding-0.6b",
+    (F(f"{HF}/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/main/Qwen3-Embedding-0.6B-Q8_0.gguf", "Qwen3-Embedding-0.6B-Q8_0.gguf", 639150592,
+       "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"),),
+    "Apache-2.0", ("",), kind="embed",
+)
