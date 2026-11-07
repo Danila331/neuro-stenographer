@@ -18,6 +18,10 @@ sealed interface Route {
     data object Settings : Route
     data object Stats : Route
     data object Record : Route
+    /** «Лицензии и модели» (B-лицензии): реестр сторонних компонентов. */
+    data object Licenses : Route
+    /** Полный текст лицензии компонента [noticeId]. */
+    data class LicenseText(val noticeId: String) : Route
 }
 
 fun Route.encode(): String = when (this) {
@@ -30,6 +34,8 @@ fun Route.encode(): String = when (this) {
     Route.Settings -> "settings"
     Route.Stats -> "stats"
     Route.Record -> "record"
+    Route.Licenses -> "licenses"
+    is Route.LicenseText -> "license:$noticeId"
 }
 
 fun decodeRoute(s: String): Route = when {
@@ -41,6 +47,8 @@ fun decodeRoute(s: String): Route = when {
     s == "settings" -> Route.Settings
     s == "stats" -> Route.Stats
     s == "record" -> Route.Record
+    s == "licenses" -> Route.Licenses
+    s.startsWith("license:") -> Route.LicenseText(s.removePrefix("license:"))
     else -> Route.Home
 }
 

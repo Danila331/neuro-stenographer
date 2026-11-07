@@ -33,7 +33,7 @@ object PdfModelBuilder {
     fun buildSummaryOnly(entry: HistoryEntry?, t: EditableTranscript, summary: SummaryDoc, locale: Locale = Locale.forLanguageTag("ru")): PdfDocModel =
         build(entry, t, protocol = null, title = "Выжимка: " + (entry?.title ?: "запись"), locale = locale, summary = summary).copy(includeTranscript = false)
 
-    fun toPdfSummary(doc: SummaryDoc, t: EditableTranscript): PdfSummary = PdfSummary(
+    fun toPdfSummary(raw: SummaryDoc, t: EditableTranscript): PdfSummary = ru.neurosteno.app.insight.SummaryPolish.clean(raw).let { doc -> PdfSummary(
         llm = doc.mode == "llm",
         overview = doc.overview.trim().replace(Regex("\\s+"), " "),
         topics = doc.topics.map { topic ->
@@ -44,5 +44,5 @@ object PdfModelBuilder {
                     topic.tasks.map { PdfSummaryItem(PdfSummaryItem.Kind.TASK, null, "", it.who, it.text, it.refs.minOfOrNull { r -> r.t }) },
             )
         },
-    )
+    ) }
 }

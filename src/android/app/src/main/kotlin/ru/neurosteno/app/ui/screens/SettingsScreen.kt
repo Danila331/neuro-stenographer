@@ -51,6 +51,7 @@ fun SettingsScreen(
     onChange: ((AppSettings) -> AppSettings) -> Unit,
     onModels: () -> Unit,
     onStats: () -> Unit,
+    onLicenses: () -> Unit = {},
     onClearHistory: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -122,6 +123,10 @@ fun SettingsScreen(
             }
             SectionCard(title = "Диагностика") {
                 BrutalButton(onClick = onStats, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = Modifier.fillMaxWidth().testTag("btn_open_stats")) { ButtonLabel("Статистика обработки") }
+            }
+            SectionCard(title = "Лицензии") {
+                Text("Модели, библиотеки и шрифты, на которых построено приложение, и полные тексты их лицензий.", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
+                BrutalButton(onClick = onLicenses, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = Modifier.fillMaxWidth().testTag("btn_open_licenses")) { ButtonLabel("Лицензии и модели") }
             }
             SectionCard(title = "Хранилище") {
                 Text("Расшифровки и копии аудио хранятся только в приватной папке приложения: ${Format.bytes(historyBytes)}.", style = MaterialTheme.typography.bodyMedium)
