@@ -12,7 +12,8 @@ import ru.neurosteno.app.llm.LlmController
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     val graph = (app as NeuroApp).graph
     val llm = LlmController(app, graph)
-    val recorder = RecorderController(app)
+    val live = ru.neurosteno.app.live.LiveController(app, graph)
+    val recorder = RecorderController(app, live)
 
     private val sessions = HashMap<String, TranscriptSession>()
 

@@ -209,11 +209,12 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
         )
         Route.Record -> {
             val rec by vm.recorder.ui.collectAsStateWithLifecycle()
+            val liveUi by vm.live.ui.collectAsStateWithLifecycle()
             var denied by rememberSaveable { mutableStateOf(false) }
             BackHandler(enabled = rec.recording) { vm.recorder.cancel(); nav.pop() }
             DisposableEffect(Unit) { onDispose { vm.recorder.cancel() } }
             RecordScreen(
-                ui = rec, permissionDenied = denied,
+                ui = rec, live = liveUi, permissionDenied = denied,
                 onStart = {
                     if (host.hasRecordPermission()) vm.recorder.start()
                     else host.requestRecordPermission { ok -> denied = !ok; if (ok) vm.recorder.start() }

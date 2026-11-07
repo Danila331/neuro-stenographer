@@ -46,6 +46,25 @@ JSON и в строке logcat `done <имя>: … peak_pss_mb=… threads=… d
 - Резерв под «Выжимку» (B50) и «AI-поиск» (B51): неактивные плитки «СКОРО» на экране расшифровки (`slot_summary`, `slot_ai_search`).
 - Скрипты скриншотов: `app/tools/redesign_shots.sh` (4 экрана x светлая/тёмная x оба акцента) и `app/tools/redesign_extra_shots.sh` (остальные экраны, шрифт x1,6, альбомная).
 
+## Живая расшифровка при записи (B13)
+
+Во время записи с микрофона экран «Запись» показывает текст по мере речи (превью). Итог -- обычная полная обработка после «Остановить»
+(точный текст, знаки, говорящие); живой текст только набросок и заменяется ею.
+
+- `:core` `live/`: `StreamingAsr` (интерфейс движка), `LivePreview` (накопление фраз), `LiveSession` (рабочий поток и очередь: поток
+  записи не блокируется, при отставании старый звук отбрасывается; модель создаётся и выгружается внутри сеанса), `StreamingModelFiles`.
+  Тесты на фейке: `LivePreviewTest`, `LiveSessionTest`, `StreamingModelFilesTest`.
+- `:engine-sherpa` `SherpaStreamingAsr`: `OnlineRecognizer` (zipformer-transducer, int8), endpoint detection по `live.endpoint.*`.
+- `:audio`: `AudioRecorder` отдаёт каждую порцию 100 мс в `onPcm`; источник звука -- `PcmSource` (микрофон; в debug -- WAV вместо микрофона).
+- `:app` `live/LiveController`: `ResourcePlanner.planLive` (RAM, ядра, наличие модели) -> включать ли превью; модель живёт только между началом
+  и концом записи и выгружается ДО полной обработки. Нет памяти/модели -- экран пишет причину, запись идёт как раньше.
+- Конфиг `config/tiers/*.json`, блок `live` (`enabled`, `model_dir` = `asr/streaming-zipformer-small-ru-int8`, потоки, пороги памяти, endpoint).
+  Модель необязательна: `requiredModelPaths()` её не включает, наборы без неё остаются полными (превью выключено).
+- Отладка без микрофона (эмулятор): `app/tools/live_check.sh <wav> <метка> [сек]` подаёт WAV в «Запись» в реальном времени
+  (`adb shell am broadcast -a ru.neurosteno.app.DEBUG_MIC_WAV --es path <wav>`, только debug), снимает экран и собирает метрики из лога (`live:`).
+- Подготовка набора для проверки до обновления `fetch_models.py`:
+  `scripts/stage_models.sh medium --map asr/streaming-zipformer-small-ru-int8=sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16`.
+
 ## Экраны (`ui/screens`)
 
 | Экран | Что есть |
