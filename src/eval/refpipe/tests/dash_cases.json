@@ -1,0 +1,516 @@
+{
+ "version": 1,
+ "description": "postprocess.strip_dashes at the level of one ASR word text (em dash U+2014 / en dash U+2013 only; hyphen-minus is never touched). A word whose output is empty/blank after trimming is dropped by the caller. Modes: off, after_terminal (default in config), all, split, split_hyphen, after_terminal_split. split/split_hyphen are experimental and measured WORSE than after_terminal (BACKLOG B59).",
+ "cases": [
+  {
+   "mode": "off",
+   "in": "Уточните.—",
+   "out": "Уточните.—"
+  },
+  {
+   "mode": "off",
+   "in": "Мыши—",
+   "out": "Мыши—"
+  },
+  {
+   "mode": "off",
+   "in": "—",
+   "out": "—"
+  },
+  {
+   "mode": "off",
+   "in": "Привет?—",
+   "out": "Привет?—"
+  },
+  {
+   "mode": "off",
+   "in": "кто—то",
+   "out": "кто—то"
+  },
+  {
+   "mode": "off",
+   "in": "кто-то",
+   "out": "кто-то"
+  },
+  {
+   "mode": "off",
+   "in": "да — нет",
+   "out": "да — нет"
+  },
+  {
+   "mode": "off",
+   "in": "—Да",
+   "out": "—Да"
+  },
+  {
+   "mode": "off",
+   "in": "Уточните.—–",
+   "out": "Уточните.—–"
+  },
+  {
+   "mode": "off",
+   "in": "Конец…—",
+   "out": "Конец…—"
+  },
+  {
+   "mode": "off",
+   "in": "А.— Б",
+   "out": "А.— Б"
+  },
+  {
+   "mode": "off",
+   "in": "x—",
+   "out": "x—"
+  },
+  {
+   "mode": "off",
+   "in": "слово,—",
+   "out": "слово,—"
+  },
+  {
+   "mode": "off",
+   "in": "«да»—",
+   "out": "«да»—"
+  },
+  {
+   "mode": "off",
+   "in": "3—4",
+   "out": "3—4"
+  },
+  {
+   "mode": "off",
+   "in": "",
+   "out": ""
+  },
+  {
+   "mode": "off",
+   "in": "Ну...—",
+   "out": "Ну...—"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "Уточните.—",
+   "out": "Уточните."
+  },
+  {
+   "mode": "after_terminal",
+   "in": "Мыши—",
+   "out": "Мыши—"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "—",
+   "out": "—"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "Привет?—",
+   "out": "Привет?"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "кто—то",
+   "out": "кто—то"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "кто-то",
+   "out": "кто-то"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "да — нет",
+   "out": "да — нет"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "—Да",
+   "out": "—Да"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "Уточните.—–",
+   "out": "Уточните."
+  },
+  {
+   "mode": "after_terminal",
+   "in": "Конец…—",
+   "out": "Конец…"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "А.— Б",
+   "out": "А. Б"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "x—",
+   "out": "x—"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "слово,—",
+   "out": "слово,—"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "«да»—",
+   "out": "«да»—"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "3—4",
+   "out": "3—4"
+  },
+  {
+   "mode": "after_terminal",
+   "in": "",
+   "out": ""
+  },
+  {
+   "mode": "after_terminal",
+   "in": "Ну...—",
+   "out": "Ну..."
+  },
+  {
+   "mode": "all",
+   "in": "Уточните.—",
+   "out": "Уточните."
+  },
+  {
+   "mode": "all",
+   "in": "Мыши—",
+   "out": "Мыши"
+  },
+  {
+   "mode": "all",
+   "in": "—",
+   "out": ""
+  },
+  {
+   "mode": "all",
+   "in": "Привет?—",
+   "out": "Привет?"
+  },
+  {
+   "mode": "all",
+   "in": "кто—то",
+   "out": "ктото"
+  },
+  {
+   "mode": "all",
+   "in": "кто-то",
+   "out": "кто-то"
+  },
+  {
+   "mode": "all",
+   "in": "да — нет",
+   "out": "да нет"
+  },
+  {
+   "mode": "all",
+   "in": "—Да",
+   "out": "Да"
+  },
+  {
+   "mode": "all",
+   "in": "Уточните.—–",
+   "out": "Уточните."
+  },
+  {
+   "mode": "all",
+   "in": "Конец…—",
+   "out": "Конец…"
+  },
+  {
+   "mode": "all",
+   "in": "А.— Б",
+   "out": "А. Б"
+  },
+  {
+   "mode": "all",
+   "in": "x—",
+   "out": "x"
+  },
+  {
+   "mode": "all",
+   "in": "слово,—",
+   "out": "слово,"
+  },
+  {
+   "mode": "all",
+   "in": "«да»—",
+   "out": "«да»"
+  },
+  {
+   "mode": "all",
+   "in": "3—4",
+   "out": "34"
+  },
+  {
+   "mode": "all",
+   "in": "",
+   "out": ""
+  },
+  {
+   "mode": "all",
+   "in": "Ну...—",
+   "out": "Ну..."
+  },
+  {
+   "mode": "split",
+   "in": "Уточните.—",
+   "out": "Уточните. —"
+  },
+  {
+   "mode": "split",
+   "in": "Мыши—",
+   "out": "Мыши —"
+  },
+  {
+   "mode": "split",
+   "in": "—",
+   "out": "—"
+  },
+  {
+   "mode": "split",
+   "in": "Привет?—",
+   "out": "Привет? —"
+  },
+  {
+   "mode": "split",
+   "in": "кто—то",
+   "out": "кто — то"
+  },
+  {
+   "mode": "split",
+   "in": "кто-то",
+   "out": "кто-то"
+  },
+  {
+   "mode": "split",
+   "in": "да — нет",
+   "out": "да — нет"
+  },
+  {
+   "mode": "split",
+   "in": "—Да",
+   "out": "— Да"
+  },
+  {
+   "mode": "split",
+   "in": "Уточните.—–",
+   "out": "Уточните. —"
+  },
+  {
+   "mode": "split",
+   "in": "Конец…—",
+   "out": "Конец… —"
+  },
+  {
+   "mode": "split",
+   "in": "А.— Б",
+   "out": "А. — Б"
+  },
+  {
+   "mode": "split",
+   "in": "x—",
+   "out": "x —"
+  },
+  {
+   "mode": "split",
+   "in": "слово,—",
+   "out": "слово, —"
+  },
+  {
+   "mode": "split",
+   "in": "«да»—",
+   "out": "«да» —"
+  },
+  {
+   "mode": "split",
+   "in": "3—4",
+   "out": "3 — 4"
+  },
+  {
+   "mode": "split",
+   "in": "",
+   "out": ""
+  },
+  {
+   "mode": "split",
+   "in": "Ну...—",
+   "out": "Ну... —"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "Уточните.—",
+   "out": "Уточните. -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "Мыши—",
+   "out": "Мыши -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "—",
+   "out": "-"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "Привет?—",
+   "out": "Привет? -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "кто—то",
+   "out": "кто - то"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "кто-то",
+   "out": "кто-то"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "да — нет",
+   "out": "да - нет"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "—Да",
+   "out": "- Да"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "Уточните.—–",
+   "out": "Уточните. -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "Конец…—",
+   "out": "Конец… -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "А.— Б",
+   "out": "А. - Б"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "x—",
+   "out": "x -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "слово,—",
+   "out": "слово, -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "«да»—",
+   "out": "«да» -"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "3—4",
+   "out": "3 - 4"
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "",
+   "out": ""
+  },
+  {
+   "mode": "split_hyphen",
+   "in": "Ну...—",
+   "out": "Ну... -"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "Уточните.—",
+   "out": "Уточните."
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "Мыши—",
+   "out": "Мыши —"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "—",
+   "out": "—"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "Привет?—",
+   "out": "Привет?"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "кто—то",
+   "out": "кто — то"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "кто-то",
+   "out": "кто-то"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "да — нет",
+   "out": "да — нет"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "—Да",
+   "out": "— Да"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "Уточните.—–",
+   "out": "Уточните."
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "Конец…—",
+   "out": "Конец…"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "А.— Б",
+   "out": "А. Б"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "x—",
+   "out": "x —"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "слово,—",
+   "out": "слово, —"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "«да»—",
+   "out": "«да» —"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "3—4",
+   "out": "3 — 4"
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "",
+   "out": ""
+  },
+  {
+   "mode": "after_terminal_split",
+   "in": "Ну...—",
+   "out": "Ну..."
+  }
+ ]
+}
