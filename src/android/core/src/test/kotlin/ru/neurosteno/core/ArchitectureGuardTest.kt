@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
  * Работают на исходниках, поэтому проходят и без Android SDK.
  */
 class ArchitectureGuardTest {
-    private val processingModules = listOf("core", "audio", "engine-sherpa", "engine-llm")
+    private val processingModules = listOf("core", "audio", "engine-sherpa", "engine-llm", "engine-embed", "store-objectbox")
 
     private val forbiddenSourceTokens = listOf(
         "java.net.URL", "java.net.HttpURLConnection", "java.net.Socket", "java.net.URI(\"http",

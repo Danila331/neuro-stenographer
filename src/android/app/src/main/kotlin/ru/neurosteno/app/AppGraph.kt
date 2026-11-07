@@ -25,9 +25,23 @@ class AppGraph(private val context: Context) {
     val settings: SettingsRepository by lazy { SettingsRepository(context) }
 
     /** Выжимка записей (B50): запуск из ProcessingService, состояние для экрана выжимки. */
-    val summary: ru.neurosteno.app.summary.SummaryRunner by lazy { ru.neurosteno.app.summary.SummaryRunner(context, this) }
+    /** AI-поиск (B51): индекс записей, эмбеддер, хранилище векторов. */
+    val search: ru.neurosteno.app.search.SearchService by lazy { ru.neurosteno.app.search.SearchService(context, this) }
 
-    val history: HistoryRepository by lazy { HistoryRepository(File(context.filesDir, "history")) }
+    /** Выжимка (B50); эмбеддер реплик для долин -- общий с поиском (выгружается по простою). */
+    val summary: ru.neurosteno.app.summary.SummaryRunner by lazy { ru.neurosteno.app.summary.SummaryRunner(context, this) { search.embedder.get() } }
+
+    val history: HistoryRepository by lazy {
+        HistoryRepository(File(context.filesDir, "history")).also { repo ->
+            // индекс AI-поиска следит за историей: новые записи индексируются в фоне, удалённые уходят из индекса сразу
+            repo.listener = object : HistoryRepository.Listener {
+                override fun onAdded(id: String) = search.onAdded(id)
+                override fun onSaved(id: String) = search.onSaved(id)
+                override fun onDeleted(id: String) = search.onDeleted(id)
+                override fun onCleared() = search.onCleared()
+            }
+        }
+    }
 
     /** Каталог наборов для загрузки (assets/model_sets.json; в debug-сборке его можно подменить файлом в files/). */
     val catalog: Catalog by lazy { Catalog.load(context, allowOverride = BuildConfig.DEBUG) }
