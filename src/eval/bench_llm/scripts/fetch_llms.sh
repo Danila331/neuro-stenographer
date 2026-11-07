@@ -2,7 +2,7 @@
 # Atomic download of official GGUF models into the shared cache ($ROOT/.cache/models/llm-<name>/).
 # Only public, non-gated official repositories (Qwen, Vikhrmodels). No tokens.
 set -euo pipefail
-ROOT="${ROOT:-/Users/danilka2203/Desktop/work/neuro-stenographer-claude}"
+ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)}"
 M="$ROOT/.cache/models"
 mkdir -p "$M"
 fetch() { # name repo file (runs as background job)

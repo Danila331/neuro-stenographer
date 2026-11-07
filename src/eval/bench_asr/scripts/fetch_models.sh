@@ -4,7 +4,7 @@
 # Аргументы: имена архивов (без .tar.bz2); без аргументов — весь список кандидатов.
 # Можно запускать несколько воркеров параллельно (замок .lock в tmp-папке).
 set -uo pipefail
-ROOT="${ROOT:-/Users/danilka2203/Desktop/work/neuro-stenographer-claude}"
+ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)}"
 CACHE="$ROOT/.cache/models"
 BASE="https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models"
 mkdir -p "$CACHE"
