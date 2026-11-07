@@ -73,8 +73,7 @@ fun RecordScreen(
                 verticalArrangement = Arrangement.spacedBy(if (showLive) 10.dp else 22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val timerFill = if (ui.recording) Brutal.accent else Brutal.bg
-                BrutalSurface(Modifier.fillMaxWidth(), fill = timerFill, shadow = 6.dp, contentColor = if (ui.recording) Brutal.onAccent else Brutal.ink) {
+                BrutalSurface(Modifier.fillMaxWidth().padding(top = if (showLive) 0.dp else 32.dp), fill = Brutal.bg, borderWidth = 0.dp, contentColor = Brutal.ink) {
                     Text(
                         Format.clock(ui.elapsedMs),
                         style = (if (showLive) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displayLarge).copy(fontFamily = MonoFamily),
@@ -101,7 +100,7 @@ fun RecordScreen(
             }
             Column(
                 Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 24.dp).padding(bottom = 16.dp, top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 if (ui.recording) {
                     BrutalButton(onClick = onStop, style = BrutalButtonStyle.Danger, height = 72.dp, modifier = Modifier.fillMaxWidth().testTag("btn_stop_record")) {
@@ -146,10 +145,10 @@ private fun LivePanel(live: LiveUi, modifier: Modifier = Modifier) {
     BrutalCard(modifier.testTag("live_panel"), contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                BrutalTag("ЖИВОЙ ТЕКСТ · ПРЕВЬЮ", fill = Brutal.accent)
+                BrutalTag("Живой текст · превью", fill = Brutal.accent)
                 when (val s = live.status) {
-                    LiveStatus.Loading -> BrutalTag("ЗАГРУЗКА МОДЕЛИ…")
-                    is LiveStatus.Active -> if (s.lagging) BrutalTag("НЕ УСПЕВАЕТ")
+                    LiveStatus.Loading -> BrutalTag("Подготовка…")
+                    is LiveStatus.Active -> if (s.lagging) BrutalTag("Обновляется с задержкой")
                     else -> {}
                 }
             }

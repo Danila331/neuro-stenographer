@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -79,15 +81,15 @@ fun ProtocolScreen(
     var tab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Протокол и вопросы", onBack = onBack) }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                BrutalChip(selected = tab == 0, onClick = { tab = 0 }, label = "Протокол заседания", modifier = Modifier.weight(1f).testTag("tab_protocol"))
-                BrutalChip(selected = tab == 1, onClick = { tab = 1 }, label = "Вопрос по расшифровке", modifier = Modifier.weight(1f).testTag("tab_qa"))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                BrutalChip(selected = tab == 0, onClick = { tab = 0 }, label = "Протокол заседания", modifier = Modifier.weight(1f).fillMaxHeight().testTag("tab_protocol"))
+                BrutalChip(selected = tab == 1, onClick = { tab = 1 }, label = "Вопрос по расшифровке", modifier = Modifier.weight(1f).fillMaxHeight().testTag("tab_qa"))
             }
             if (availability is LlmAvailability.Unavailable) {
                 MessageCard(availability.reason, isError = true, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
             }
             if (transcript == null) {
-                Text("Расшифровка загружается…", Modifier.padding(16.dp))
+                Text("Расшифровка загружается…", Modifier.padding(24.dp))
             } else if (tab == 0) {
                 ProtocolTab(llm, transcript, title, availability is LlmAvailability.Available, onShareText, onCopy)
             } else {
@@ -109,11 +111,10 @@ private fun ProtocolTab(
     val ui by llm.ui.collectAsState()
     val scroll = rememberScrollState()
     LaunchedEffect(ui.protocol.length) { if (ui.running) scroll.scrollTo(scroll.maxValue) }
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         if (ui.protocol.isBlank() && !ui.running) {
             Text(
-                "Языковая модель на устройстве составит протокол по расшифровке «$title»: резюме, обсуждённые вопросы, решения и поручения. " +
-                    "Это занимает время (десятки секунд и больше) и выполняется без интернета.",
+                "Краткое содержание встречи, решения и задачи — по записи «$title». Подготовка выполняется на устройстве и может занять несколько минут.",
                 style = MaterialTheme.typography.bodyLarge, color = Brutal.ink,
             )
         }
@@ -133,7 +134,7 @@ private fun ProtocolTab(
                 SelectionContainer {
                     Text(
                         ui.protocol,
-                        modifier = Modifier.verticalScroll(scroll).padding(16.dp).fillMaxWidth().testTag("protocol_text"),
+                        modifier = Modifier.verticalScroll(scroll).padding(24.dp).fillMaxWidth().testTag("protocol_text"),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
@@ -169,7 +170,7 @@ private fun QaTab(llm: LlmController, transcript: EditableTranscript, available:
         if (ui.qa.isNotEmpty()) listState.animateScrollToItem(ui.qa.lastIndex)
     }
     Column(Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             if (ui.qa.isEmpty()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -184,7 +185,7 @@ private fun QaTab(llm: LlmController, transcript: EditableTranscript, available:
             }
             items(ui.qa) { item ->
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BrutalCard(Modifier.fillMaxWidth(), fill = Brutal.ink) { Text(item.question, style = MaterialTheme.typography.titleSmall, color = Brutal.onInk) }
+                    BrutalCard(Modifier.fillMaxWidth(), fill = Brutal.accent) { Text(item.question, style = MaterialTheme.typography.titleSmall, color = Brutal.onAccent) }
                     BrutalCard(Modifier.fillMaxWidth()) {
                         SelectionContainer {
                             Text(item.answer.ifBlank { if (item.done) "" else "…" }, style = MaterialTheme.typography.bodyLarge)
@@ -195,7 +196,7 @@ private fun QaTab(llm: LlmController, transcript: EditableTranscript, available:
             ui.error?.let { e -> item { MessageCard(e, isError = true) } }
         }
         if (ui.running) {
-            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(ui.status.ifBlank { "Генерация…" }, style = MaterialTheme.typography.labelMedium)
                 BrutalProgress(null, height = 12.dp)
             }

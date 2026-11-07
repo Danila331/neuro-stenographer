@@ -33,7 +33,7 @@ fun OnlineSetupScreen(
     Scaffold(containerColor = ru.neurosteno.app.ui.theme.Brutal.bg, topBar = { NeuroTopBar(appName, titleMaxLines = 2) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {

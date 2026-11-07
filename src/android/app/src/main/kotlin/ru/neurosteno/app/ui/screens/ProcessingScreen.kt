@@ -76,7 +76,7 @@ fun ProcessingScreen(
     val eta = EtaEstimator.remainingMs(elapsed, state.overall, state.audioDurationMs, priorRtf)
     val percentText = Format.percent(state.overall)
     val headerBlock: @Composable () -> Unit = {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Text(state.sourceName, style = MaterialTheme.typography.titleMedium, maxLines = 2, color = Brutal.ink)
             if (models is ModelsStatus.Installing) {
                 BrutalPlaque("Подготовка моделей (только при первом запуске): ${Format.percent(models.fraction)}. Обработка начнётся сразу после неё.", kind = PlaqueKind.Neutral) {
@@ -86,10 +86,10 @@ fun ProcessingScreen(
             // огромный процент на акцентной заливке
             BrutalSurface(
                 Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "Общий прогресс $percentText" },
-                fill = Brutal.accent, shadow = 6.dp, contentColor = Brutal.onAccent,
+                fill = Brutal.surface, contentColor = Brutal.ink,
             ) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(percentText, style = MaterialTheme.typography.displayLarge, color = Brutal.onAccent)
+                    Text(percentText, style = MaterialTheme.typography.displayLarge, color = Brutal.ink)
                     BrutalProgress(state.overall)
                 }
             }
@@ -102,7 +102,7 @@ fun ProcessingScreen(
                     },
                     style = MaterialTheme.typography.bodyMedium, color = Brutal.ink,
                 )
-                state.audioDurationMs?.let { BrutalTag("ЗАПИСЬ ${Format.clock(it)}") }
+                state.audioDurationMs?.let { BrutalTag("Запись ${Format.clock(it)}") }
             }
         }
     }
@@ -143,7 +143,7 @@ fun ProcessingScreen(
             if (maxWidth >= 720.dp) {
                 // альбомная ориентация: слева общий прогресс и «Отменить», справа стадии -- всё видно без прокрутки
                 Row(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                         headerBlock(); hintBlock(); cancelButton(); noteBlock()
                     }
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { stagesBlock() }
@@ -176,17 +176,17 @@ private fun StageRow(stage: Stage, fraction: Float, active: Boolean) {
     val fill = if (active) Brutal.accent else Brutal.bg
     Row(
         Modifier.fillMaxWidth().defaultMinSize(minHeight = 46.dp)
-            .background(fill, BrutalShape).border(if (active) BrutalDims.BorderThick else BrutalDims.Border, if (done || active) Brutal.ink else Brutal.muted, BrutalShape)
+            .background(fill, BrutalShape)
             .padding(horizontal = 10.dp, vertical = 6.dp)
             .semantics(mergeDescendants = true) { contentDescription = "$title: $status" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(28.dp).background(if (done) Brutal.ink else Brutal.bg, BrutalShape).border(2.dp, if (done || active) Brutal.ink else Brutal.muted, BrutalShape),
+            Modifier.size(24.dp).background(if (done) Brutal.accent else Brutal.panel, androidx.compose.foundation.shape.CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            if (done) Icon(Icons.Default.Check, contentDescription = null, tint = Brutal.onInk, modifier = Modifier.size(20.dp))
-            else if (active) Box(Modifier.size(10.dp).background(Brutal.ink))
+            if (done) Icon(Icons.Default.Check, contentDescription = null, tint = Brutal.strong, modifier = Modifier.size(15.dp))
+            else if (active) Box(Modifier.size(6.dp).background(Brutal.strong, androidx.compose.foundation.shape.CircleShape))
         }
         Spacer(Modifier.width(12.dp))
         Text(

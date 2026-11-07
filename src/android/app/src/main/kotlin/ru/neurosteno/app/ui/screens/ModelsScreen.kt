@@ -60,12 +60,12 @@ fun ModelsScreen(
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Модели", onBack = onBack) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BrutalTag("СВОБОДНО ${Format.bytes(freeBytes).uppercase()}", fill = Brutal.accent)
+                    BrutalTag("Свободно ${Format.bytes(freeBytes).uppercase()}", fill = Brutal.accent)
                     Text(
                         "Все вычисления выполняются на устройстве. Интернет нужен только для скачивания наборов моделей — и только по вашей кнопке.",
                         style = MaterialTheme.typography.bodyMedium, color = Brutal.muted,
@@ -98,8 +98,8 @@ fun ModelSetCard(row: ModelSetRow, bundledSetId: String?, actions: ModelActions,
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(row.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f, fill = false))
-                if (row.active) BrutalTag("АКТИВНЫЙ", fill = Brutal.ink)
-                else if (row.recommended && !row.installed) BrutalTag("РЕКОМЕНДУЕМ", fill = Brutal.accent)
+                if (row.active) BrutalTag("Выбран", fill = Brutal.ink)
+                else if (row.recommended && !row.installed) BrutalTag("Рекомендуем", fill = Brutal.accent)
             }
             if (row.description.isNotBlank()) Text(row.description, style = MaterialTheme.typography.bodyMedium)
             Text(statusLine(row, isBundled), style = MaterialTheme.typography.labelMedium, color = if (row.active) Brutal.onAccent else Brutal.muted)

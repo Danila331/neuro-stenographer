@@ -77,8 +77,8 @@ fun SummaryScreen(
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Выжимка", onBack = actions.onBack) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             when (state) {
                 SummaryState.Loading -> item { Text("Загрузка…", style = MaterialTheme.typography.bodyLarge) }
@@ -86,7 +86,7 @@ fun SummaryScreen(
                 is SummaryState.Preparing -> item { WorkingPlaque(state.stage, null, actions.onCancel, preparing = true) }
                 is SummaryState.Failed -> {
                     item { MessageCard(state.message, isError = true) }
-                    state.doc?.let { content(it, names, caps, blockedReason, null, null, actions, working = false) }
+                    state.doc?.let { content(it, names, caps, blockedReason, null, null, actions, working = false, showControls = false) }
                     item { Controls(working = false, hasDoc = state.doc != null, blocked = blockedReason, actions = actions, retryLabel = "Повторить") }
                 }
                 is SummaryState.Shown -> content(state.doc, names, caps, blockedReason, state, state.notice, actions, working = state.working)
@@ -104,9 +104,10 @@ private fun androidx.compose.foundation.lazy.LazyListScope.content(
     notice: String?,
     actions: SummaryActions,
     working: Boolean,
+    showControls: Boolean = true,
 ) {
     item { StatusTags(doc, working) }
-    if (shown?.progress != null) item { WorkingPlaque(shown.progress!!.stage.trimEnd('.', '…'), shown.progress!!.fraction, actions.onCancel) }
+    shown?.progress?.let { progress -> item { WorkingPlaque(progress.stage.trimEnd('.', '…'), progress.fraction, actions.onCancel) } }
     item {
         BrutalPlaque(
             "Нажмите на пункт — откроется реплика. Пересказ может быть неточным.",
@@ -132,14 +133,14 @@ private fun androidx.compose.foundation.lazy.LazyListScope.content(
         }
     }
     itemsIndexed(doc.topics) { i, t -> TopicCard(i, t, names, actions.onJump) }
-    item { Controls(working = working, hasDoc = !doc.topics.isEmpty(), blocked = blockedReason, actions = actions, retryLabel = "Пересоздать") }
+    if (showControls) item { Controls(working = working, hasDoc = !doc.topics.isEmpty(), blocked = blockedReason, actions = actions, retryLabel = "Пересоздать") }
 }
 
 @Composable
 private fun StatusTags(doc: SummaryDoc, working: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (doc.isLlm && !working) BrutalTag("ИИ-ВЫЖИМКА", fill = Brutal.ink, modifier = Modifier.testTag("summary_tag_llm"))
-        else BrutalTag("БЫСТРАЯ ВЫЖИМКА · БЕЗ ИИ", fill = Brutal.accent, modifier = Modifier.testTag("summary_tag_quick"))
+        if (doc.isLlm && !working) BrutalTag("ИИ-выжимка", fill = Brutal.ink, modifier = Modifier.testTag("summary_tag_llm"))
+        else BrutalTag("Быстрая выжимка · без ИИ", fill = Brutal.accent, modifier = Modifier.testTag("summary_tag_quick"))
         BrutalTag(Format.plural(doc.topics.size, "тема", "темы", "тем"))
     }
 }
@@ -209,7 +210,7 @@ private fun TopicCard(index: Int, t: SummaryTopic, names: (String) -> String, on
             t.decisions.forEachIndexed { j, d ->
                 RefRow(modifier = Modifier.testTag("summary_decision_${index}_$j"), ref = d.refs.firstRef(), onJump = onJump, description = "Решение: ${d.text}") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        BrutalTag("РЕШЕНИЕ", fill = Brutal.ink)
+                        BrutalTag("Решение", fill = Brutal.ink)
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                     }
                     Text(d.text, style = MaterialTheme.typography.bodyLarge)
@@ -220,7 +221,7 @@ private fun TopicCard(index: Int, t: SummaryTopic, names: (String) -> String, on
                     description = "Задача" + (if (task.who.isNotBlank()) " для ${task.who}" else "") + ": ${task.text}") {
                     @OptIn(ExperimentalLayoutApi::class)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        BrutalTag("ЗАДАЧА", fill = Brutal.ink)
+                        BrutalTag("Задача", fill = Brutal.ink)
                         if (task.who.isNotBlank()) BrutalTag(task.who)
                     }
                     Text(task.text, style = MaterialTheme.typography.bodyLarge)

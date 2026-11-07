@@ -14,39 +14,28 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.neurosteno.app.data.ThemeChoice
 
-/** Цвета системы дизайна (нужные примитивам и экранам; всё остальное -- через [MaterialTheme.colorScheme]). */
+/** Component contracts are retained; the processing pipeline is independent of this theme. */
 data class BrutalColors(
-    val bg: Color,
-    /** Основной цвет: текст, обводки, тени (чёрный в светлой теме, белый в тёмной). */
-    val ink: Color,
-    /** Цвет текста НА инк-заливке (инверсия ink). */
-    val onInk: Color,
-    val muted: Color,
-    val panel: Color,
-    val accent: Color,
-    /** Текст на акценте и на заливках говорящих: всегда чёрный. */
-    val onAccent: Color,
-    val error: Color,
-    val dark: Boolean,
+    val bg: Color, val ink: Color, val onInk: Color, val muted: Color, val panel: Color,
+    val accent: Color, val onAccent: Color, val error: Color, val dark: Boolean,
+    val surface: Color, val outline: Color, val strong: Color, val onStrong: Color, val errorText: Color,
 )
 
-val LocalBrutal = staticCompositionLocalOf<BrutalColors> { error("BrutalTheme не задана") }
+val LocalBrutal = staticCompositionLocalOf<BrutalColors> { error("NeuroTheme is missing") }
+val LocalDarkTheme = staticCompositionLocalOf { false }
 
-/** Размеры системы: толщина обводок и смещение жёстких теней. */
 object BrutalDims {
-    val Border: Dp = 2.5.dp
-    val BorderThick: Dp = 3.dp
-    val Shadow: Dp = 4.dp
-    val ShadowSmall: Dp = 2.dp
-    val Corner: Dp = 3.dp
+    val Border: Dp = 1.dp
+    val BorderThick: Dp = 1.dp
+    val Shadow: Dp = 0.dp
+    val ShadowSmall: Dp = 0.dp
+    val Corner: Dp = 18.dp
     val MinTouch: Dp = 48.dp
 }
 
 val BrutalShape = RoundedCornerShape(BrutalDims.Corner)
-
 val Brutal: BrutalColors @Composable get() = LocalBrutal.current
 
-/** Тема приложения: нео-брутализм, белый/чёрный, один неоновый акцент ([AccentConfig]). [choice] -- выбор пользователя (система/светлая/тёмная). */
 @Composable
 fun NeuroTheme(choice: ThemeChoice = ThemeChoice.SYSTEM, content: @Composable () -> Unit) {
     val dark = when (choice) {
@@ -54,47 +43,58 @@ fun NeuroTheme(choice: ThemeChoice = ThemeChoice.SYSTEM, content: @Composable ()
         ThemeChoice.LIGHT -> false
         ThemeChoice.DARK -> true
     }
-    val accent = AccentConfig.current.color
     val colors = if (dark) {
-        BrutalColors(BrutalPalette.Black, BrutalPalette.White, BrutalPalette.Black, BrutalPalette.MutedDark, BrutalPalette.PanelDark, accent, BrutalPalette.Black, BrutalPalette.Error, true)
-    } else {
-        BrutalColors(BrutalPalette.White, BrutalPalette.Black, BrutalPalette.White, BrutalPalette.MutedLight, BrutalPalette.PanelLight, accent, BrutalPalette.Black, BrutalPalette.Error, false)
-    }
-    val scheme = if (dark) {
-        darkColorScheme(
-            primary = accent, onPrimary = BrutalPalette.Black, primaryContainer = accent, onPrimaryContainer = BrutalPalette.Black,
-            secondary = colors.ink, onSecondary = colors.onInk, secondaryContainer = colors.panel, onSecondaryContainer = colors.ink,
-            tertiary = accent, onTertiary = BrutalPalette.Black, tertiaryContainer = accent, onTertiaryContainer = BrutalPalette.Black,
-            background = colors.bg, onBackground = colors.ink, surface = colors.bg, onSurface = colors.ink,
-            surfaceVariant = colors.panel, onSurfaceVariant = colors.muted,
-            surfaceContainerLowest = colors.bg, surfaceContainerLow = colors.bg, surfaceContainer = colors.panel,
-            surfaceContainerHigh = colors.panel, surfaceContainerHighest = colors.panel,
-            outline = colors.ink, outlineVariant = colors.muted, error = colors.error, onError = BrutalPalette.Black,
-            errorContainer = colors.error, onErrorContainer = BrutalPalette.Black, scrim = BrutalPalette.Black,
+        BrutalColors(
+            bg = Color(0xFF1C211E), ink = Color(0xFFE8EDE5), onInk = Color(0xFF20271F),
+            muted = Color(0xFFADB6AA), panel = Color(0xFF303831), accent = Color(0xFF35483A),
+            onAccent = Color(0xFFDCEAD8), error = Color(0xFF49332F), dark = true,
+            surface = Color(0xFF252C26), outline = Color(0xFF3B443C), strong = Color(0xFFA8BEA1),
+            onStrong = Color(0xFF202E21), errorText = Color(0xFFE7BDB3),
         )
     } else {
-        lightColorScheme(
-            primary = accent, onPrimary = BrutalPalette.Black, primaryContainer = accent, onPrimaryContainer = BrutalPalette.Black,
-            secondary = colors.ink, onSecondary = colors.onInk, secondaryContainer = colors.panel, onSecondaryContainer = colors.ink,
-            tertiary = accent, onTertiary = BrutalPalette.Black, tertiaryContainer = accent, onTertiaryContainer = BrutalPalette.Black,
-            background = colors.bg, onBackground = colors.ink, surface = colors.bg, onSurface = colors.ink,
-            surfaceVariant = colors.panel, onSurfaceVariant = colors.muted,
-            surfaceContainerLowest = colors.bg, surfaceContainerLow = colors.bg, surfaceContainer = colors.panel,
-            surfaceContainerHigh = colors.panel, surfaceContainerHighest = colors.panel,
-            outline = colors.ink, outlineVariant = colors.muted, error = colors.error, onError = BrutalPalette.Black,
-            errorContainer = colors.error, onErrorContainer = BrutalPalette.Black, scrim = BrutalPalette.Black,
+        BrutalColors(
+            bg = Color(0xFFFAF9F6), ink = Color(0xFF30372F), onInk = Color(0xFFFAFCF8),
+            muted = Color(0xFF6D746B), panel = Color(0xFFEEEFE9), accent = Color(0xFFE5EDDF),
+            onAccent = Color(0xFF3F573B), error = Color(0xFFF3E3DF), dark = false,
+            surface = Color(0xFFFFFFFF), outline = Color(0xFFE3E7DE), strong = Color(0xFF526B4C),
+            onStrong = Color(0xFFFFFFFF), errorText = Color(0xFF874F43),
         )
     }
+    val scheme = if (dark) darkColorScheme(
+        primary = colors.strong, onPrimary = colors.onStrong,
+        primaryContainer = colors.accent, onPrimaryContainer = colors.onAccent,
+        secondary = colors.strong, onSecondary = colors.onStrong,
+        secondaryContainer = colors.panel, onSecondaryContainer = colors.ink,
+        tertiary = colors.strong, onTertiary = colors.onStrong,
+        tertiaryContainer = colors.accent, onTertiaryContainer = colors.onAccent,
+        background = colors.bg, onBackground = colors.ink, surface = colors.surface, onSurface = colors.ink,
+        surfaceVariant = colors.panel, onSurfaceVariant = colors.muted,
+        surfaceContainerLowest = colors.bg, surfaceContainerLow = colors.surface, surfaceContainer = colors.surface,
+        surfaceContainerHigh = colors.panel, surfaceContainerHighest = colors.panel,
+        outline = colors.outline, outlineVariant = colors.outline,
+        error = colors.errorText, onError = colors.bg, errorContainer = colors.error, onErrorContainer = colors.errorText,
+    ) else lightColorScheme(
+        primary = colors.strong, onPrimary = colors.onStrong,
+        primaryContainer = colors.accent, onPrimaryContainer = colors.onAccent,
+        secondary = colors.strong, onSecondary = colors.onStrong,
+        secondaryContainer = colors.panel, onSecondaryContainer = colors.ink,
+        tertiary = colors.strong, onTertiary = colors.onStrong,
+        tertiaryContainer = colors.accent, onTertiaryContainer = colors.onAccent,
+        background = colors.bg, onBackground = colors.ink, surface = colors.surface, onSurface = colors.ink,
+        surfaceVariant = colors.panel, onSurfaceVariant = colors.muted,
+        surfaceContainerLowest = colors.bg, surfaceContainerLow = colors.surface, surfaceContainer = colors.surface,
+        surfaceContainerHigh = colors.panel, surfaceContainerHighest = colors.panel,
+        outline = colors.outline, outlineVariant = colors.outline,
+        error = colors.errorText, onError = colors.bg, errorContainer = colors.error, onErrorContainer = colors.errorText,
+    )
     val shapes = Shapes(
-        extraSmall = BrutalShape, small = BrutalShape, medium = BrutalShape, large = BrutalShape, extraLarge = BrutalShape,
+        extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(12.dp),
+        medium = BrutalShape, large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(28.dp),
     )
     CompositionLocalProvider(LocalBrutal provides colors, LocalDarkTheme provides dark) {
         MaterialTheme(colorScheme = scheme, typography = BrutalTypography, shapes = shapes, content = content)
     }
 }
 
-val LocalDarkTheme = staticCompositionLocalOf { false }
-
-/** Цвет говорящего (одинаков во всех экранах и темах). Оставлено для совместимости: см. [speakerFill]. */
 @Composable
 fun speakerColor(speakerId: String): Color = speakerFill(speakerId)

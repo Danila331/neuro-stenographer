@@ -58,13 +58,12 @@ fun SettingsScreen(
     var confirmClear by remember { mutableStateOf(false) }
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Настройки", onBack = onBack) }) { padding ->
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             SectionCard(title = "Язык записи") {
                 Text(
-                    "«Авто» определяет язык отдельно для каждого фрагмента речи (русский или английский), поэтому смешанные русско-английские " +
-                        "диалоги распознаются корректно. Если язык записи известен, выберите его вручную — это быстрее и надёжнее.",
+                    "Автоматически — русский и английский. Выберите язык вручную, если он известен.",
                     style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     LanguageChoice.entries.forEach { l ->
@@ -80,8 +79,7 @@ fun SettingsScreen(
                     NumbersChoice.CONFIG -> configSpellsNumbers
                 }
                 Text(
-                    "«Словами» заменяет цифры в тексте на слова («25» → «двадцать пять»), «Цифрами» оставляет их так, как выдала модель. " +
-                        "В расшифровке и в JSON по ТЗ будет выбранный вариант.",
+                    "Как показывать числа в расшифровке и экспортируемых файлах: 25 или двадцать пять.",
                     style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -92,7 +90,7 @@ fun SettingsScreen(
                 }
             }
             SectionCard(title = "Число говорящих") {
-                Text("Если оно известно заранее, диаризация работает точнее. При 1 говорящем она отключается — обработка быстрее.", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
+                Text("Укажите число участников, если знаете его заранее. Это поможет точнее разделить реплики.", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     (0..AppSettings.MAX_SPEAKERS).forEach { n ->
                         BrutalChip(

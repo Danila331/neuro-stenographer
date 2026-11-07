@@ -80,9 +80,9 @@ class UiKeyPathTest {
                 )
             }
         }
-        rule.onNodeWithText("Выбрать аудиофайл").assertIsDisplayed().performClick()
+        rule.onNodeWithTag(ru.neurosteno.app.ui.screens.Tags.PICK_AUDIO).assertIsDisplayed().performClick()
         rule.onNodeWithText("Записать").assertIsDisplayed().performClick()
-        rule.onNodeWithText("Обработка выполняется на устройстве").assertIsDisplayed()
+        rule.onNodeWithText("Только на вашем устройстве").assertIsDisplayed()
         assertEquals(1, picked)
         assertEquals(1, recorded)
     }

@@ -47,8 +47,8 @@ fun StatsScreen(entries: List<HistoryEntry>, deviceTotalMb: Int, tier: String, o
     val runs = entries.filter { it.processingMs > 0 && it.durationMs > 0 }
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Статистика обработки", onBack = onBack) }) { padding ->
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             if (runs.isEmpty()) {
                 Text("Пока нет данных: обработайте любую запись, и здесь появятся время по стадиям, RTF и пиковая память.", style = MaterialTheme.typography.bodyMedium)

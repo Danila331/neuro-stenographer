@@ -17,7 +17,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "ru.neurosteno.app"
+        applicationId = "ru.neurosteno.minimal"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -39,7 +39,7 @@ android {
             dimension = "tier"
             applicationIdSuffix = ".lite"
             versionNameSuffix = "-lite"
-            resValue("string", "app_name", "Нейро-стенографист Lite")
+            resValue("string", "app_name", "Нейро · Записи Lite")
             buildConfigField("String", "TIER", "\"lite\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "true")
         }
@@ -47,7 +47,7 @@ android {
             dimension = "tier"
             applicationIdSuffix = ".medium"
             versionNameSuffix = "-medium"
-            resValue("string", "app_name", "Нейро-стенографист Medium")
+            resValue("string", "app_name", "Нейро · Записи")
             buildConfigField("String", "TIER", "\"medium\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "true")
         }
@@ -55,7 +55,7 @@ android {
             dimension = "tier"
             applicationIdSuffix = ".hard"
             versionNameSuffix = "-hard"
-            resValue("string", "app_name", "Нейро-стенографист Hard")
+            resValue("string", "app_name", "Нейро · Записи Hard")
             buildConfigField("String", "TIER", "\"hard\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "true")
         }
@@ -63,7 +63,7 @@ android {
             dimension = "tier"
             applicationIdSuffix = ".online"
             versionNameSuffix = "-online"
-            resValue("string", "app_name", "Нейро-стенографист Online")
+            resValue("string", "app_name", "Нейро · Записи Online")
             buildConfigField("String", "TIER", "\"online\"")
             buildConfigField("boolean", "BUNDLED_MODELS", "false")
         }

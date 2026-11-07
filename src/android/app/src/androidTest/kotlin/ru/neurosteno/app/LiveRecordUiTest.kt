@@ -40,7 +40,7 @@ class LiveRecordUiTest {
             onStop = { stopped = true },
         )
         rule.onNodeWithTag("live_panel").assertIsDisplayed()
-        rule.onNodeWithText("ЖИВОЙ ТЕКСТ · ПРЕВЬЮ").assertIsDisplayed()
+        rule.onNodeWithText("Живой текст · превью").assertIsDisplayed()
         rule.onNodeWithContentDescription("Живой текст: Добрый день коллеги начинаем").assertIsDisplayed()
         rule.onNodeWithText("Остановить и расшифровать", substring = true).assertIsDisplayed()
         rule.onNodeWithTag("btn_stop_record").performClick()
@@ -50,7 +50,7 @@ class LiveRecordUiTest {
     @Test
     fun emptyAndLoadingStatesAreExplained() {
         show(recording, LiveUi(enabled = true, status = LiveStatus.Loading))
-        rule.onNodeWithText("ЗАГРУЗКА МОДЕЛИ…").assertIsDisplayed()
+        rule.onNodeWithText("Подготовка…").assertIsDisplayed()
         rule.onNodeWithText("Говорите — слова появятся здесь…").assertIsDisplayed()
     }
 

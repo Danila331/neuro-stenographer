@@ -39,7 +39,7 @@ import ru.neurosteno.app.ui.theme.SectionTitle
 @Composable
 fun LicensesScreen(notices: List<Notice>, onOpen: (Notice) -> Unit, onBack: () -> Unit) {
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Лицензии и модели", onBack = onBack) }) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
                 Text(
                     "Приложение работает офлайн и использует открытые модели, библиотеки и шрифты. Нажмите на пункт, чтобы прочитать полный текст лицензии.",
@@ -84,7 +84,7 @@ private fun NoticeCard(n: Notice, onOpen: (Notice) -> Unit) {
 @Composable
 fun LicenseTextScreen(notice: Notice, text: String?, onBack: () -> Unit) {
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar(notice.name, onBack = onBack, titleMaxLines = 2) }) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(padding).fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 BrutalTag(notice.license, fill = Brutal.accent)
                 if (notice.version.isNotBlank()) BrutalTag(notice.version)

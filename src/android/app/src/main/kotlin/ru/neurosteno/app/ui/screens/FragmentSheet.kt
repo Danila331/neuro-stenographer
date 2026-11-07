@@ -88,7 +88,7 @@ fun FragmentOptionsSheet(
         Column(
             Modifier.semantics { testTagsAsResourceId = true } // окно листа отдельное: resource-id тегов нужны скриптам автоматизации
                 .verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             SectionTitle("Обработать заново")
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {

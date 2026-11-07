@@ -91,8 +91,8 @@ fun SearchScreen(ui: SearchUi, suggestions: List<String>, recordTitle: String?, 
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("AI-поиск", onBack = actions.onBack) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -198,7 +198,7 @@ private fun highlighted(text: String, terms: List<String>): AnnotatedString {
         var pos = 0
         for (r in ranges) {
             append(text.substring(pos, r.first))
-            withStyle(SpanStyle(background = accent, color = Color.Black, fontWeight = FontWeight.Bold)) { append(text.substring(r.first, r.last + 1)) }
+            withStyle(SpanStyle(background = accent, color = Brutal.onAccent, fontWeight = FontWeight.Bold)) { append(text.substring(r.first, r.last + 1)) }
             pos = r.last + 1
         }
         append(text.substring(pos))
@@ -238,7 +238,7 @@ private fun AnswerBlock(ui: SearchUi, actions: SearchActions) {
 /** Ответ ИИ: ссылки `[мм:сс, Говорящий N]` -- кликабельные, ведут к реплике нужной записи. */
 @Composable
 private fun AnswerText(text: String, ui: SearchUi, onOpen: (String, Long) -> Unit) {
-    val link = SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, background = Brutal.accent, color = Color.Black)
+    val link = SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, background = Brutal.accent, color = Brutal.onAccent)
     val annotated = buildAnnotatedString {
         for (part in CitationParser.parse(text)) when (part) {
             is CitationParser.Part.Text -> append(part.text)

@@ -33,8 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -59,7 +61,7 @@ import ru.neurosteno.app.ui.theme.PlaqueKind
 import ru.neurosteno.app.ui.theme.SectionTitle
 import ru.neurosteno.app.ui.theme.SpeakerSquare
 
-/** Верхняя панель экрана: квадратная «Назад» (если [onBack] задан), заголовок Unbounded, действия справа и толстая линия снизу. */
+/** Quiet top bar with a readable title and circular navigation actions. */
 @Composable
 fun NeuroTopBar(
     title: String,
@@ -81,15 +83,15 @@ fun NeuroTopBar(
             val titleStyle = MaterialTheme.typography.titleLarge.let { if (big) it.copy(fontSize = it.fontSize * 0.6f, lineHeight = it.lineHeight * 0.6f) else it }
             Text(
                 title, style = titleStyle, color = Brutal.ink, maxLines = titleMaxLines, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp).semantics { heading() },
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp).testTag("screen_title").semantics { heading() },
             )
             actions()
         }
-        Box(Modifier.fillMaxWidth().height(BrutalDims.BorderThick).background(Brutal.ink))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Brutal.outline.copy(alpha = 0.5f)))
     }
 }
 
-/** Диалог в стиле системы: рамка, жёсткая тень, заголовок Unbounded; кнопки передаёт вызывающий ([DialogButton]). */
+/** Rounded dialog; actions are supplied by the caller through [DialogButton]. */
 @Composable
 fun BrutalDialog(
     onDismissRequest: () -> Unit,
@@ -100,7 +102,7 @@ fun BrutalDialog(
     text: @Composable () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        BrutalCard(modifier.padding(horizontal = 20.dp).fillMaxWidth(), shadow = 6.dp, contentPadding = androidx.compose.foundation.layout.PaddingValues(18.dp)) {
+        BrutalCard(modifier.padding(horizontal = 24.dp).fillMaxWidth(), contentPadding = androidx.compose.foundation.layout.PaddingValues(24.dp)) {
             Text(title, style = MaterialTheme.typography.titleLarge, color = Brutal.ink, modifier = Modifier.semantics { heading() })
             Spacer(Modifier.height(12.dp))
             Box(Modifier.weight(1f, fill = false).heightIn(max = 460.dp)) { text() }
@@ -142,17 +144,16 @@ fun ConfirmDialog(
     }
 }
 
-/** Лист снизу в стиле системы: квадратные углы, толстая верхняя линия, чёрный скрим. */
+/** Rounded bottom sheet with a small handle and a subtle scrim. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrutalSheet(onDismissRequest: () -> Unit, sheetState: SheetState, content: @Composable () -> Unit) {
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest, sheetState = sheetState, shape = RectangleShape, containerColor = Brutal.bg,
-        contentColor = Brutal.ink, scrimColor = Color.Black.copy(alpha = 0.6f), tonalElevation = 0.dp,
+        onDismissRequest = onDismissRequest, sheetState = sheetState, shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), containerColor = Brutal.surface,
+        contentColor = Brutal.ink, scrimColor = Color.Black.copy(alpha = 0.28f), tonalElevation = 0.dp,
         dragHandle = {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(Modifier.fillMaxWidth().height(BrutalDims.BorderThick).background(Brutal.ink))
-                Box(Modifier.padding(vertical = 10.dp).width(56.dp).height(6.dp).background(Brutal.ink))
+                Box(Modifier.padding(vertical = 14.dp).width(32.dp).height(4.dp).background(Brutal.outline, RoundedCornerShape(2.dp)))
             }
         },
     ) { content() }
@@ -167,7 +168,7 @@ fun BrutalSnackbarHost(state: SnackbarHostState, modifier: Modifier = Modifier) 
 @Composable
 private fun BrutalSnackbar(data: SnackbarData) {
     Row(
-        Modifier.padding(12.dp).fillMaxWidth().background(Brutal.ink, BrutalShape).border(BrutalDims.Border, Brutal.bg, BrutalShape).padding(horizontal = 14.dp, vertical = 8.dp),
+        Modifier.padding(16.dp).fillMaxWidth().background(Brutal.ink, BrutalShape).padding(horizontal = 18.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -188,7 +189,7 @@ fun SectionCard(
     container: Color = Color.Unspecified,
     content: @Composable () -> Unit,
 ) {
-    BrutalCard(modifier.fillMaxWidth(), fill = if (container == Color.Unspecified) Brutal.bg else container) {
+    BrutalCard(modifier.fillMaxWidth(), fill = if (container == Color.Unspecified) Brutal.surface else container) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (title != null) SectionTitle(title)
             content()
@@ -196,7 +197,7 @@ fun SectionCard(
     }
 }
 
-/** Цветной квадрат говорящего (в списках и диалогах). */
+/** Pastel speaker marker shared by lists and dialogs. */
 @Composable
 fun SpeakerDot(speakerId: String, size: Int = 18) = SpeakerSquare(speakerId, size.dp)
 
@@ -209,7 +210,7 @@ fun InfoRow(label: String, value: String, modifier: Modifier = Modifier) {
             Spacer(Modifier.width(12.dp))
             Text(value, style = MaterialTheme.typography.titleSmall, color = Brutal.ink, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Brutal.muted.copy(alpha = 0.5f)))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Brutal.outline))
     }
 }
 
