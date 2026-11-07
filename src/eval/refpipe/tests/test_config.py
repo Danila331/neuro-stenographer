@@ -27,3 +27,10 @@ def test_hash_ignores_comment_keys_and_changes_with_overrides():
 def test_all_tier_files_load():
     for t in ("lite", "medium", "hard"):
         assert load_config(TIERS / f"{t}.json")["tier"] == t
+
+
+def test_hash_ignores_live_and_llm_blocks():
+    cfg = load_config(TIERS / "medium.json")
+    h = config_hash(cfg)
+    assert h == config_hash({**cfg, "live": {"enabled": False}, "llm": {"model": "other.gguf"}})
+    assert h != config_hash(apply_overrides(cfg, ["asr.blank_penalty=1.0"]))

@@ -345,6 +345,66 @@
       "note": "English ASR (asr_en, engine nemo_tdt); only the official .tar.bz2 release carries the weights"
     },
     {
+      "path": "asr/streaming-zipformer-small-ru-int8/decoder.onnx",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16/resolve/main/decoder.onnx",
+      "sha256": "89b3088a9e20e1ef7f2e85ce1a3478afe6a9c4ac57369cabcc4beb8e95328ea0",
+      "sha256_source": "official",
+      "size": 2093080,
+      "license": "Apache-2.0 (alphacep vosk-model-small-streaming-ru)",
+      "tiers": [
+        "lite",
+        "medium",
+        "hard"
+      ],
+      "kind": "asr",
+      "note": "live transcription while recording (config `live`), streaming zipformer; preview only"
+    },
+    {
+      "path": "asr/streaming-zipformer-small-ru-int8/encoder.int8.onnx",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16/resolve/main/encoder.int8.onnx",
+      "sha256": "e0db705e94ec35d803b1df4f40cda23d064e1142977c80ab288430b109777a9d",
+      "sha256_source": "official",
+      "size": 26214060,
+      "license": "Apache-2.0 (alphacep vosk-model-small-streaming-ru)",
+      "tiers": [
+        "lite",
+        "medium",
+        "hard"
+      ],
+      "kind": "asr",
+      "note": "live transcription while recording (config `live`), streaming zipformer; preview only"
+    },
+    {
+      "path": "asr/streaming-zipformer-small-ru-int8/joiner.int8.onnx",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16/resolve/main/joiner.int8.onnx",
+      "sha256": "b55784b071ab7512eab4c7c44e4f5478284ef33c83562cc6a249b972515a31e5",
+      "sha256_source": "official",
+      "size": 259417,
+      "license": "Apache-2.0 (alphacep vosk-model-small-streaming-ru)",
+      "tiers": [
+        "lite",
+        "medium",
+        "hard"
+      ],
+      "kind": "asr",
+      "note": "live transcription while recording (config `live`), streaming zipformer; preview only"
+    },
+    {
+      "path": "asr/streaming-zipformer-small-ru-int8/tokens.txt",
+      "url": "https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16/resolve/main/tokens.txt",
+      "sha256": "93bbbc0bae6b78c0bbb743d4aa9fded3bb5ff3aac5f0200e3a769a5a05e0fdf6",
+      "sha256_source": "official",
+      "size": 6388,
+      "license": "Apache-2.0 (alphacep vosk-model-small-streaming-ru)",
+      "tiers": [
+        "lite",
+        "medium",
+        "hard"
+      ],
+      "kind": "asr",
+      "note": "live transcription while recording (config `live`), streaming zipformer; preview only"
+    },
+    {
       "path": "asr/whisper-large-v3-turbo-int8/decoder.int8.onnx",
       "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-turbo/resolve/main/turbo-decoder.int8.onnx",
       "sha256": "20accd02388482eb3a46bd615631adfdc85e1eb2c7db9ea3f02a40ffe6b81547",
