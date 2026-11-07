@@ -33,7 +33,7 @@ def digest(rec: Record, vecs=None, target_chars: int = 1500, **kw) -> list[S.Top
 
         def info(i):
             ts = terms(rec.utts[i].text, mode="snow5")
-            return sum(math.log(1 + n / df[w]) for w in set(ts))
+            return sum(math.log(1 + n / df[w]) for w in sorted(set(ts)))
         for spk in sorted({rec.utts[i].spk for i in range(lo, hi)}):
             ids = [i for i in range(lo, hi) if rec.utts[i].spk == spk and len(rec.utts[i].text.split()) >= 3]
             if ids:
