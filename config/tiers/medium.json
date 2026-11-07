@@ -101,7 +101,14 @@
     "punctuation": false,
     "speaker_fix": false,
     "summary": true,
-    "time_budget_rtf": 0.15
+    "no_repack": true,
+    "flash_attn": true,
+    "kv_cache_type": "q8_0",
+    "use_mmap": true,
+    "protocol_mode": "chunk_merge",
+    "filter_quotes": true,
+    "qa_chunk_budget_ratio": 0.25,
+    "quality": "full"
   },
   "normalization": {
     "numbers": "as_is",

@@ -97,11 +97,18 @@
     "model": "llm/qwen3-4b-q4_k_m.gguf",
     "n_ctx": 4096,
     "n_threads": 4,
-    "gpu_layers": 99,
+    "gpu_layers": 0,
     "punctuation": false,
-    "speaker_fix": true,
+    "speaker_fix": false,
     "summary": true,
-    "time_budget_rtf": 0.15
+    "no_repack": true,
+    "flash_attn": true,
+    "kv_cache_type": "q8_0",
+    "use_mmap": true,
+    "protocol_mode": "chunk_merge",
+    "filter_quotes": true,
+    "qa_chunk_budget_ratio": 0.25,
+    "quality": "full"
   },
   "normalization": {
     "numbers": "as_is",
