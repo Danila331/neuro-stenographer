@@ -94,6 +94,11 @@ class ProcessingService : Service() {
                 runCatching { startForegroundCompat(buildNotification(fragmentLabel(p), null, 0f)) }
                 startFragment(p)
             }
+            ACTION_SUMMARY -> {
+                val id = intent.getStringExtra(EXTRA_ENTRY) ?: ""
+                runCatching { startForegroundCompat(buildTextNotification("Выжимка", "Подготовка…", null)) }
+                startSummary(id)
+            }
             else -> stopSelf(startId)
         }
         return START_NOT_STICKY
@@ -172,6 +177,7 @@ class ProcessingService : Service() {
                 removeOwnRecording(uri)
                 if (entry != null) ProcessingState.setProcessing(ProcessingUi.Done(entry.id, name))
                 else ProcessingState.setProcessing(ProcessingUi.Failed(name, "Расшифровка готова и сохранена в папку results, но не добавлена в историю (нет места?)."))
+                if (entry != null && graph.activeConfig()?.first?.summary?.auto == true) autoSummary(graph, entry.id, name)
             } catch (e: CancellationException) {
                 ProcessingState.reset()
             } catch (e: ModelsNotReadyException) {
@@ -186,6 +192,41 @@ class ProcessingService : Service() {
                 fail("Не удалось обработать запись: ${e.message ?: e.javaClass.simpleName}")
             } finally {
                 sampler.cancel()
+                releaseWakeLock()
+                ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
+        }
+    }
+
+    /** B50: выжимка после основной обработки (`summary.auto`), в том же фоновом задании; сбой или отмена не портят готовый результат. */
+    private suspend fun autoSummary(graph: AppGraph, entryId: String, name: String) {
+        try {
+            graph.summary.run(entryId) { text, fraction -> updateTextNotification("Выжимка · $name", text, fraction) }
+        } catch (e: CancellationException) {
+            // расшифровка уже готова и показана; останавливаем только выжимку
+        } catch (e: Throwable) {
+            android.util.Log.e("Neurosteno", "auto summary failed", e)
+        }
+    }
+
+    /** Выжимка по кнопке (B50): foreground-сервис, прогресс в уведомлении, состояние -- `AppGraph.summary.ui`. */
+    private fun startSummary(entryId: String) {
+        if (job?.isActive == true || (application as NeuroApp).graph.summary.isRunning) {
+            stopSelf()
+            return
+        }
+        acquireWakeLock()
+        val graph = (application as NeuroApp).graph
+        job = scope.launch {
+            try {
+                val label = graph.history.get(entryId)?.sourceName ?: "запись"
+                graph.summary.run(entryId) { text, fraction -> updateTextNotification("Выжимка · $label", text, fraction) }
+            } catch (e: CancellationException) {
+                // состояние «Остановлено» уже выставлено SummaryRunner
+            } catch (e: Throwable) {
+                android.util.Log.e("Neurosteno", "summary failed", e)
+            } finally {
                 releaseWakeLock()
                 ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
                 stopSelf()
@@ -366,6 +407,36 @@ class ProcessingService : Service() {
             .build()
     }
 
+    /** Уведомление произвольного текста (выжимка): [fraction] = null -- неопределённый прогресс. */
+    private fun buildTextNotification(title: String, text: String, fraction: Float?): Notification {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL_ID) == null) {
+            nm.createNotificationChannel(NotificationChannel(CHANNEL_ID, getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW))
+        }
+        val open = PendingIntent.getActivity(
+            this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val cancel = PendingIntent.getService(
+            this, 1, Intent(this, ProcessingService::class.java).setAction(ACTION_CANCEL), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        return Notification.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_notify_sync)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setContentIntent(open)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setProgress(100, ((fraction ?: 0f) * 100).toInt(), fraction == null)
+            .addAction(Notification.Action.Builder(null, getString(R.string.btn_cancel_processing), cancel).build())
+            .build()
+    }
+
+    private fun updateTextNotification(title: String, text: String, fraction: Float) {
+        if (!notificationGate.tryPass()) return
+        runCatching { (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIFICATION_ID, buildTextNotification(title, text, fraction)) }
+    }
+
     private var lastNotifiedPercent = -1
 
     /** Уведомление обновляется не чаще 2 раз в секунду (система отбрасывает чаще; B34). */
@@ -399,6 +470,8 @@ class ProcessingService : Service() {
         const val ACTION_START = "ru.neurosteno.app.action.START"
         const val ACTION_CANCEL = "ru.neurosteno.app.action.CANCEL"
         const val ACTION_REPROCESS = "ru.neurosteno.app.action.REPROCESS_FRAGMENT"
+        /** Составить выжимку записи (B50); extra [EXTRA_ENTRY] -- id записи истории. Прогресс -- `AppGraph.summary.ui`. */
+        const val ACTION_SUMMARY = "ru.neurosteno.app.action.SUMMARY"
         const val EXTRA_NAME = "name"
         const val EXTRA_ENTRY = "entry"
         const val EXTRA_START = "start_ms"
@@ -412,6 +485,9 @@ class ProcessingService : Service() {
         private const val WAKE_LOCK_TIMEOUT_MS = 2L * 60 * 60 * 1000
         /** Подкаталог filesDir с записями с микрофона. */
         const val RECORDINGS_DIR = "recordings"
+
+        fun summaryIntent(context: Context, entryId: String): Intent =
+            Intent(context, ProcessingService::class.java).setAction(ACTION_SUMMARY).putExtra(EXTRA_ENTRY, entryId)
 
         fun startIntent(context: Context, uri: Uri, name: String): Intent =
             Intent(context, ProcessingService::class.java)
