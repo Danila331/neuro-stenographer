@@ -18,10 +18,10 @@ def db(v):
     return 20 * np.log10(max(v, 1e-9))
 
 
-if str(cfg.get("mode", "none")).lower() == "peak" and len(x):
+if cfg.get("enabled", True) and str(cfg.get("mode", "none")).lower() == "peak" and len(x):
     pk = float(np.abs(x).max())
-    if db(pk) >= -85:
-        g = float(cfg.get("target_peak_dbfs", -1.0)) - db(pk)
+    if db(pk) >= float(cfg.get("skip_if_peak_below_dbfs", -85.0)):
+        g = float(cfg.get("peak_dbfs", cfg.get("target_peak_dbfs", -1.0))) - db(pk)
         g = float(np.clip(g, -float(cfg.get("max_attenuation_db", 6.0)), float(cfg.get("max_gain_db", 40.0))))
         g = min(g, -1.0 - db(pk))
         x = (x * 10 ** (g / 20)).astype(np.float32)

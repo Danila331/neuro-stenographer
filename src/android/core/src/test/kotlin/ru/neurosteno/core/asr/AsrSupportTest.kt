@@ -161,4 +161,21 @@ class AsrSupportTest {
         assertEquals(listOf(TimeSpan(0, 250)), SpanOps.padAndMerge(listOf(TimeSpan(0, 100)), 150, 10_000))
         assertEquals(3150L + 0, SpanOps.totalMs(listOf(TimeSpan(0, 3150))))
     }
+
+    @Test
+    fun `punctuation token does not move the word end for punct models`() {
+        val toks = listOf("▁Привет", ",", "▁мир", ".")
+        val ts = listOf(0.0f, 0.5f, 0.8f, 1.2f)
+        val w = TokenWords.build(toks, ts.toFloatArray(), 0, 5000, null, 40, 0, true)
+        assertEquals(listOf("Привет,", "мир."), w.map { it.text })
+        assertEquals(40L, w[0].endMs) // а не 500+40: запятая стоит на 0.5 с
+        assertEquals(800L, w[1].startMs); assertEquals(840L, w[1].endMs)
+    }
+
+    @Test
+    fun `start offset shifts word starts and ends`() {
+        val w = TokenWords.build(listOf("▁да"), floatArrayOf(0.1f), 1000, 5000, null, 40, -30, false)
+        assertEquals(1070L, w.single().startMs)
+        assertEquals(1110L, w.single().endMs)
+    }
 }

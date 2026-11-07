@@ -113,8 +113,12 @@ object TokenWords {
                 val tMs = chunkStartMs + (timestampsSec[i].toDouble() * 1000 + 0.5).toLong() + startOffsetMs
                 val c = cur ?: Acc(StringBuilder(), tMs, tMs, null).also { cur = it }
                 c.text.append(body)
-                c.last = tMs
-                c.lastDur = if (durationsSec != null && i < durationsSec.size) (durationsSec[i].toDouble() * 1000 + 0.5).toLong() else null
+                // знак препинания (punct-модели ставят его отдельным токеном позже слова) не сдвигает конец слова
+                val punctOnly = keepPunct && c.text.length > body.length && body.all { it in PUNCT_CHARS }
+                if (!punctOnly) {
+                    c.last = tMs
+                    c.lastDur = if (durationsSec != null && i < durationsSec.size) (durationsSec[i].toDouble() * 1000 + 0.5).toLong() else null
+                }
             }
             if (tk.isNotEmpty() && tk.last().isWhitespace() && tk.length > 1) flush()
         }

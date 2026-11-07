@@ -18,6 +18,7 @@ import ru.neurosteno.core.Word
 import ru.neurosteno.core.asr.AsrModelFiles
 import ru.neurosteno.core.asr.ChunkPlanner
 import ru.neurosteno.core.asr.TokenWords
+import ru.neurosteno.core.postprocess.Postprocess
 import kotlin.math.roundToLong
 
 /**
@@ -39,6 +40,8 @@ class SherpaAsr(
     private val language: String = "ru",
     /** true -> модель сама ставит знаки и регистр (`punctuation.source == asr_native`), слова сохраняют их. */
     private val keepPunct: Boolean = false,
+    /** `postprocess.drop_tiny_chunks.max_chars`: чанк, весь вывод которого не длиннее, отбрасывается; null -- не отбрасывать. */
+    private val dropTinyMaxChars: Int? = null,
     /** Отладка/диагностика: сырой результат распознавания каждого чанка (текст, токены, времена токенов в секундах). */
     private val onRawResult: ((text: String, tokens: List<String>, timestamps: FloatArray) -> Unit)? = null,
 ) : AsrEngine {
@@ -79,7 +82,7 @@ class SherpaAsr(
         }
         val hotwords = root.optionalFile(cfg.hotwordsFile)
         val config = OfflineRecognizerConfig(
-            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = if (files.kind == AsrModelFiles.Kind.NEMO_TRANSDUCER) 64 else 80), // как в эталоне
+            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = if (files.kind == AsrModelFiles.Kind.NEMO_TRANSDUCER && cfg.engine.lowercase().contains("gigaam")) 64 else 80), // как в эталоне (64 -- только GigaAM RNNT; Parakeet и др. -- 80)
             modelConfig = model,
             decodingMethod = cfg.decoding,
             maxActivePaths = cfg.maxActivePaths,
@@ -110,6 +113,10 @@ class SherpaAsr(
                     rec.decode(stream)
                     val r = rec.getResult(stream)
                     onRawResult?.invoke(r.text, r.tokens.toList(), r.timestamps)
+                    if (dropTinyMaxChars != null && Postprocess.isTinyChunk(r.text, dropTinyMaxChars)) {
+                        progress.onProgress(Stage.ASR, (i + 1).toFloat() / chunks.size)
+                        return@forEachIndexed // галлюцинация на шуме/мяуканье
+                    }
                     words += wordsOf(r.text, r.tokens.toList(), r.timestamps, r.durations, chunk.startMs, chunk.endMs)
                 } finally {
                     stream.release()

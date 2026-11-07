@@ -86,9 +86,15 @@ fun main(args: Array<String>) {
             }
         },
         punctuator = punct,
+        languageId = if (cfg.language.effectiveMode == "auto" && cfg.language.lidModel != null && cfg.asrEn != null &&
+            java.io.File(root.dir, cfg.language.lidModel!!).isDirectory
+        ) {
+            { ru.neurosteno.sherpa.SherpaLanguageId(cfg.language.lidModel!!, root, 1, cfg.language.lidSeconds) }
+        } else null,
         asr = { lang ->
             SherpaAsr(if (lang == "en") (cfg.asrEn ?: cfg.asr) else cfg.asr, root, threads, lang,
                 keepPunct = cfg.punctuation.source == "asr_native",
+                dropTinyMaxChars = cfg.postprocess.dropTinyChunks.takeIf { it.enabled }?.maxChars,
                 onRawResult = if (System.getenv("SMOKE_DEBUG_ASR") != null) { text, tokens, ts ->
                     println("RAW text=\"$text\"\n    tokens=$tokens\n    ts=${ts.toList()}")
                 } else null)
