@@ -67,12 +67,19 @@ score() { # <run-dir> <norm|punct> -> WER
   (cd "$REPO/src/eval/stenoeval" && uv run --quiet stenoeval score --dataset "$DATASET" --run "$1" --ids "$IDLIST" --split all 2>&1 \
     | sed -n "s/.*WER $2 = \\([0-9.]*\\)%.*/\\1/p" | head -1)
 }
+derscore() { # <run-dir> -> "DER±.25 cpWER" (строка ALL таблицы stenoeval)
+  (cd "$REPO/src/eval/stenoeval" && uv run --quiet stenoeval score --dataset "$DATASET" --run "$1" --ids "$IDLIST" --split all 2>&1 \
+    | awk '$1=="ALL"{print $11, $9; exit}')
+}
 A="$(score "$OUT/android" norm)"; AP="$(score "$OUT/android" punct)"
+AD="$(derscore "$OUT/android")"; RD="$(derscore "$OUT/refpipe")"
 R="$(score "$OUT/refpipe" norm)"; RP="$(score "$OUT/refpipe" punct)"
 {
   echo "dataset=$NAME tier=$TIER files=${#IDS[@]} tol=${TOL}pp config=$(basename "$CONFIG")"
   echo "WER norm : android=${A}%  refpipe=${R}%  diff=$(python3 -I -c "print(round($A-$R,2))")pp"
   echo "WER punct: android=${AP}%  refpipe=${RP}%  diff=$(python3 -I -c "print(round($AP-$RP,2))")pp"
+  echo "DER +-.25 / cpWER: android=${AD}  refpipe=${RD}  (DER diff=$(python3 -I -c "print(round(float('${AD%% *}')-float('${RD%% *}'),2))")pp)"
 } | tee "$OUT/summary.txt"
 python3 -I -c "import sys; sys.exit(0 if $A - $R <= $TOL else 1)" || { echo "ПАРИТЕТ НАРУШЕН: Android хуже refpipe более чем на ${TOL} п.п." >&2; exit 1; }
+python3 -I -c "import sys; sys.exit(0 if abs(float('${AD%% *}') - float('${RD%% *}')) <= ${PARITY_DER_TOL:-1.0} else 1)" || { echo "ПАРИТЕТ DER НАРУШЕН (допуск ${PARITY_DER_TOL:-1.0} п.п.)" >&2; exit 1; }
 echo "паритет ок"
