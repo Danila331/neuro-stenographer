@@ -113,6 +113,7 @@ class FragmentResult(
      * Нужен UI, чтобы перенести пользовательские имена говорящих.
      */
     val speakerRemap: Map<String, String>,
+    /** Как говорящие, реально попавшие в новые реплики, сопоставлены с расшифровкой (локальные говорящие без слов не перечисляются). */
     val speakerAssignments: List<SpeakerAssignment>,
     /** Язык, на котором распознавали фрагмент; `null`, если не распознавали. */
     val language: String?,
@@ -369,7 +370,8 @@ class FragmentReprocessor(
         val outcome = if (replaced.isEmpty()) FragmentOutcome.INSERTED else FragmentOutcome.REPLACED
         val msg = if (replaced.isEmpty()) "Добавлено реплик: ${punctuated.size}" else "Заменено реплик: ${replaced.size} -> ${punctuated.size}"
         tracker.report(Stage.EXPORT, 0f)
-        return finish(kept, punctuated, replaced, eff, duration, transcript, outcome, msg, assignments, language, warnings, stageMs, t0, nanoTime)
+        val used = punctuated.map { it.speakerId }.toSet()
+        return finish(kept, punctuated, replaced, eff, duration, transcript, outcome, msg, assignments.filter { it.speakerId in used }, language, warnings, stageMs, t0, nanoTime)
             .also { tracker.report(Stage.EXPORT, 1f) }
     }
 

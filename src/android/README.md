@@ -186,3 +186,80 @@ SMOKE_LLM_GGUF=$ROOT/.cache/models/llm-qwen3-0.6b-q4_k_m/Qwen3-0.6B-Q4_K_M.gguf 
 * R8 отключён (JNI и сериализация), размер APK определяют модели.
 * Android-модули (`:audio`, `:engine-*`, `:app`) написаны и проходят конфигурацию AGP 9.5.1 до этапа получения SDK
   (проверено), но **не собирались** — нужны SDK-пакеты выше.
+
+## Повторная обработка фрагмента (B37, `ru.neurosteno.core.fragment`)
+
+Движок для кнопки «Обработать фрагмент заново» (UI-часть не сделана). Прогоняет VAD → (LID) → ASR ∥ диаризация →
+Aligner → пунктуация **только на выбранном отрезке** и заменяет им реплики; остальная расшифровка не затрагивается.
+
+```kotlin
+class FragmentReprocessor(engines: EngineProviders, settings: PipelineSettings,
+                          tuning: FragmentTuning = FragmentTuning(), dispatcher = Dispatchers.IO)
+suspend fun reprocess(audio: AudioBuffer | source: AudioSource, transcript: Transcript,
+                      request: FragmentRequest, listener: PipelineProgressListener? = null): FragmentResult
+
+data class FragmentRequest(startMs, endMs,                    // абсолютные мс; одна или несколько реплик
+    language: String? = null,        // null/"auto" (LID, если ≥ 3 с речи и есть LID; иначе язык расшифровки) | "ru" | "en"
+    numSpeakers: Int? = null,        // null = авто, 1 = без диаризации; только при recomputeSpeakers
+    recomputeSpeakers: Boolean = false, // false: говорящие из старых реплик по времени (только ASR, быстро)
+    removeIfNoSpeech: Boolean = false)  // речь не найдена: false -> ничего не удаляем
+```
+`AudioSource` отдаёт отрезки без полной загрузки записи: `AudioSource.of(AudioBuffer)`, `AudioSource.wav(File)` (PCM16
+16 кГц читается по диапазону байт; иной WAV декодируется один раз), `AudioSource.decoded(input, decoder)` (любой формат
+через `MediaCodecAudioDecoder`, декодируется целиком при первом чтении).
+
+`FragmentResult`: `transcript` (новый, инварианты §1) и `json`; `outcome` (`REPLACED` / `INSERTED` / `NO_SPEECH_KEPT` /
+`NO_SPEECH_REMOVED` / `INVALID_REQUEST`) + `message` для показа пользователю; `range` (реально обработанный диапазон),
+`removed`/`added` (для «отменить» и подсветки), `speakerRemap` (id до перенумерации → итоговый `speaker_N`: UI переносит по нему
+пользовательские имена говорящих), `speakerAssignments`, `language`, `warnings`, `stageMs`/`processingMs`, `changed`.
+
+**Как вызвать из UI.** `PipelineRunner` собирает `EngineProviders` и `PipelineSettings` — то же самое нужно для
+`FragmentReprocessor(providers, settings)` (вынести сборку в общий метод). Запускать в `ProcessingService` (foreground) тем же
+способом, что и обработку; прогресс — тот же `PipelineProgressListener` (стадии `DECODE..EXPORT`, общий прогресс монотонный),
+отмена — отменой корутины.
+```kotlin
+val src = AudioSource.decoded(UriAudioInput(uri, name), MediaCodecAudioDecoder(ctx))   // или AudioSource.wav(файл)
+val r = FragmentReprocessor(providers, settings).reprocess(src, current,
+    FragmentRequest(sel.first().startMs, sel.last().endMs, language = lang, numSpeakers = n, recomputeSpeakers = fixSpeakers), listener)
+when (r.outcome) { REPLACED, INSERTED, NO_SPEECH_REMOVED -> save(r.transcript, r.speakerRemap); else -> toast(r.message) }
+```
+
+**Что делает.**
+* Заменяются реплики, пересекающиеся с `[start, end]` (касание границей — нет); диапазон расширяется до их границ.
+  Обрабатывается диапазон ± `paddingMs` (300 мс); слова с центром вне диапазона отбрасываются (края паддинга режут слова), слова,
+  совпадающие по тексту и времени со словами **не заменяемых** соседних реплик (перекрытие речи), тоже.
+* **Говорящие.** `recomputeSpeakers = false`: старые реплики диапазона становятся turns для `Aligner` (речь, найденная в пропуске
+  между репликами, получает говорящего ближайшей реплики). `true`: диаризация отрезка (`numSpeakers` — подсказка) и
+  `SpeakerMatcher`: (1) **эмбеддинги** — `Diarizer.speakerEmbeddings(clips)` (`SherpaDiarizer`: `SpeakerEmbeddingExtractor`, тот же файл
+  модели, что в диаризации) для речи каждого локального говорящего (≥ 1.5 с) и эталона каждого глобального (до 20 с его самых длинных
+  «чистых» реплик **вне** диапазона); косинус ≥ 0.55, жадно по убыванию, строго один-к-одному; (2) иначе **по времени** — пересечение с
+  старыми репликами диапазона (≥ 30 % речи говорящего; не применяется, если у обоих есть эмбеддинги и они «не совпали»); (3) иначе
+  **новый** говорящий. Диаризатор без эмбеддингов (интерфейс по умолчанию возвращает пустой список) — сразу способ (2).
+  После замены `speaker_N` перенумеровываются по ТЗ (по первому появлению) — для остальных реплик id могут сдвинуться, см. `speakerRemap`.
+* Модели грузятся и выгружаются по очереди, как в основном пайплайне (ASR ∥ диаризация; пунктуатор — после).
+* Речь не найдена (VAD пуст или ASR ничего не вернул) → расшифровка **не меняется**, `NO_SPEECH_KEPT` + сообщение; удалить реплики можно только
+  явным `removeIfNoSpeech = true`. Некорректный запрос (пустой/вне записи отрезок, `numSpeakers < 1`) → `INVALID_REQUEST`.
+* Сбой ASR → `PipelineException(Stage.ASR)` (входной `Transcript` неизменяем); сбой VAD/LID/диаризации/эмбеддингов/пунктуации →
+  предупреждение и деградация, как в оркестраторе.
+
+**Ограничения.** Фрагмент обрабатывается на одном языке (per-chunk LID не применяется); LID короче 3 с речи не используется.
+Диаризация короткого отрезка видит только его: без `numSpeakers` она может слить двух говорящих (на `cats_c01` отрезок из трёх говорящих
+дал двух) — для отрезков с известным числом говорящих задавайте его. Эмбеддинги неоднозначны на телефонном кодеке и похожих голосах
+(распределение косинусов ниже). Перекрытие речи в записи остаётся перекрытием: пересчёт не разделит смешанный звук. Пиковая память
+выше основного пути на один `SpeakerEmbeddingExtractor` (~размер модели эмбеддингов). Времена слов в диапазоне могут слегка сдвинуться
+(границы VAD/паддинг), реплика — перегруппироваться.
+
+**Проверка.**
+```bash
+cd src/android && ./gradlew :core:test -Pneurosteno.android=false            # 242 теста, в т.ч. fragment/* на фейковых движках
+# реальные модели (JVM хоста): полная обработка, затем повторная обработка по сценариям
+source scripts/env.sh && cd src/android/tools/jvm-smoke
+../../gradlew -p . run -q --args="--reprocess $ROOT/.cache/data/ru-dialog-tts-cats/audio/cats_c04_v0_call_overlap.wav \
+  $PWD/../../../../config/tiers/medium.json $ROOT/.cache/models --scenario 'utt=4' --scenario 'utt=5,6 recompute=true' \
+  --scenario 'utt=0 lang=en' --scenario 'utt=2 recompute=true speakers=4'"      # ключи: utt=i[,j] | from= to= | lang= | speakers= | recompute= | pad=
+# подбор порога эмбеддингов: пары «ref.json audio.wav»
+../../gradlew -p . run -q --args="--emb-check <cfg.json> <models-root> <ref.json> <audio.wav> ..."
+```
+Порог 0.55 (`SpeakerMatcher.DEFAULT_THRESHOLD`) подобран `--emb-check` на 9 dev-записях cats (192-мерные эмбеддинги medium, 195 пар «тот же»,
+373 «другой»): «тот же» — медиана 0.78, мин 0.59; «другой» — медиана 0.39, p95 0.72, на чистых записях ≤ 0.41, на телефонных/похожих
+голосах (irina/milena) до 0.8.
