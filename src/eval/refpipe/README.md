@@ -112,6 +112,14 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
   ASR и диаризация работают параллельно (по `num_threads` на каждую). Диаризация вынесена в **подпроцесс**: биндинг
   `OfflineSpeakerDiarization.process` держит GIL (проверено), и в потоке она сериализовала бы ASR. Доп. параметр
   `diarization.window_shift_ratio` (шаг окна pyannote/окно, по умолчанию 0.1; 0.5 примерно в 3-5 раз быстрее).
+* **Relabel** (`diarization.relabel`, `relabel.py`, порт `bench_diar/spkphrase.py`) — говорящие по ASR-фразам: после ASR и
+  диаризации, до Aligner. Юниты из слов (`gap_ms`, `max_unit_ms`, резка по доминирующему turn'у штатной диаризации при
+  `split_min_side_ms`), эмбеддинг юнита (`diarization.embedding`; `pad_ms`, `embed_max_s`, L2), надёжные юниты
+  (`min_reliable_ms`, `max_cluster_units`), ward, силуэт k∈[`k_min`,`k_max`], центроиды с весом длительности, `refine`.
+  Результат — turns юнитов вместо turns диаризатора. **Защита от монологов:** `k1_silhouette_thr` (лучший силуэт ниже порога → 1 говорящий)
+  и `k1_require_stock_single` (только если штатная диаризация тоже видит одного: не более одного говорящего с долей
+  ≥ `k1_stock_min_share`=0.10 речи). Эталонные кейсы для Kotlin: `tests/relabel_cases.json` (генератор `tools/make_relabel_cases.py`).
+  Датасет монологов: `tools/make_monologue.py` → `ru-monologue`.
 * **Aligner** (`align.py`) — строго §5, все неоднозначности зафиксированы в docstring; кейсы `tests/align_cases.json`
   (слова + turns + параметры -> ожидаемые реплики, 23 случая) — их же должен проходить Kotlin-порт.
 * **Punctuator** (`punct.py`) — `none` (слова lower без пунктуации), `asr_native` (слова с пунктуацией от

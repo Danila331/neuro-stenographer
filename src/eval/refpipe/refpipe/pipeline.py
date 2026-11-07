@@ -27,6 +27,7 @@ from .config import DEFAULTS, canonical, config_hash, deep_merge
 from .diar import Diarizer, SubprocessDiarizer
 from .lid import LanguageId, smooth_languages
 from .punct import make_punctuator
+from .relabel import Params as RelabelParams, UnitEmbedder, embed_units, label_units, make_units, stock_is_single
 from .types import SpeakerTurn, TimeSpan, Utterance, Word
 from .vad import SileroVad, speech_chunks
 
@@ -107,6 +108,8 @@ class Pipeline:
         if d.get("enabled", True):
             # in a subprocess: sherpa's diarization holds the GIL (see diar.py)
             self.diar = (SubprocessDiarizer if d.get("subprocess", True) else Diarizer)(d, self.root, dt)
+        self.relabel = (d.get("relabel") or {}) if (d.get("relabel") or {}).get("enabled") else None
+        self.embedder = UnitEmbedder(self.root / d["embedding"], dt) if self.relabel else None
         self.lid = None
         lang = cfg.get("language") or {}
         self.lang_mode = lang.get("mode", "auto")
@@ -147,6 +150,33 @@ class Pipeline:
             tmp = p.with_name(p.name + ".tmp")
             tmp.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
             tmp.replace(p)
+
+    def _relabel(self, x, words, stock_turns, audio_key):
+        """diarization.relabel: speakers from ASR phrases (relabel.py); the stock turns only give cut points."""
+        p = RelabelParams.from_config(self.relabel)
+        w = [(a.start_ms, a.end_ms) for a in words]
+        tt = [(t.speaker, t.start_ms, t.end_ms) for t in stock_turns] or None
+        units = make_units(w, tt, p)
+        if not units:
+            return stock_turns, {"units": 0}
+        ck = self._ckey("emb", audio_key, {"u": [(u[0], u[1]) for u in units], "m": self.cfg["diarization"]["embedding"],
+                                           "pad": p.pad_ms, "max": p.embed_max_s, "gain": self._diar_gain()})
+        hit = None
+        if ck and ck.with_suffix(".npy").is_file():
+            hit = np.load(ck.with_suffix(".npy"))
+        if hit is not None:
+            E = hit
+        else:
+            E = embed_units(x, units, self.embedder, p)
+            if ck:
+                np.save(ck.with_suffix(".npy"), E)
+        dur = np.array([u[1] - u[0] for u in units])
+        diag: dict = {}
+        lab = label_units(E, dur, p, diag, stock_is_single(tt, p.k1_stock_min_share))
+        out = [SpeakerTurn(int(l), u[0], u[1]) for u, l in zip(units, lab)]
+        return out, {"units": len(units), "k": int(len(set(int(l) for l in lab))),
+                     "silhouettes": {str(k): round(v, 4) for k, v in diag.get("silhouettes", {}).items()},
+                     "k1": bool(diag.get("k1", False)), "cos2": diag.get("cos2"), "cos_best": diag.get("cos_best")}
 
     def _diar_gain(self):
         """Diarization only depends on the gain config when the whole signal is normalised (scope all)."""
@@ -334,6 +364,12 @@ class Pipeline:
             from .postprocess import strip_dashes
 
             words = strip_dashes(words, sd)
+
+        if self.relabel and words:
+            t = time.perf_counter()
+            turns, rl_info = self._relabel(x, words, turns, audio_key)
+            info["relabel"] = rl_info
+            stage["relabel"] = _ms(t)
 
         t = time.perf_counter()
         utts = align(words, turns, AlignParams.from_config(cfg))

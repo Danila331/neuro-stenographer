@@ -195,12 +195,27 @@ MODELS: tuple[Model, ...] = (
          hf("csukuangfj/sherpa-onnx-pyannote-segmentation-3-0", "LICENSE")),
         "MIT (pyannote/segmentation-3.0, ONNX export by k2-fsa)", ("lite", "medium", "hard"), kind="diar-seg",
     ),
+    # speaker embeddings (3D-Speaker, Apache-2.0): one per tier, used by the relabel stage and the stock diarizer
+    *(
+        Model(path, (F(f"{GH}/speaker-recongition-models/{fname}", "model.onnx", size, sha,
+                       alias=(f"diar-emb-{fname[:-5]}/model.onnx",)),),
+              "Apache-2.0 (modelscope/3D-Speaker; the release notes defer to the model repository)", (tier,),
+              kind="diar-emb", note=note)
+        for path, fname, size, sha, tier, note in [
+            ("diar/emb-campplus-zh-cn", "3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx", 28281138,
+             "f682b514c05d947ee3fa91cd6ec6c5c7543479a128373fa29b1faedccd21fd11", "lite", "CAM++ (lite)"),
+            ("diar/emb-eres2net-base-200k", "3dspeaker_speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx", 39593765,
+             "e2d2048292e055f7b61cdec3db010503f35369b245bf0b3bbad021c9a91e4053", "medium", "ERes2Net base 200k (medium)"),
+            ("diar/emb-eres2netv2", "3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx", 71441526,
+             "bf1a75b9930474cf3389ef415e6e5d38ca96fea4a3a00f7e301d080a58ee2239", "hard", "ERes2Net v2 (hard)"),
+        ]
+    ),
     Model(
         "diar/embedding",
         (F(f"{GH}/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx",
            "model.onnx", 28281164, "aa3cfc16963a10586a9393f5035d6d6b57e98d358b347f80c2a30bf4f00ceba2"),),
-        "Apache-2.0 (modelscope/3D-Speaker CAM++ zh_en advanced)", ("lite", "medium", "hard"), kind="diar-emb",
-        note="default embedding; no Russian-trained model exists in sherpa-onnx -- diar-bench decides",
+        "Apache-2.0 (modelscope/3D-Speaker CAM++ zh_en advanced)", ("",), kind="diar-emb",
+        note="previous default embedding (superseded by diar/emb-* per tier)",
     ),
     *(
         Model(f"diar/embedding-{tag}", (F(f"{GH}/speaker-recongition-models/{fname}", "model.onnx", size),),
