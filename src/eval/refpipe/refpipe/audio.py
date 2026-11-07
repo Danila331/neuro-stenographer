@@ -133,3 +133,33 @@ def normalize_gain(x: np.ndarray, cfg: dict | None) -> tuple[np.ndarray, float]:
     if abs(g) < 1e-6:
         return x, 0.0
     return (x * (10.0 ** (g / 20.0))).astype(np.float32), g
+
+
+def segment_gain(x: np.ndarray, segments_ms: list, cfg: dict) -> np.ndarray:
+    """normalize_gain.scope = asr_segment: every VAD segment is peak-normalised on its own (same rule as normalize_gain,
+    per segment: gain = clip(peak_dbfs - segment_peak_dB, -max_attenuation_db, max_gain_db), never above -1 dBFS - peak;
+    segments with a peak below skip_if_peak_below_dbfs are left as they are).  Samples between segments are untouched."""
+    y = x.copy()
+    for a, b in segments_ms:
+        a_, b_ = a * 16, b * 16
+        if b_ > a_:
+            y[a_:b_] = normalize_gain(x[a_:b_], {**cfg, "enabled": True, "apply_if_peak_below_dbfs": None})[0]
+    return y
+
+
+def agc(x: np.ndarray, cfg: dict) -> np.ndarray:
+    """audio.agc (ASR input only): slow automatic gain control.  RMS per frame_ms window (hop = frame_ms/2); per-window
+    gain = clip(target_dbfs - rms_dB, 0, max_gain_db) (0 where rms_dB <= floor_dbfs); linear interpolation of the gain
+    between window centres; samples are multiplied by 10^(gain/20) and clipped to [-1, 1]."""
+    frame = int(cfg.get("frame_ms", 500) * 16)
+    hop = frame // 2
+    n = len(x)
+    if n < frame:
+        return x
+    starts = np.arange(0, n - frame + 1, hop)
+    rms = np.array([math.sqrt(float((x[s:s + frame] ** 2).mean()) + 1e-12) for s in starts])
+    db = 20 * np.log10(rms)
+    g = np.where(db > float(cfg.get("floor_dbfs", -58.0)),
+                 np.clip(float(cfg.get("target_dbfs", -24.0)) - db, 0, float(cfg.get("max_gain_db", 30.0))), 0.0)
+    gi = np.interp(np.arange(n), starts + frame // 2, g)
+    return np.clip(x * 10 ** (gi / 20), -1.0, 1.0).astype(np.float32)

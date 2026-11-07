@@ -22,6 +22,7 @@ DEFAULTS: dict[str, Any] = {
         "chunk": {"max_s": 25.0, "min_s": 1.0, "overlap_ms": 0},
         "second_pass": None,
         # refpipe extras (not in the architect's files; forward-compatible, Kotlin should mirror):
+        "blank_penalty": 0.0,     # transducer: penalty on the blank logit (sherpa blank_penalty)
         "batch_size": 1,          # chunks per decode call (1 = same as the Android per-chunk call)
         "word_tail_ms": 40,       # end of a word = last token start + tail (clipped by next word start)
         "word_start_offset_ms": 0,  # shift of all token timestamps (calibrate on aligned data)
@@ -87,7 +88,11 @@ def apply_overrides(cfg: dict, overrides: list[str] | None) -> dict:
     return cfg
 
 
+NON_PROCESSING_BLOCKS = ("live", "llm")  # do not change what the processing pipeline produces
+
+
 def canonical(cfg: dict) -> str:
+    """Canonical JSON of the PROCESSING config: sorted keys, no `_*` comment keys, no top-level `live` / `llm` blocks."""
     def strip(o):
         if isinstance(o, dict):
             return {k: strip(v) for k, v in o.items() if not k.startswith("_")}
@@ -95,7 +100,7 @@ def canonical(cfg: dict) -> str:
             return [strip(v) for v in o]
         return o
 
-    return json.dumps(strip(cfg), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return json.dumps(strip({k: v for k, v in cfg.items() if k not in NON_PROCESSING_BLOCKS}), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
 
 
 def config_hash(cfg: dict) -> str:

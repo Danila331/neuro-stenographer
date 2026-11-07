@@ -1,0 +1,1470 @@
+{
+ "args": {
+  "models": [
+   "1.7b"
+  ],
+  "docs": [
+   "M1",
+   "M2",
+   "M3",
+   "d1_budget",
+   "d2_bridge",
+   "d3_holiday"
+  ],
+  "tag": "nogram",
+  "n_ctx": 4096,
+  "no_grammar": true,
+  "min_support": 0.3,
+  "item_support": 0.5,
+  "no_relink": false,
+  "seg_model": "user2-small",
+  "target": 1500,
+  "k": 3,
+  "alpha": 0.0,
+  "merge_sim": 0.45,
+  "merge_cos": null,
+  "overview": false,
+  "threads": 4,
+  "extractive": false,
+  "flags": null
+ },
+ "peak": {
+  "rss_mb": 1521,
+  "uss_mb": 0,
+  "load_s": 0.3
+ },
+ "rows": [
+  {
+   "topics_gold": 5,
+   "topics_gen": 8,
+   "cov_range": 0.8,
+   "cov_kw": 0.6,
+   "cov_both": 0.8,
+   "points": 9,
+   "grounded": 1.0,
+   "attrib": 0.8888888888888888,
+   "facts": 6,
+   "facts_recall": 0.8333333333333334,
+   "who_n": 2,
+   "who_ok": 0.5,
+   "doc": "M1",
+   "model": "1.7b",
+   "wall_s": 64.0,
+   "frags": 10,
+   "prompt_tok": 3140,
+   "cached_tok": 4989,
+   "raw_topics": 8,
+   "relinked": 5,
+   "gen_tok": 1461,
+   "pp_s": 32.7,
+   "tg_s": 31.3,
+   "truncated": 0,
+   "refs": 87,
+   "ref_bad": 14,
+   "items": 42,
+   "dropped": 20,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 87,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Повестка вопросов",
+      "start_ms": 28733,
+      "end_ms": 43092,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Вопрос по повестке о сметане стоит на пятом месте, потому что нужно сначала решить вопросы с мышами на складе",
+        "refs": [
+         {
+          "n": 12,
+          "t": 33532,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Сначала решить вопросы с мышами на складе",
+        "refs": [
+         {
+          "n": 13,
+          "t": 36972,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Решить вопросы с мышами на складе до конца дня",
+        "refs": [
+         {
+          "n": 13,
+          "t": 36972,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Определение посла",
+      "start_ms": 43652,
+      "end_ms": 66323,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Согласие не требуется, повестка утверждена",
+        "refs": [
+         {
+          "n": 15,
+          "t": 43652,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_3",
+        "text": "Поняла, не вступила в согласие",
+        "refs": [
+         {
+          "n": 16,
+          "t": 46607,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Возражает против порядка вопросов",
+        "refs": [
+         {
+          "n": 19,
+          "t": 54527,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_3",
+        "text": "Несёт басик, диктует",
+        "refs": [
+         {
+          "n": 18,
+          "t": 51927,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Возражает против порядка вопросов, подпись Басик",
+        "refs": [
+         {
+          "n": 19,
+          "t": 54527,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Переходит к первому вопросу, кто доложит посла",
+        "refs": [
+         {
+          "n": 20,
+          "t": 63563,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Повестка утверждена",
+        "refs": [
+         {
+          "n": 15,
+          "t": 43652,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Кто доложит посла до конца встречи",
+        "refs": [
+         {
+          "n": 20,
+          "t": 63563,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Дежурство и отчётность",
+      "start_ms": 78799,
+      "end_ms": 119759,
+      "points": [],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Назначить дежурного Бакиру до понедельника",
+        "refs": [
+         {
+          "n": 36,
+          "t": 98799,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Покупка семги",
+      "start_ms": 120399,
+      "end_ms": 138271,
+      "points": [],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "купить семгу до среды",
+        "refs": [
+         {
+          "n": 46,
+          "t": 122439,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Закупка чайника",
+      "start_ms": 138711,
+      "end_ms": 175155,
+      "points": [],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Подготовить расчёт к пятницам",
+        "refs": [
+         {
+          "n": 58,
+          "t": 158071,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 1",
+        "text": "Запросить уточнение о новой меске для общего зала",
+        "refs": [
+         {
+          "n": 59,
+          "t": 166035,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Выбор миски",
+      "start_ms": 175475,
+      "end_ms": 194120,
+      "points": [
+       {
+        "speaker": "speaker_3",
+        "text": "Предлагает миску с рыбками, синей, с разными элементами",
+        "refs": [
+         {
+          "n": 65,
+          "t": 179115,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Согласен с рыбкой, но считает это другим дело",
+        "refs": [
+         {
+          "n": 67,
+          "t": 182595,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Два за, один против",
+        "refs": [
+         {
+          "n": 71,
+          "t": 190720,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Воздержаться от голосования",
+        "refs": [
+         {
+          "n": 71,
+          "t": 190720,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Представление данных о котах",
+      "start_ms": 200292,
+      "end_ms": 214892,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Число котов — 15",
+        "refs": [
+         {
+          "n": 74,
+          "t": 202412,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "tasks": []
+     },
+     {
+      "title": "Ловить мышей на складе",
+      "start_ms": 215372,
+      "end_ms": 242308,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Написать о отдыхе кота Барсика",
+        "refs": [
+         {
+          "n": 82,
+          "t": 227068,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Написать о отдыхе кота Барсика",
+        "refs": [
+         {
+          "n": 82,
+          "t": 227068,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 5,
+   "topics_gen": 7,
+   "cov_range": 1.0,
+   "cov_kw": 0.2,
+   "cov_both": 0.8,
+   "points": 8,
+   "grounded": 1.0,
+   "attrib": 1.0,
+   "facts": 9,
+   "facts_recall": 0.7777777777777778,
+   "who_n": 2,
+   "who_ok": 0.5,
+   "doc": "M2",
+   "model": "1.7b",
+   "wall_s": 39.4,
+   "frags": 7,
+   "prompt_tok": 1738,
+   "cached_tok": 3879,
+   "raw_topics": 7,
+   "relinked": 2,
+   "gen_tok": 997,
+   "pp_s": 17.8,
+   "tg_s": 21.6,
+   "truncated": 0,
+   "refs": 52,
+   "ref_bad": 5,
+   "items": 30,
+   "dropped": 11,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 54,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Познакомиться с новичком",
+      "start_ms": 556,
+      "end_ms": 23441,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Представляет себя, рассказывает о доме, языках и акценте",
+        "refs": [
+         {
+          "n": 2,
+          "t": 2876,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": []
+     },
+     {
+      "title": "Испытательный срок",
+      "start_ms": 23761,
+      "end_ms": 44605,
+      "points": [
+       {
+        "speaker": "speaker_3",
+        "text": "Предлагает испытательный срок две недели",
+        "refs": [
+         {
+          "n": 9,
+          "t": 23761,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Согласен с предложенным сроком",
+        "refs": [
+         {
+          "n": 10,
+          "t": 27441,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Решено на срок две недели с 20 ноября по 4 декабря",
+        "refs": [
+         {
+          "n": 11,
+          "t": 28241,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Испытательный срок две недели",
+        "refs": [
+         {
+          "n": 9,
+          "t": 23761,
+          "speaker": "speaker_3"
+         },
+         {
+          "n": 11,
+          "t": 28241,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Установить срок две недели с 20 ноября по 4 декабря",
+        "refs": [
+         {
+          "n": 11,
+          "t": 28241,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Распределение ложек по возрасту",
+      "start_ms": 45285,
+      "end_ms": 60690,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Общее количество ложек — 16",
+        "refs": [
+         {
+          "n": 23,
+          "t": 55490,
+          "speaker": "speaker_4"
+         }
+        ]
+       }
+      ],
+      "tasks": []
+     },
+     {
+      "title": "Пожаловаться на пса",
+      "start_ms": 61330,
+      "end_ms": 90934,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Пожаловаться на пса и указать время лайка",
+        "refs": [
+         {
+          "n": 30,
+          "t": 73254,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Пожаловаться на пса до 6:00 утра",
+        "refs": [
+         {
+          "n": 35,
+          "t": 86654,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Направление письма",
+      "start_ms": 91254,
+      "end_ms": 107159,
+      "points": [
+       {
+        "speaker": "speaker_3",
+        "text": "Предлагает направить письмо",
+        "refs": [
+         {
+          "n": 41,
+          "t": 99919,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Предлагают направить письмо",
+        "refs": [
+         {
+          "n": 41,
+          "t": 99919,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Составить текст письма",
+        "refs": [
+         {
+          "n": 42,
+          "t": 103199,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 3",
+        "text": "Направить письмо",
+        "refs": [
+         {
+          "n": 41,
+          "t": 99919,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Путешествие на море или горы",
+      "start_ms": 107559,
+      "end_ms": 134707,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Выбрано горы, отправляется 25 июля",
+        "refs": [
+         {
+          "n": 51,
+          "t": 127867,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Пойти на море или горы до 25 июля",
+        "refs": [
+         {
+          "n": 51,
+          "t": 127867,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Приказ о котах и порядке",
+      "start_ms": 135267,
+      "end_ms": 169927,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Согласен с принятием приказа и предлагает взять миску",
+        "refs": [
+         {
+          "n": 52,
+          "t": 135267,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_1",
+        "text": "Признает приказ, но с условием дополнительной рыбы по пятницам",
+        "refs": [
+         {
+          "n": 54,
+          "t": 144247,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Принимает приказ о котах и порядке",
+        "refs": [
+         {
+          "n": 54,
+          "t": 144247,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Василий Петрович",
+        "text": "Назначить ответственным за порядок котам",
+        "refs": [
+         {
+          "n": 54,
+          "t": 144247,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 5,
+   "topics_gen": 4,
+   "cov_range": 0.8,
+   "cov_kw": 0.4,
+   "cov_both": 0.6,
+   "points": 3,
+   "grounded": 1.0,
+   "attrib": 1.0,
+   "facts": 6,
+   "facts_recall": 0.16666666666666666,
+   "who_n": 0,
+   "who_ok": null,
+   "doc": "M3",
+   "model": "1.7b",
+   "wall_s": 87.4,
+   "frags": 7,
+   "prompt_tok": 1942,
+   "cached_tok": 3879,
+   "raw_topics": 4,
+   "relinked": 0,
+   "gen_tok": 1452,
+   "pp_s": 39.6,
+   "tg_s": 47.7,
+   "truncated": 0,
+   "refs": 106,
+   "ref_bad": 46,
+   "items": 22,
+   "dropped": 10,
+   "parse_failed": 1,
+   "repaired": 0,
+   "utts": 66,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Раздача рыбы",
+      "start_ms": 556,
+      "end_ms": 19116,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Слово предоставляется заведующей кухни",
+        "refs": [
+         {
+          "n": 1,
+          "t": 556,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Раздача 240 порций рыбы, рост на 28 порций, пришли новые коты",
+        "refs": [
+         {
+          "n": 2,
+          "t": 3196,
+          "speaker": "speaker_2"
+         },
+         {
+          "n": 4,
+          "t": 9716,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "раздать 212 порций рыбы",
+        "refs": [
+         {
+          "n": 4,
+          "t": 9716,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Показ картин",
+      "start_ms": 59256,
+      "end_ms": 83997,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Билеты будут стоить 50 руб.",
+        "refs": [
+         {
+          "n": 28,
+          "t": 77517,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "text": "50 руб. для котят слишком дорого",
+        "refs": [
+         {
+          "n": 29,
+          "t": 79877,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Записать Снежинку на 50 см",
+        "refs": [
+         {
+          "n": 26,
+          "t": 72757,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 1",
+        "text": "Билеты будут стоить 50 руб.",
+        "refs": [
+         {
+          "n": 28,
+          "t": 77517,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 3",
+        "text": "50 руб. для котят слишком дорого",
+        "refs": [
+         {
+          "n": 29,
+          "t": 79877,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Изменение режима дня",
+      "start_ms": 125573,
+      "end_ms": 140469,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Предлагает изменить режим дня, ждёт разрешения до 10:00 утра, переносит на 11, ужин, останется в 7 вечера, изменяет время между завтраком и ужином до 2 часов",
+        "refs": [
+         {
+          "n": 49,
+          "t": 125573,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Режим дня изменён",
+        "refs": [
+         {
+          "n": 49,
+          "t": 125573,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "tasks": []
+     },
+     {
+      "title": "Выбор имени Костюма",
+      "start_ms": 141869,
+      "end_ms": 175839,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Воздержавшийся",
+        "refs": [
+         {
+          "n": 57,
+          "t": 144709,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 3",
+        "text": "Писать, что воздержался",
+        "refs": [
+         {
+          "n": 57,
+          "t": 144709,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 2,
+   "topics_gen": 3,
+   "cov_range": 1.0,
+   "cov_kw": 1.0,
+   "cov_both": 1.0,
+   "points": 5,
+   "grounded": 1.0,
+   "attrib": 1.0,
+   "facts": 6,
+   "facts_recall": 0.8333333333333334,
+   "who_n": 0,
+   "who_ok": null,
+   "claims": 11,
+   "claims_recall": 0.18181818181818182,
+   "claims_misattr": 0.09090909090909091,
+   "doc": "d1_budget",
+   "model": "1.7b",
+   "wall_s": 24.1,
+   "frags": 3,
+   "prompt_tok": 1038,
+   "cached_tok": 1664,
+   "raw_topics": 3,
+   "relinked": 1,
+   "gen_tok": 453,
+   "pp_s": 13.9,
+   "tg_s": 10.2,
+   "truncated": 0,
+   "refs": 18,
+   "ref_bad": 0,
+   "items": 12,
+   "dropped": 0,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 19,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Покупка оборудования",
+      "start_ms": 0,
+      "end_ms": 75420,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Спрашивает о бюджете, витрине и сроке оплаты",
+        "refs": [
+         {
+          "n": 8,
+          "t": 54040,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Говорит о цене витрины, обещает договориться с Барсиком и передать размеры",
+        "refs": [
+         {
+          "n": 9,
+          "t": 61580,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Покупаем витрину до 30-го числа",
+        "refs": [
+         {
+          "n": 8,
+          "t": 54040,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Договориться с Барсиком и передать размеры прилавка",
+        "refs": [
+         {
+          "n": 9,
+          "t": 61580,
+          "speaker": "speaker_2"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 3",
+        "text": "Измерить размеры прилавка и передать письменно",
+        "refs": [
+         {
+          "n": 10,
+          "t": 68700,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Уборка площади",
+      "start_ms": 75820,
+      "end_ms": 112280,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Предлагает Мурку помочь на вторник и предлагает поднять оплату до 70 рублей с первого числа следующего месяца",
+        "refs": [
+         {
+          "n": 14,
+          "t": 97600,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Говорит о проблеме с оплатой и предлагает внести в бюджет",
+        "refs": [
+         {
+          "n": 12,
+          "t": 82520,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Поднять оплату до 70 рублей с первого числа следующего месяца",
+        "refs": [
+         {
+          "n": 14,
+          "t": 97600,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Поднять оплату до 70 рублей с первого числа следующего месяца до конца месяца",
+        "refs": [
+         {
+          "n": 14,
+          "t": 97600,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Проверка качества уборки",
+      "start_ms": 112680,
+      "end_ms": 140340,
+      "points": [
+       {
+        "speaker": "speaker_3",
+        "text": "Спрашивает, кто будет проверять качество уборки и предлагает пример с прошлым случаем",
+        "refs": [
+         {
+          "n": 16,
+          "t": 112680,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Ответственным будет Тишка",
+        "refs": [
+         {
+          "n": 17,
+          "t": 119380,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Назначить Тишки ответственным для уборки до завтра",
+        "refs": [
+         {
+          "n": 17,
+          "t": 119380,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 3,
+   "topics_gen": 4,
+   "cov_range": 1.0,
+   "cov_kw": 1.0,
+   "cov_both": 1.0,
+   "points": 4,
+   "grounded": 1.0,
+   "attrib": 1.0,
+   "facts": 5,
+   "facts_recall": 0.8,
+   "who_n": 0,
+   "who_ok": null,
+   "claims": 11,
+   "claims_recall": 0.45454545454545453,
+   "claims_misattr": 0.09090909090909091,
+   "doc": "d2_bridge",
+   "model": "1.7b",
+   "wall_s": 24.6,
+   "frags": 4,
+   "prompt_tok": 886,
+   "cached_tok": 2216,
+   "raw_topics": 4,
+   "relinked": 0,
+   "gen_tok": 520,
+   "pp_s": 10.7,
+   "tg_s": 13.9,
+   "truncated": 0,
+   "refs": 19,
+   "ref_bad": 2,
+   "items": 13,
+   "dropped": 1,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 18,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Ремонт моста",
+      "start_ms": 0,
+      "end_ms": 42740,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Нужно ускорить ремонт и спросить срок работы",
+        "refs": [
+         {
+          "n": 5,
+          "t": 31840,
+          "speaker": "speaker_1"
+         }
+        ]
+       },
+       {
+        "speaker": "speaker_2",
+        "text": "Мост сгнил, нужно ускорить работу, бригаде Рыжика понадобится 4 дня, закончить в четверг к вечеру",
+        "refs": [
+         {
+          "n": 6,
+          "t": 36860,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Ремонт начнёт в понедельник",
+        "refs": [
+         {
+          "n": 5,
+          "t": 31840,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Ускорить ремонт и уточнить срок работы",
+        "refs": [
+         {
+          "n": 5,
+          "t": 31840,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Заказ досок и гвоздей",
+      "start_ms": 43140,
+      "end_ms": 62000,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Заказать 40 досок и 2 мешка гвоздей",
+        "refs": [
+         {
+          "n": 8,
+          "t": 48580,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 2",
+        "text": "Оформить заказ сегодня",
+        "refs": [
+         {
+          "n": 8,
+          "t": 48580,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Ремонт и дежурство",
+      "start_ms": 62400,
+      "end_ms": 90040,
+      "points": [
+       {
+        "speaker": "speaker_3",
+        "text": "Предлагает поставить дежурного по временной тропе через камни, предлагает Пушку, получает согласие, уточняет сроки",
+        "refs": [
+         {
+          "n": 10,
+          "t": 62400,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Ремонт начнём в понедельник, Пушка будет дежурным, заказаны доски",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Предоставить выходной в субботу, начать ремонт в понедельник, назначить Пушку дежурного",
+        "refs": [
+         {
+          "n": 14,
+          "t": 83740,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "title": "Вырубка ёлок и объявление",
+      "start_ms": 90440,
+      "end_ms": 114320,
+      "points": [
+       {
+        "speaker": "speaker_2",
+        "text": "Запрашивает разрешение на вырубку ёлок и просит бумагу лесничего",
+        "refs": [
+         {
+          "n": 15,
+          "t": 90440,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Подготовит разрешение и отправит его завтра до обеда",
+        "refs": [
+         {
+          "n": 16,
+          "t": 97140,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 1",
+        "text": "Подготовит разрешение и отправит его завтра до обеда",
+        "refs": [
+         {
+          "n": 16,
+          "t": 97140,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "topics_gold": 4,
+   "topics_gen": 3,
+   "cov_range": 1.0,
+   "cov_kw": 1.0,
+   "cov_both": 1.0,
+   "points": 2,
+   "grounded": 1.0,
+   "attrib": 1.0,
+   "facts": 5,
+   "facts_recall": 0.4,
+   "who_n": 0,
+   "who_ok": null,
+   "claims": 9,
+   "claims_recall": 0.1111111111111111,
+   "claims_misattr": 0.0,
+   "doc": "d3_holiday",
+   "model": "1.7b",
+   "wall_s": 28.3,
+   "frags": 3,
+   "prompt_tok": 858,
+   "cached_tok": 1663,
+   "raw_topics": 3,
+   "relinked": 1,
+   "gen_tok": 655,
+   "pp_s": 10.7,
+   "tg_s": 17.6,
+   "truncated": 0,
+   "refs": 27,
+   "ref_bad": 12,
+   "items": 14,
+   "dropped": 8,
+   "parse_failed": 0,
+   "repaired": 0,
+   "utts": 16,
+   "json": {
+    "overview": "",
+    "topics": [
+     {
+      "title": "Покупка сметаны",
+      "start_ms": 0,
+      "end_ms": 33520,
+      "points": [
+       {
+        "speaker": "speaker_1",
+        "text": "Спрашивает о празднике и соглашается на покупку сметаны",
+        "refs": [
+         {
+          "n": 1,
+          "t": 0,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "decisions": [
+       {
+        "text": "Ферма Бурёнки привезёт 80 л сметаны бесплатно",
+        "refs": [
+         {
+          "n": 4,
+          "t": 20940,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ],
+      "tasks": []
+     },
+     {
+      "title": "Предложение о добровольцах",
+      "start_ms": 33920,
+      "end_ms": 51940,
+      "points": [
+       {
+        "speaker": "speaker_3",
+        "text": "Предлагает привлечь добровольцев из старших классов",
+        "refs": [
+         {
+          "n": 6,
+          "t": 33920,
+          "speaker": "speaker_3"
+         }
+        ]
+       }
+      ],
+      "decisions": [],
+      "tasks": []
+     },
+     {
+      "title": "Проведение конкурса и дегустации",
+      "start_ms": 52340,
+      "end_ms": 104280,
+      "points": [],
+      "decisions": [
+       {
+        "text": "Назначение конкурса на четыре часа дня.",
+        "refs": [
+         {
+          "n": 10,
+          "t": 58620,
+          "speaker": "speaker_1"
+         }
+        ]
+       }
+      ],
+      "tasks": [
+       {
+        "who": "Говорящий 3",
+        "text": "Проверить библиотеку в понедельник.",
+        "refs": [
+         {
+          "n": 14,
+          "t": 85420,
+          "speaker": "speaker_3"
+         }
+        ]
+       },
+       {
+        "who": "Говорящий 2",
+        "text": "Перенести праздник в два захода в случае дождя.",
+        "refs": [
+         {
+          "n": 15,
+          "t": 90860,
+          "speaker": "speaker_2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

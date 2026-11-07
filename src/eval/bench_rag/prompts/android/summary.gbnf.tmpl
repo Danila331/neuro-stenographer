@@ -1,0 +1,14 @@
+# GBNF for ONE fragment of the summary (B50). The app substitutes the placeholders for every call:
+#   {POINTS}     = point<K> | point<K2> | ...                 one alternative per speaker K present in the fragment
+#   {REF_ALL}    = "1" | "2" | ... | "<n>"                    n = number of lines in the fragment (local numbers, lines are numbered from 1)
+#   {SPK_RULES}  = for every speaker K two lines:
+#        point<K> ::= "{\"speaker\":<K>,\"refs\":[" r<K> ("," r<K>){0,2} "],\"text\":" str "}"
+#        r<K> ::= "<local numbers of K's own lines>"  as alternatives:  "1" | "3" | "6"
+# A point of speaker K can therefore cite only K's own lines: a reference to another speaker's line cannot be generated.
+root ::= "{\"title\":" str ",\"points\":[" point ("," point){0,5} "],\"decisions\":[" (dec ("," dec){0,2})? "],\"tasks\":[" (task ("," task){0,2})? "]}"
+point ::= {POINTS}
+dec ::= "{\"refs\":[" ref ("," ref){0,2} "],\"text\":" str "}"
+task ::= "{\"refs\":[" ref ("," ref){0,2} "],\"who\":" str ",\"text\":" str "}"
+ref ::= {REF_ALL}
+str ::= "\"" [^"\\\n]{1,140} "\""
+{SPK_RULES}
