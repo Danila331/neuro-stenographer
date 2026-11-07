@@ -63,7 +63,7 @@ class SearchService(private val context: Context, private val graph: AppGraph) {
 
     val embedder = EmbedderHolder(
         scope,
-        canLoad = { !isBusy() },
+        canLoad = { !isPipelineBusy() },
         source = {
             val cfg = config() ?: return@EmbedderHolder null
             val dir = graph.modelStore.activeDir() ?: return@EmbedderHolder null
@@ -77,8 +77,11 @@ class SearchService(private val context: Context, private val graph: AppGraph) {
 
     private fun root() = File(graph.filesDir(), "search").also { it.mkdirs() }
 
-    /** Память занята тяжёлой работой: индексировать/грузить эмбеддер сейчас нельзя. */
-    fun isBusy(): Boolean = ProcessingState.processing.value is ProcessingUi.Running || FragmentState.running || graph.summary.isRunning || answering
+    /** Идёт обработка записи или пересчёт фрагмента (ASR/диаризация в памяти): эмбеддер грузить нельзя. */
+    private fun isPipelineBusy(): Boolean = ProcessingState.processing.value is ProcessingUi.Running || FragmentState.running
+
+    /** Память занята тяжёлой работой (в т. ч. выжимкой и ответом LLM): фоновую индексацию откладываем. */
+    fun isBusy(): Boolean = isPipelineBusy() || graph.summary.isRunning || answering
 
     /** Почему ответ LLM сейчас недоступен (текст для пользователя) либо null, если можно. */
     fun llmUnavailableReason(): String? {
@@ -169,18 +172,22 @@ class SearchService(private val context: Context, private val graph: AppGraph) {
         namesCache.remove(entryId)
         queued.remove(entryId)
         _progress.update { it - entryId }
-        val b = bind() ?: return
-        runCatching {
-            b.engine.deleteRecord(entryId)
-            writeHashes(b, readHashes(b).also { it.remove(entryId) })
-        }.onFailure { Log.e(TAG, "search: не удалось удалить записи $entryId из индекса", it) }
+        scope.launch(Dispatchers.IO) {
+            val b = bind() ?: return@launch
+            runCatching {
+                b.engine.deleteRecord(entryId)
+                writeHashes(b, readHashes(b).also { it.remove(entryId) })
+            }.onFailure { Log.e(TAG, "search: не удалось удалить записи $entryId из индекса", it) }
+        }
     }
 
     fun onCleared() {
         queued.clear()
         _progress.value = emptyMap()
-        val b = bind() ?: return
-        runCatching { b.engine.retainOnly(emptySet()); writeHashes(b, emptyMap()) }
+        scope.launch(Dispatchers.IO) {
+            val b = bind() ?: return@launch
+            runCatching { b.engine.retainOnly(emptySet()); writeHashes(b, emptyMap()) }
+        }
     }
 
     /** При запуске: убрать из индекса удалённые записи, проиндексировать новые и достроить векторы. */
@@ -204,8 +211,8 @@ class SearchService(private val context: Context, private val graph: AppGraph) {
         queue.trySend(id)
     }
 
-    private fun ensureWorker() = synchronized(lock) {
-        if (worker?.isActive == true) return
+    private fun ensureWorker(): Unit = synchronized(lock) {
+        if (worker?.isActive == true) return@synchronized
         worker = scope.launch {
             for (id in queue) {
                 try {

@@ -287,3 +287,42 @@ source scripts/env.sh && cd src/android/tools/jvm-smoke
 Порог 0.55 (`SpeakerMatcher.DEFAULT_THRESHOLD`) подобран `--emb-check` на 9 dev-записях cats (192-мерные эмбеддинги medium, 195 пар «тот же»,
 373 «другой»): «тот же» — медиана 0.78, мин 0.59; «другой» — медиана 0.39, p95 0.72, на чистых записях ≤ 0.41, на телефонных/похожих
 голосах (irina/milena) до 0.8.
+
+## AI-поиск по записям (B51, `ru.neurosteno.core.search`, `:engine-embed`, `:store-objectbox`)
+
+Гибридный поиск по одной записи или по всей истории: **BM25** по основам слов (Snowball + обрезка до 5 символов, `SummaryText`) +
+**плотные векторы** (USER2-small для medium/hard, rubert-tiny-turbo для lite) + слияние **RRF** (k = 60, вес dense 0.5), **мягкий** фильтр
+говорящего из вопроса (`speaker_N`, «говорящий 2», «второй спикер», имена, заданные пользователем: +0.15 диапазона оценок окнам этого
+говорящего). Окна — `win3s1` (3 хода, шаг 1; «ход» = склейка соседних реплик одного говорящего). Ответ LLM — по топ-3 окнам, ссылки
+`[мм:сс, Говорящий N]` проверяет `AnswerBuilder.verify` (недействительные удаляются).
+
+| Что | Где |
+|---|---|
+| нарезка, BM25, `SpeakerQueryParser`, `HybridSearcher`, `AnswerBuilder`, `SearchEngine` (индексация + поиск), `BruteForceVectorStore`, `FileChunkStore` | `:core` `ru.neurosteno.core.search` (чистый JVM) |
+| токенайзеры: WordPiece (rubert-tiny-turbo) и byte-level BPE (USER2-small) — свои порты, бит в бит с Python `tokenizers` | `:core` `…search.tokenizer` |
+| `OrtTextEmbedder` (ONNX Runtime, int8, пулинг и префиксы — по `search.embedder`) | `:engine-embed` |
+| `ObjectBoxVectorStore` (HNSW, косинус, 384) | `:store-objectbox` |
+| `SearchService` (фоновая индексация после обработки, удаление записи → удаление векторов), `EmbedderHolder` (загрузка/выгрузка эмбеддера), `RealSearchRepository` | `:app` |
+
+**Лицензии.** onnxruntime-android — MIT (Maven Central). ObjectBox: Kotlin/Java API и генератор кода открыты (Apache-2.0 / AGPL-3.0 для
+генератора, выход генератора лицензией не затрагивается), **нативная библиотека `libobjectbox-jni.so` закрытая** (бинарная лицензия
+ObjectBox GmbH); при проблеме с ней `search.store.fallback = bruteforce` (int8-матрица в памяти + переранжирование f32; автоматически
+включается при ошибке открытия ObjectBox и для размерности ≠ 384). Стеммер — собственная реализация опубликованного алгоритма Snowball
+(код проекта). `libonnxruntime.so` у sherpa-onnx (1.28.2) и у onnxruntime-android (1.28.0) общая — в APK попадает одна (`pickFirsts`),
+оба JNI работают с ней (API 1.28). Все `.so` в APK выровнены на 16 КБ (`llvm-objdump -p`: align 2**14).
+
+**Данные и паритет.**
+```bash
+src/eval/bench_rag/.venv/bin/python src/android/scripts/gen_search_cases.py     # кейсы чанкера/BM25/RRF/ответа -> core/src/test/resources/search_cases.json
+src/eval/bench_rag/.venv/bin/python src/android/scripts/gen_tokenizer_cases.py  # id токенов Python tokenizers, 302 строки x 3 усечения
+src/eval/bench_rag/.venv/bin/python src/android/scripts/gen_embedder_cases.py   # эталонные векторы Python onnxruntime
+src/eval/bench_rag/.venv/bin/python src/android/scripts/gen_search_eval.py      # корпус cats + ответы Python (hit@5, MRR) -> $ROOT/.cache/search-eval/
+cd src/android && ./gradlew :core:test :engine-embed:testDebugUnitTest :store-objectbox:testDebugUnitTest
+```
+Модели `embed/<имя>/model.int8.onnx` — **наш экспорт** официальных весов (`python -m bench_rag.export_onnx`), в `config/models.json`
+`sha256_source: exported`; публичного URL пока нет, поэтому онлайн-наборы без эмбеддера (поиск тогда по BM25). `tokenizer.json` — файл
+автора модели.
+
+Отладка на устройстве (debug-сборка): `adb shell am broadcast -a ru.neurosteno.app.DEBUG_SEARCH -n <пакет>/ru.neurosteno.app.DebugSearchReceiver
+--es q_b64 <base64 utf-8> [--es record <id>] [--ez answer true]` или `--es cmd status|release`; результат — строки `search_debug …`,
+`search_index …`, `search_query …`, `search_answer …` в logcat (тег Neurosteno).

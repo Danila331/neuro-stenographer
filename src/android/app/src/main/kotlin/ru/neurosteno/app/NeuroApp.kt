@@ -12,6 +12,6 @@ class NeuroApp : Application() {
         // создаёт app-specific внешнюю папку силами самого приложения (иначе её владелец -- adb shell и приложение её не прочитает)
         runCatching { getExternalFilesDir(null) }
         // AI-поиск: достроить индекс записей, добавленных/удалённых без приложения (фон, очередь ждёт, пока память занята обработкой)
-        runCatching { graph.history; graph.search.syncAll() }
+        Thread({ runCatching { graph.search.syncAll() } }, "search-sync").start()
     }
 }
