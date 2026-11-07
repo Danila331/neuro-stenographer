@@ -50,11 +50,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Запись файла в место, выбранное пользователем (SAF). Возвращает сообщение об ошибке или null. */
     fun writeExport(uri: Uri, entryId: String, format: ExportFormat): String? {
+        if (format == ExportFormat.PDF) return writePdf(uri, entryId)
         val text = render(entryId, format) ?: return "Расшифровка ещё не загружена"
         return runCatching {
             getApplication<Application>().contentResolver.openOutputStream(uri, "wt")!!.use { it.write(text.toByteArray(Charsets.UTF_8)) }
             null
         }.getOrElse { "Не удалось сохранить файл: ${it.message ?: it.javaClass.simpleName}" }
+    }
+
+    /** PDF: шапка, легенда говорящих, реплики и протокол (если уже составлен). Нативный PdfDocument, без сети. */
+    private fun writePdf(uri: Uri, entryId: String): String? {
+        val doc = sessions[entryId]?.doc?.value ?: return "Расшифровка ещё не загружена"
+        val model = ru.neurosteno.app.export.PdfModelBuilder.build(graph.history.get(entryId), doc.transcript, graph.history.readProtocol(entryId))
+        return runCatching {
+            getApplication<Application>().contentResolver.openOutputStream(uri, "wt")!!.use { ru.neurosteno.app.export.PdfExporter(getApplication()).write(it, model) }
+            null
+        }.getOrElse { "Не удалось сохранить PDF: ${it.message ?: it.javaClass.simpleName}" }
     }
 
     override fun onCleared() {

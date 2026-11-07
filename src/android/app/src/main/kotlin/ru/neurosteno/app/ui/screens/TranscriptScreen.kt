@@ -277,7 +277,7 @@ fun TranscriptScreen(
                 },
             )
         },
-        bottomBar = { if (player.available) PlayerBar(player, session.player) },
+        bottomBar = { if (player.available) PlayerBar(player, session.player, utterances, highlight) },
         snackbarHost = { BrutalSnackbarHost(snackbar) },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
@@ -411,6 +411,7 @@ fun TranscriptScreen(
                     ExportFormat.TXT to "Текст с именами говорящих и временем",
                     ExportFormat.SRT to "Субтитры SubRip",
                     ExportFormat.VTT to "Субтитры WebVTT",
+                    ExportFormat.PDF to "Печатный документ: шапка, говорящие, реплики и протокол (если составлен)",
                     ExportFormat.FULL_JSON to "Слова, уверенность, модели, время по стадиям, имена говорящих",
                 ).forEach { (f, hint) ->
                     FormatRow(f.label, hint) { showFormats = false; onExport(f) }
@@ -604,7 +605,7 @@ private fun SearchBar(query: String, count: Int, cursor: Int, onQuery: (String) 
 }
 
 @Composable
-private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
+private fun PlayerBar(state: PlayerState, player: AudioPlayer, utterances: List<Utterance>, highlight: Set<Pair<Long, Long>>) {
     var dragging by remember { mutableStateOf<Float?>(null) }
     var speedMenu by remember { mutableStateOf(false) }
     val duration = state.durationMs.coerceAtLeast(1)
@@ -647,16 +648,27 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
                 }
             }
         }
+        // дорожка говорящих под плеером (B54): те же цвета, что у меток реплик; тап/протяжка -- перемотка
+        val timeline: @Composable () -> Unit = {
+            ru.neurosteno.app.ui.components.SpeakerTimeline(
+                utterances = utterances, highlighted = highlight, durationMs = state.durationMs, positionMs = state.positionMs,
+                onSeek = { player.seekTo(it) }, modifier = Modifier.padding(top = 4.dp),
+            )
+        }
         if (landscape) {
             // в альбомной ориентации плеер -- одна строка, чтобы остаться компактным и не съедать список реплик
-            Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                controls(Modifier)
-                seek(Modifier.weight(1f).padding(start = 12.dp))
+            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    controls(Modifier)
+                    seek(Modifier.weight(1f).padding(start = 12.dp))
+                }
+                timeline()
             }
         } else {
             Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
                 seek(Modifier.fillMaxWidth())
                 controls(Modifier.fillMaxWidth())
+                timeline()
             }
         }
     }

@@ -71,6 +71,9 @@ def config_paths(tier: str) -> list[str]:
         out.append(c["punctuation"]["model"])
     if c.get("llm", {}).get("model"):
         out.append(c["llm"]["model"])
+    live = c.get("live") or {}
+    if live.get("enabled") and live.get("model_dir"):  # потоковая модель живой расшифровки (B13); как в TierConfig.requiredModelPaths
+        out.append(live["model_dir"])
     return list(dict.fromkeys(out))
 
 

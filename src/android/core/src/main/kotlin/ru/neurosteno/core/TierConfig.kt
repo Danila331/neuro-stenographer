@@ -207,6 +207,8 @@ data class AsrConfig(
     @SerialName("max_active_paths") val maxActivePaths: Int = 4,
     @SerialName("hotwords_file") val hotwordsFile: String? = null,
     @SerialName("hotwords_score") val hotwordsScore: Double = 1.5,
+    /** Штраф за blank-токен в greedy-декодировании (sherpa `blank_penalty`); 0 -- выключен. >0 уменьшает удаления на дальнем поле. */
+    @SerialName("blank_penalty") val blankPenalty: Double = 0.0,
     val chunk: ChunkConfig = ChunkConfig(),
     @SerialName("second_pass") val secondPass: SecondPassConfig? = null,
     /** Размер батча чанков (используется только Python-эталоном; на Android чанки декодируются по одному). */

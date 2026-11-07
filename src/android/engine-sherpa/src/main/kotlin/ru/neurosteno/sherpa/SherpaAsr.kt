@@ -94,6 +94,7 @@ class SherpaAsr(
             maxActivePaths = cfg.maxActivePaths,
             hotwordsFile = hotwords?.absolutePath ?: "",
             hotwordsScore = cfg.hotwordsScore.toFloat(),
+            blankPenalty = cfg.blankPenalty.toFloat(),
         )
         return OfflineRecognizer(null, config).also { recognizer = it }
     }
