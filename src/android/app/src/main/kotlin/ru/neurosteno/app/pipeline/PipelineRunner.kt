@@ -25,6 +25,7 @@ import ru.neurosteno.core.fragment.FragmentRequest
 import ru.neurosteno.core.fragment.FragmentResult
 import ru.neurosteno.core.llm.LlmPunctuator
 import ru.neurosteno.llm.LlamaAssistant
+import ru.neurosteno.llm.toLlamaOptions
 import ru.neurosteno.sherpa.ModelRoot
 import ru.neurosteno.sherpa.SherpaAsr
 import ru.neurosteno.sherpa.SherpaDenoiser
@@ -100,7 +101,7 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
                     val file = llmFile ?: error("файл LLM не найден (${cfg.llm.model})")
                     LlamaAssistant.availability()?.let { error(it) }
                     // GPU-слои не передаём (0): ускорение только опционально, по умолчанию -- CPU (BACKLOG B11)
-                    val llm = LlamaAssistant(file, cfg.llm.nCtx, minOf(cfg.llm.nThreads, threads), gpuLayers = 0)
+                    val llm = LlamaAssistant(file, cfg.llm.nCtx, minOf(cfg.llm.nThreads, threads), gpuLayers = 0, options = cfg.llm.toLlamaOptions())
                     LlmPunctuator(llm, durationMs, cfg.llm.timeBudgetRtf)
                 }
             } else null,

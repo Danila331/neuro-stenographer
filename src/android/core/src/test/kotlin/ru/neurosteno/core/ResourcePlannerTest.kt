@@ -82,4 +82,30 @@ class ResourcePlannerTest {
         assertEquals(4, p4.numThreads)
         assertTrue(p4.llmPunctuation)
     }
+
+    private val withLive = medium.copy(live = LiveConfig(enabled = true, modelDir = "asr/streaming-zipformer-small-ru-int8", numThreads = 2))
+
+    @Test
+    fun `live preview enabled with enough memory and cores`() {
+        val p = ResourcePlanner.planLive(MemorySnapshot(4096, 2500), withLive, cores = 8)
+        assertTrue(p.enabled)
+        assertEquals(2, p.numThreads)
+    }
+
+    @Test
+    fun `live preview threads never exceed half of cores`() {
+        assertEquals(1, ResourcePlanner.planLive(MemorySnapshot(4096, 2500), withLive, cores = 2).numThreads)
+        assertEquals(2, ResourcePlanner.planLive(MemorySnapshot(4096, 2500), withLive, cores = 4).numThreads)
+    }
+
+    @Test
+    fun `live preview is off when config model memory or cores say so`() {
+        assertFalse(ResourcePlanner.planLive(MemorySnapshot(4096, 2500), medium, cores = 8).enabled) // нет блока live
+        assertFalse(ResourcePlanner.planLive(MemorySnapshot(4096, 2500), withLive, cores = 8, modelPresent = false).enabled)
+        assertFalse(ResourcePlanner.planLive(MemorySnapshot(4096, 300), withLive, cores = 8).enabled)
+        assertFalse(ResourcePlanner.planLive(MemorySnapshot(1024, 800), withLive, cores = 8).enabled)
+        assertFalse(ResourcePlanner.planLive(MemorySnapshot(4096, 2500, lowMemory = true), withLive, cores = 8).enabled)
+        assertFalse(ResourcePlanner.planLive(MemorySnapshot(4096, 2500), withLive, cores = 1).enabled)
+        assertTrue(ResourcePlanner.planLive(MemorySnapshot(4096, 300), withLive, cores = 8).reason!!.contains("свободной памяти"))
+    }
 }

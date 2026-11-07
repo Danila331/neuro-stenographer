@@ -29,6 +29,7 @@ struct Handle {
     const llama_vocab *vocab = nullptr;
     int n_ctx = 0;
     int n_batch = 0;
+    std::string options; // фактически применённые параметры (для диагностики и Kotlin-слоя)
     std::atomic<bool> abort{false};
 };
 
@@ -42,6 +43,18 @@ void set_error(const std::string &msg) {
 
 void log_cb(enum ggml_log_level level, const char *text, void *) {
     if (level == GGML_LOG_LEVEL_WARN || level == GGML_LOG_LEVEL_ERROR) NS_LOG("%s", text);
+}
+
+// "f16" | "q8_0" | "q4_0" -> тип ggml для K/V кэша; неизвестное значение = f16 (с предупреждением в лог).
+ggml_type parse_kv_type(const std::string &name) {
+    if (name == "q8_0") return GGML_TYPE_Q8_0;
+    if (name == "q4_0") return GGML_TYPE_Q4_0;
+    if (name != "f16" && !name.empty()) NS_LOG("неизвестный kv_cache_type '%s' -> f16", name.c_str());
+    return GGML_TYPE_F16;
+}
+
+const char *kv_name(ggml_type t) {
+    return t == GGML_TYPE_Q8_0 ? "q8_0" : t == GGML_TYPE_Q4_0 ? "q4_0" : "f16";
 }
 
 bool abort_cb(void *data) { return static_cast<Handle *>(data)->abort.load(); }
@@ -89,8 +102,16 @@ size_t utf8_complete_prefix(const std::string &s) {
 
 extern "C" {
 
+// Параметры памяти и скорости (BACKLOG B48), все -- через llama_model_params / llama_context_params этой версии llama.cpp:
+//   no_repack  -> model.use_extra_bufts = false   (веса не перепаковываются в отдельный буфер: -1 ГБ RSS у 1.7B, prefill медленнее);
+//   use_mmap   -> model.load_mode = MMAP | NONE   (в этой версии булево use_mmap заменено перечислением llama_load_mode);
+//   flash_attn -> ctx.flash_attn_type = ENABLED | DISABLED;
+//   kv_cache   -> ctx.type_k = ctx.type_v          (квантованный V требует flash attention: без него контекст не создаётся).
+// Обход: если kv_cache квантован, а flash_attn выключен -- flash включается принудительно; если контекст с такими параметрами
+// не создался (например, бэкенд не умеет flash attention для этой модели) -- повтор с f16 и flash AUTO.
 JNIEXPORT jlong JNICALL Java_ru_neurosteno_llm_LlamaNative_load(JNIEnv *env, jclass, jstring jpath, jint n_ctx, jint n_threads,
-                                                                jint n_gpu_layers) {
+                                                                jint n_gpu_layers, jboolean no_repack, jboolean flash_attn,
+                                                                jstring jkv, jboolean use_mmap) {
     std::call_once(g_backend_once, [] {
         llama_log_set(log_cb, nullptr);
         llama_backend_init();
@@ -98,10 +119,18 @@ JNIEXPORT jlong JNICALL Java_ru_neurosteno_llm_LlamaNative_load(JNIEnv *env, jcl
     const char *path = env->GetStringUTFChars(jpath, nullptr);
     std::string p(path);
     env->ReleaseStringUTFChars(jpath, path);
+    std::string kv_str = "f16";
+    if (jkv) {
+        const char *kv = env->GetStringUTFChars(jkv, nullptr);
+        kv_str = kv;
+        env->ReleaseStringUTFChars(jkv, kv);
+    }
 
     auto *h = new Handle();
     llama_model_params mp = llama_model_default_params();
     mp.n_gpu_layers = n_gpu_layers;
+    mp.use_extra_bufts = no_repack == JNI_FALSE;
+    mp.load_mode = use_mmap == JNI_TRUE ? LLAMA_LOAD_MODE_MMAP : LLAMA_LOAD_MODE_NONE;
     h->model = llama_model_load_from_file(p.c_str(), mp);
     if (!h->model) {
         set_error("не удалось загрузить модель: " + p);
@@ -109,6 +138,13 @@ JNIEXPORT jlong JNICALL Java_ru_neurosteno_llm_LlamaNative_load(JNIEnv *env, jcl
         return 0;
     }
     h->vocab = llama_model_get_vocab(h->model);
+
+    ggml_type kv_type = parse_kv_type(kv_str);
+    bool fa = flash_attn == JNI_TRUE;
+    if (kv_type != GGML_TYPE_F16 && !fa) {
+        NS_LOG("квантованный KV-кэш (%s) требует flash attention -- включаю его", kv_name(kv_type));
+        fa = true;
+    }
 
     llama_context_params cp = llama_context_default_params();
     cp.n_ctx = static_cast<uint32_t>(n_ctx);
@@ -119,7 +155,19 @@ JNIEXPORT jlong JNICALL Java_ru_neurosteno_llm_LlamaNative_load(JNIEnv *env, jcl
     cp.no_perf = true;
     cp.abort_callback = abort_cb;
     cp.abort_callback_data = h;
+    cp.flash_attn_type = fa ? LLAMA_FLASH_ATTN_TYPE_ENABLED : LLAMA_FLASH_ATTN_TYPE_DISABLED;
+    cp.type_k = kv_type;
+    cp.type_v = kv_type;
     h->ctx = llama_init_from_model(h->model, cp);
+    if (!h->ctx && (fa || kv_type != GGML_TYPE_F16)) {
+        NS_LOG("контекст не создан с flash_attn=%d kv=%s -- повтор: f16, flash AUTO", fa ? 1 : 0, kv_name(kv_type));
+        fa = false;
+        kv_type = GGML_TYPE_F16;
+        cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO;
+        cp.type_k = kv_type;
+        cp.type_v = kv_type;
+        h->ctx = llama_init_from_model(h->model, cp);
+    }
     if (!h->ctx) {
         set_error("не удалось создать контекст (мало памяти? n_ctx=" + std::to_string(n_ctx) + ")");
         llama_model_free(h->model);
@@ -128,6 +176,10 @@ JNIEXPORT jlong JNICALL Java_ru_neurosteno_llm_LlamaNative_load(JNIEnv *env, jcl
     }
     h->n_ctx = static_cast<int>(llama_n_ctx(h->ctx));
     h->n_batch = static_cast<int>(cp.n_batch);
+    h->options = std::string("no_repack=") + (mp.use_extra_bufts ? "0" : "1") + " mmap=" + (use_mmap == JNI_TRUE ? "1" : "0") +
+                 " flash_attn=" + llama_flash_attn_type_name(cp.flash_attn_type) + " kv=" + kv_name(kv_type) +
+                 " n_ctx=" + std::to_string(h->n_ctx) + " threads=" + std::to_string(n_threads);
+    NS_LOG("модель загружена: %s", h->options.c_str());
 
     llama_sampler_chain_params sp = llama_sampler_chain_default_params();
     sp.no_perf = true;
@@ -152,6 +204,12 @@ JNIEXPORT void JNICALL Java_ru_neurosteno_llm_LlamaNative_cancel(JNIEnv *, jclas
 
 JNIEXPORT jstring JNICALL Java_ru_neurosteno_llm_LlamaNative_lastError(JNIEnv *env, jclass) {
     return env->NewStringUTF(g_last_error.c_str()); // ASCII-безопасно: сообщения содержат только BMP-текст без суррогатов
+}
+
+// Фактически применённые параметры загрузки (после обходов), строкой `key=value ...`.
+JNIEXPORT jstring JNICALL Java_ru_neurosteno_llm_LlamaNative_options(JNIEnv *env, jclass, jlong handle) {
+    auto *h = reinterpret_cast<Handle *>(handle);
+    return env->NewStringUTF(h ? h->options.c_str() : "");
 }
 
 JNIEXPORT jstring JNICALL Java_ru_neurosteno_llm_LlamaNative_systemInfo(JNIEnv *env, jclass) {

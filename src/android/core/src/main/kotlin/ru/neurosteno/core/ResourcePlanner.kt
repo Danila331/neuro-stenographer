@@ -15,6 +15,9 @@ data class ResourcePlan(
     val degraded: Boolean get() = reasons.isNotEmpty()
 }
 
+/** Решение по живой расшифровке (B13): включать ли превью во время записи. */
+data class LivePlan(val enabled: Boolean, val numThreads: Int, val reason: String? = null)
+
 /**
  * Чистая функция «память + конфиг -> план ресурсов» (ARCHITECTURE: «Бюджет памяти»). Никаких исключений:
  * при нехватке памяти снижаем потоки и отключаем самые тяжёлые необязательные части, но обработка идёт.
@@ -80,5 +83,22 @@ object ResourcePlanner {
             reasons += "для LLM-пунктуации не хватает памяти (доступно $avail МБ, нужно ~${(llmMb * 1.25).toLong()} МБ)"
         }
         return ResourcePlan(threads, llm, second, denoise, reasons)
+    }
+
+    /**
+     * Живая расшифровка: потоковая модель (~100-150 МБ) работает только пока идёт запись, остальные модели в это время
+     * не загружены. Превью выключается, если его нет в конфиге, нет файлов модели, мало памяти (общей или свободной,
+     * либо система сообщает low memory) или ядер меньше двух (запись и распознавание мешали бы друг другу).
+     * Потоки: не больше [LiveConfig.numThreads] и не больше половины ядер -- микрофон и интерфейс не должны страдать.
+     */
+    fun planLive(memory: MemorySnapshot, cfg: TierConfig, cores: Int, modelPresent: Boolean = true): LivePlan {
+        val live = cfg.live
+        if (!live.enabled || live.modelDir == null) return LivePlan(false, 0, "превью не входит в этот вариант")
+        if (!modelPresent) return LivePlan(false, 0, "в наборе моделей нет потоковой модели")
+        if (cores < 2) return LivePlan(false, 0, "мало ядер процессора ($cores)")
+        if (memory.lowMemory) return LivePlan(false, 0, "системе не хватает памяти")
+        if (memory.totalMb in 1 until live.minTotalMb) return LivePlan(false, 0, "памяти устройства ${memory.totalMb} МБ < ${live.minTotalMb} МБ")
+        if (memory.availMb < live.minAvailMb) return LivePlan(false, 0, "свободной памяти ${memory.availMb} МБ < ${live.minAvailMb} МБ")
+        return LivePlan(true, maxOf(1, minOf(live.numThreads, cores / 2)))
     }
 }

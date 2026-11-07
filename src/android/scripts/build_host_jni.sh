@@ -11,7 +11,8 @@ ANDROID_DIR="$(cd "$HERE/.." && pwd)"
 command -v cmake >/dev/null || { echo "нет cmake в PATH (см. README: pip-колесо cmake в \$ROOT/.local)"; exit 1; }
 
 "$HERE/fetch_llama_cpp.sh" >/dev/null
-OUT="$NEUROSTENO_ROOT/.cache/android-deps/llm-host-build"
+# LLM_HOST_BUILD -- другой каталог сборки (у каждой рабочей копии свой: кэш CMake привязан к пути исходников)
+OUT="${LLM_HOST_BUILD:-$NEUROSTENO_ROOT/.cache/android-deps/llm-host-build}"
 mkdir -p "$OUT"
 GEN=()
 command -v ninja >/dev/null && GEN=(-G Ninja)

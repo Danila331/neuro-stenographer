@@ -1,14 +1,15 @@
 package ru.neurosteno.app.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,29 +20,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
@@ -53,9 +45,18 @@ import ru.neurosteno.app.models.ModelsStatus
 import ru.neurosteno.app.ui.Format
 import ru.neurosteno.app.ui.components.AppIcons
 import ru.neurosteno.app.ui.components.ConfirmDialog
-import ru.neurosteno.app.ui.components.IconLabel
 import ru.neurosteno.app.ui.components.MessageCard
 import ru.neurosteno.app.ui.components.NeuroTopBar
+import ru.neurosteno.app.ui.theme.Brutal
+import ru.neurosteno.app.ui.theme.BrutalButton
+import ru.neurosteno.app.ui.theme.BrutalButtonStyle
+import ru.neurosteno.app.ui.theme.BrutalCard
+import ru.neurosteno.app.ui.theme.BrutalIconButton
+import ru.neurosteno.app.ui.theme.BrutalPlaque
+import ru.neurosteno.app.ui.theme.BrutalProgress
+import ru.neurosteno.app.ui.theme.BrutalTag
+import ru.neurosteno.app.ui.theme.PlaqueKind
+import ru.neurosteno.app.ui.theme.SectionTitle
 
 object Tags {
     const val PICK_AUDIO = "btn_pick_audio"
@@ -83,33 +84,32 @@ fun HomeScreen(
 ) {
     var toDelete by remember { mutableStateOf<HistoryEntry?>(null) }
     Scaffold(
+        containerColor = Brutal.bg,
         topBar = {
             NeuroTopBar(
-                title = appName,
+                title = appName, titleMaxLines = 2,
                 actions = {
-                    IconButton(onClick = onModels) { Icon(AppIcons.Memory, contentDescription = "Модели") }
-                    IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, contentDescription = "Настройки") }
+                    BrutalIconButton(onClick = onModels, contentDescription = "Модели") { Icon(AppIcons.Memory, contentDescription = null) }
+                    BrutalIconButton(onClick = onSettings, contentDescription = "Настройки") { Icon(Icons.Default.Settings, contentDescription = null) }
                 },
             )
         },
     ) { padding ->
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
             val wide = maxWidth >= 720.dp
-            val actionPanel: @Composable () -> Unit = {
-                ActionPanel(models, activeSet, onPickAudio, onRecord, onModels)
-            }
+            val actionPanel: @Composable () -> Unit = { ActionPanel(models, activeSet, onPickAudio, onRecord, onModels) }
             if (wide) {
                 Row(Modifier.fillMaxSize().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Column(Modifier.weight(0.45f).verticalScroll(rememberScrollState()).padding(vertical = 8.dp)) { actionPanel() }
-                    LazyColumn(Modifier.weight(0.55f), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp)) {
+                    Column(Modifier.weight(0.45f).verticalScroll(rememberScrollState()).padding(vertical = 12.dp)) { actionPanel() }
+                    LazyColumn(Modifier.weight(0.55f), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)) {
                         historyItems(entries, onOpen) { toDelete = it }
                     }
                 }
             } else {
                 LazyColumn(
                     Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(top = 14.dp, bottom = 28.dp),
                 ) {
                     item { actionPanel() }
                     historyItems(entries, onOpen) { toDelete = it }
@@ -137,27 +137,24 @@ private fun ActionPanel(
     onRecord: () -> Unit,
     onModels: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Button(
-            onClick = onPickAudio,
-            modifier = Modifier.fillMaxWidth().height(72.dp).testTag(Tags.PICK_AUDIO),
-            shape = MaterialTheme.shapes.large,
-            colors = ButtonDefaults.buttonColors(),
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        BrutalButton(
+            onClick = onPickAudio, height = 92.dp,
+            modifier = Modifier.fillMaxWidth().testTag(Tags.PICK_AUDIO),
         ) {
-            Icon(AppIcons.AudioFile, contentDescription = null, modifier = Modifier.size(28.dp))
+            Icon(AppIcons.AudioFile, contentDescription = null, modifier = Modifier.size(30.dp))
             Spacer(Modifier.width(12.dp))
-            Text("Выбрать аудиофайл", style = MaterialTheme.typography.titleMedium)
+            Text("Выбрать аудиофайл", style = MaterialTheme.typography.titleLarge, color = androidx.compose.material3.LocalContentColor.current)
         }
-        FilledTonalButton(
-            onClick = onRecord,
-            modifier = Modifier.fillMaxWidth().height(64.dp).testTag(Tags.RECORD),
-            shape = MaterialTheme.shapes.large,
+        BrutalButton(
+            onClick = onRecord, style = BrutalButtonStyle.Secondary, height = 72.dp,
+            modifier = Modifier.fillMaxWidth().testTag(Tags.RECORD),
         ) {
-            Icon(AppIcons.Mic, contentDescription = null, modifier = Modifier.size(26.dp))
+            Icon(AppIcons.Mic, contentDescription = null, modifier = Modifier.size(28.dp))
             Spacer(Modifier.width(12.dp))
-            Text("Записать", style = MaterialTheme.typography.titleMedium)
+            Text("Записать", style = MaterialTheme.typography.titleLarge, color = androidx.compose.material3.LocalContentColor.current)
         }
-        IconLabel(AppIcons.Lock, "Обработка выполняется на устройстве", modifier = Modifier.padding(horizontal = 4.dp))
+        BrutalPlaque("Обработка выполняется на устройстве", kind = PlaqueKind.Ink) {}
         ModelsSummary(models, activeSet, onModels)
     }
 }
@@ -165,26 +162,25 @@ private fun ActionPanel(
 @Composable
 private fun ModelsSummary(models: ModelsStatus, activeSet: ModelSetRow?, onModels: () -> Unit) {
     when (models) {
-        is ModelsStatus.Checking -> Text("Проверка моделей…", style = MaterialTheme.typography.bodySmall)
-        is ModelsStatus.Installing -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Подготовка моделей (только при первом запуске): ${Format.percent(models.fraction)}", style = MaterialTheme.typography.bodyMedium)
-            LinearProgressIndicator(progress = { models.fraction }, modifier = Modifier.fillMaxWidth())
-            Text("Можно уже выбрать файл: обработка начнётся, как только модели будут готовы.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        is ModelsStatus.Checking -> BrutalTag("ПРОВЕРКА МОДЕЛЕЙ…")
+        is ModelsStatus.Installing -> BrutalCard(Modifier.fillMaxWidth(), fill = Brutal.panel) {
+            Text("Подготовка моделей (только при первом запуске): ${Format.percent(models.fraction)}", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+            BrutalProgress(models.fraction)
+            Spacer(Modifier.height(8.dp))
+            Text("Можно уже выбрать файл: обработка начнётся, как только модели будут готовы.", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
         }
         is ModelsStatus.Missing -> MessageCard(models.message, isError = true) {
-            OutlinedButton(onClick = onModels) { Text("Открыть «Модели»") }
+            BrutalButton(onClick = onModels, style = BrutalButtonStyle.Secondary, height = 48.dp) { Text("Открыть «Модели»", style = MaterialTheme.typography.labelLarge) }
         }
-        is ModelsStatus.Ready -> Card(
-            Modifier.fillMaxWidth().clickable(onClickLabel = "Открыть раздел «Модели»", onClick = onModels),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        ) {
-            Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(AppIcons.Memory, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Column(Modifier.weight(1f)) {
-                    Text("Набор моделей", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        is ModelsStatus.Ready -> BrutalCard(Modifier.fillMaxWidth(), onClick = onModels, onClickLabel = "Открыть раздел «Модели»") {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(AppIcons.Memory, contentDescription = null, modifier = Modifier.size(28.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    BrutalTag("НАБОР МОДЕЛЕЙ")
                     Text(
                         activeSet?.let { "${it.title}${if (it.builtin) " · встроенный" else " · загруженный"} · ${Format.bytes(it.sizeBytes)}" } ?: models.setId,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleSmall,
                     )
                 }
             }
@@ -198,18 +194,16 @@ private fun androidx.compose.foundation.lazy.LazyListScope.historyItems(
     onDelete: (HistoryEntry) -> Unit,
 ) {
     item(key = "history-header") {
-        Text(
-            if (entries.isEmpty()) "История расшифровок" else "История расшифровок · ${entries.size}",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SectionTitle("История")
+            if (entries.isNotEmpty()) BrutalTag("${entries.size}")
+        }
     }
     if (entries.isEmpty()) {
         item(key = "history-empty") {
             Text(
                 "Здесь появятся ваши расшифровки: выберите аудиофайл или запишите разговор.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge, color = Brutal.muted,
             )
         }
     } else {
@@ -221,26 +215,29 @@ private val dateFormat = ThreadLocal.withInitial { SimpleDateFormat("d MMM yyyy,
 
 @Composable
 private fun HistoryCard(e: HistoryEntry, onOpen: () -> Unit, onDelete: () -> Unit) {
-    val summary = buildString {
-        append(Format.clock(e.durationMs))
-        append(" · ").append(Format.plural(e.speakerCount, "говорящий", "говорящих", "говорящих"))
-        append(" · ").append(Format.plural(e.utteranceCount, "реплика", "реплики", "реплик"))
-    }
+    val speakers = Format.plural(e.speakerCount, "говорящий", "говорящих", "говорящих")
+    val utterances = Format.plural(e.utteranceCount, "реплика", "реплики", "реплик")
     val date = dateFormat.get()!!.format(Date(e.createdAt))
-    Card(
-        Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "Расшифровка ${e.title}, $date, $summary" }
-            .clickable(onClickLabel = "Открыть расшифровку", onClick = onOpen),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    BrutalCard(
+        Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "Расшифровка ${e.title}, $date, ${Format.clock(e.durationMs)}, $speakers, $utterances" },
+        onClick = onOpen, onClickLabel = "Открыть расшифровку",
+        contentPadding = PaddingValues(start = 14.dp, top = 12.dp, bottom = 12.dp, end = 6.dp),
     ) {
-        Row(Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(e.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("$date · $summary", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(verticalAlignment = Alignment.Top) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(e.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(date, style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
+                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    BrutalTag(Format.clock(e.durationMs), fill = Brutal.accent)
+                    BrutalTag(speakers)
+                    BrutalTag(utterances)
+                }
                 if (e.preview.isNotBlank()) {
-                    Text(e.preview, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+                    Text(e.preview, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
-            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Удалить расшифровку ${e.title}") }
+            BrutalIconButton(onClick = onDelete, contentDescription = "Удалить расшифровку ${e.title}") { Icon(Icons.Default.Delete, contentDescription = null) }
         }
     }
 }

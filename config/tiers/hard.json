@@ -19,6 +19,20 @@
       "scope": "asr"
     }
   },
+  "live": {
+    "enabled": true,
+    "_note": "B13: живая расшифровка при записи -- потоковая vosk-small-streaming-ru (zipformer, int8, Apache-2.0, 27 МБ). Только превью: итог даёт полная обработка. Работает лишь пока идёт запись; выгружается до обработки; выключается при нехватке памяти (ResourcePlanner.planLive).",
+    "model_dir": "asr/streaming-zipformer-small-ru-int8",
+    "num_threads": 2,
+    "min_avail_mb": 600,
+    "min_total_mb": 1800,
+    "endpoint": {
+      "min_trailing_silence_s": 0.8,
+      "start_silence_s": 2.4,
+      "max_utterance_s": 30.0
+    },
+    "keep_phrases": 200
+  },
   "vad": {
     "model": "silero-vad/silero_vad.onnx",
     "threshold": 0.3,

@@ -54,7 +54,7 @@ tasks.named<JavaExec>("run") {
     dependsOn(extractNative)
     val nativeDir = layout.buildDirectory.dir("native").get().asFile.absolutePath
     // + libneurosteno_llm (scripts/build_host_jni.sh), если собрана
-    val llmDir = "$root/.cache/android-deps/llm-host-build"
+    val llmDir = System.getenv("LLM_HOST_BUILD") ?: "$root/.cache/android-deps/llm-host-build"
     jvmArgs("-Djava.library.path=$nativeDir:$llmDir")
     environment("DYLD_LIBRARY_PATH", nativeDir)
     workingDir = projectDir

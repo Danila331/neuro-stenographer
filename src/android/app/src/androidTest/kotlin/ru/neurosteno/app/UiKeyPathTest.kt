@@ -27,7 +27,7 @@ import ru.neurosteno.app.data.HistoryEntry
 import ru.neurosteno.app.export.ExportFormat
 import ru.neurosteno.app.llm.LlmAvailability
 import ru.neurosteno.app.models.ModelsStatus
-import ru.neurosteno.app.ui.NeuroTheme
+import ru.neurosteno.app.ui.theme.NeuroTheme
 import ru.neurosteno.app.ui.TranscriptSession
 import ru.neurosteno.app.ui.screens.HomeScreen
 import ru.neurosteno.app.ui.screens.ProcessingScreen

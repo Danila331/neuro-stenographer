@@ -6,6 +6,20 @@ import java.util.concurrent.CancellationException
 import ru.neurosteno.core.LlmAssistant
 
 /**
+ * Параметры загрузки llama.cpp из `llm.*` конфига уровня: [noRepack] (`llama_model_params.use_extra_bufts = false`), [flashAttn],
+ * [kvCacheType] (`f16` | `q8_0` | `q4_0`; квантованный требует flash attention -- нативный слой включает его сам), [useMmap].
+ */
+data class LlamaOptions(
+    val noRepack: Boolean = false,
+    val flashAttn: Boolean = false,
+    val kvCacheType: String = "f16",
+    val useMmap: Boolean = true,
+)
+
+/** Параметры загрузки из секции `llm` конфига уровня. */
+fun ru.neurosteno.core.LlmConfig.toLlamaOptions() = LlamaOptions(noRepack, flashAttn, kvCacheType, useMmap)
+
+/**
  * [LlmAssistant] поверх llama.cpp (GGUF, CPU). Загружает модель в конструкторе; `close()` освобождает нативную память.
  *
  * Ускорение (GPU и т.п.) -- ТОЛЬКО опционально: при [gpuLayers] > 0 сначала пробуем с ним, при любой неудаче
@@ -21,6 +35,8 @@ class LlamaAssistant(
     nCtx: Int = 2048,
     nThreads: Int = 4,
     gpuLayers: Int = 0,
+    /** Память и скорость llama.cpp (B48); по умолчанию -- прежнее поведение (repack, f16, без flash attention). */
+    options: LlamaOptions = LlamaOptions(),
 ) : LlmAssistant {
 
     private var handle: Long = 0
@@ -29,18 +45,25 @@ class LlamaAssistant(
     /** Режим, в котором реально загружена модель (для диагностики/статистики). */
     val loadedWithGpuLayers: Int
 
+    /** Фактически применённые параметры загрузки (после обходов в нативном слое), для логов и диагностики. */
+    val appliedOptions: String
+
     init {
         availability()?.let { throw IOException("LLM недоступна: $it") }
         if (!modelFile.isFile) throw IOException("Нет файла модели: ${modelFile.path}")
         var layers = gpuLayers
-        var h = if (layers > 0) LlamaNative.load(modelFile.absolutePath, nCtx, nThreads, layers) else 0L
+        fun load(gpu: Int) = LlamaNative.load(
+            modelFile.absolutePath, nCtx, nThreads, gpu, options.noRepack, options.flashAttn, options.kvCacheType, options.useMmap,
+        )
+        var h = if (layers > 0) load(layers) else 0L
         if (h == 0L) {
             layers = 0
-            h = LlamaNative.load(modelFile.absolutePath, nCtx, nThreads, 0)
+            h = load(0)
         }
         if (h == 0L) throw IOException("Не удалось загрузить LLM: ${LlamaNative.lastError()}")
         handle = h
         loadedWithGpuLayers = layers
+        appliedOptions = LlamaNative.options(h)
     }
 
     override fun generate(prompt: String, maxTokens: Int, onToken: (String) -> Unit): String = synchronized(lock) {

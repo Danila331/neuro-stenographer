@@ -1,4 +1,4 @@
-# :app — интерфейс «Нейро-стенографиста» (Jetpack Compose, Material 3)
+# :app — интерфейс «Нейро-стенографиста» (Jetpack Compose, нео-брутализм поверх Material 3)
 
 Один экран-Activity (`MainActivity`) + `AppRoot` с простым стеком навигации (`nav/Nav.kt`, стек переживает поворот).
 Обработка идёт в foreground-сервисе (`ProcessingService`), интерфейс только наблюдает `ProcessingState`.
@@ -26,6 +26,44 @@ JSON и в строке logcat `done <имя>: … peak_pss_mb=… threads=… d
 так как используемый интерфейс llama.cpp не отдаёт токены промпта; в маркере это отмечено полем `prompt_tokens_estimated`.
 Если `results` недоступна для записи (остаток от другой установки/uid → `EACCES`), берётся `results-<uid>`, затем внутренняя `filesDir/results`;
 путь — в `results=` строки `done` и в `results_dir` маркера.
+
+## Дизайн-система (B52, `ui/theme`)
+
+Нео-брутализм по `docs/DESIGN_BRIEF.md`: белый фон и чёрный текст (тёмная тема -- инверсия), рамки 2-3 dp, жёсткие тени без размытия,
+радиус 3 dp, один неоновый акцент, 8 цветов говорящих с чёрным текстом.
+
+- `Accent.kt` -- акцент. **Один переключатель**: `AccentConfig.DEFAULT` (`GREEN` #B6FF00 или `PINK` #FF2E88). В debug-сборке акцент
+  меняется на лету: `adb shell am broadcast -a ru.neurosteno.app.DEBUG_ACCENT -p ru.neurosteno.app.medium --es accent pink` (green|pink|default).
+  Контраст чёрного текста на акценте (WCAG): зелёный 17,3:1, розовый 6,0:1; сам акцент как цвет текста не используется (на белом 1,2:1 / 3,5:1).
+- `Color.kt` -- `BrutalPalette`, `SpeakerPalette` (один и тот же цвет говорящего на всех экранах, через `speakerFill(id)`).
+- `Type.kt` -- шрифты OFL с кириллицей, вшиты в APK (`res/font`, лицензии в `assets/licenses`): Unbounded (заголовки), Golos Text (текст),
+  JetBrains Mono (время и числа). Все три -- вариативные, начертание задаётся `FontVariation`.
+- `Theme.kt` -- `NeuroTheme`, `Brutal` (bg, ink, accent, muted...), размеры `BrutalDims`, форма `BrutalShape`.
+- `Primitives.kt` -- `BrutalCard`/`BrutalSurface`, `BrutalButton` (нажатая «вдавливается» в тень), `BrutalIconButton`, `BrutalChip`, `SpeakerChip`,
+  `BrutalTag`, `BrutalPlaque`, `BrutalSwitch`, `BrutalProgress`, `BrutalSlider`, `BrutalTextField`, `SectionTitle`. Тень рисуется в зарезервированном
+  отступе справа/снизу, поэтому родители (LazyColumn, Scaffold) её не обрезают. `BrutalButton` по умолчанию -- по ширине содержимого;
+  `fillMaxWidth()`/`weight()` вызывающего растягивают и лицо кнопки.
+- Резерв под «Выжимку» (B50) и «AI-поиск» (B51): неактивные плитки «СКОРО» на экране расшифровки (`slot_summary`, `slot_ai_search`).
+- Скрипты скриншотов: `app/tools/redesign_shots.sh` (4 экрана x светлая/тёмная x оба акцента) и `app/tools/redesign_extra_shots.sh` (остальные экраны, шрифт x1,6, альбомная).
+
+## Живая расшифровка при записи (B13)
+
+Во время записи с микрофона экран «Запись» показывает текст по мере речи (превью). Итог -- обычная полная обработка после «Остановить»
+(точный текст, знаки, говорящие); живой текст только набросок и заменяется ею.
+
+- `:core` `live/`: `StreamingAsr` (интерфейс движка), `LivePreview` (накопление фраз), `LiveSession` (рабочий поток и очередь: поток
+  записи не блокируется, при отставании старый звук отбрасывается; модель создаётся и выгружается внутри сеанса), `StreamingModelFiles`.
+  Тесты на фейке: `LivePreviewTest`, `LiveSessionTest`, `StreamingModelFilesTest`.
+- `:engine-sherpa` `SherpaStreamingAsr`: `OnlineRecognizer` (zipformer-transducer, int8), endpoint detection по `live.endpoint.*`.
+- `:audio`: `AudioRecorder` отдаёт каждую порцию 100 мс в `onPcm`; источник звука -- `PcmSource` (микрофон; в debug -- WAV вместо микрофона).
+- `:app` `live/LiveController`: `ResourcePlanner.planLive` (RAM, ядра, наличие модели) -> включать ли превью; модель живёт только между началом
+  и концом записи и выгружается ДО полной обработки. Нет памяти/модели -- экран пишет причину, запись идёт как раньше.
+- Конфиг `config/tiers/*.json`, блок `live` (`enabled`, `model_dir` = `asr/streaming-zipformer-small-ru-int8`, потоки, пороги памяти, endpoint).
+  Модель необязательна: `requiredModelPaths()` её не включает, наборы без неё остаются полными (превью выключено).
+- Отладка без микрофона (эмулятор): `app/tools/live_check.sh <wav> <метка> [сек]` подаёт WAV в «Запись» в реальном времени
+  (`adb shell am broadcast -a ru.neurosteno.app.DEBUG_MIC_WAV --es path <wav>`, только debug), снимает экран и собирает метрики из лога (`live:`).
+- Подготовка набора для проверки до обновления `fetch_models.py`:
+  `scripts/stage_models.sh medium --map asr/streaming-zipformer-small-ru-int8=sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16`.
 
 ## Экраны (`ui/screens`)
 
@@ -90,7 +128,21 @@ python3 src/android/app/tools/gen_model_sets.py            # пересобра�
 `tools/uia.py` — минимальный adb+uiautomator (tap/wait/shot/type); кириллицу вводит через буфер обмена debug-сборки
 (`DebugClipReceiver`, только в `src/debug`).
 
+## LLM: протокол и вопросы (B48)
+
+* **Флаги llama.cpp из `llm.*` конфига** (`no_repack`, `flash_attn`, `kv_cache_type`, `use_mmap`) попадают в JNI (`LlamaOptions`, `LlmConfig.toLlamaOptions()`):
+  `no_repack` → `llama_model_params.use_extra_bufts = false`; `use_mmap` → `llama_model_params.load_mode = MMAP | NONE` (в этой версии llama.cpp булево
+  `use_mmap` заменено перечислением `llama_load_mode`); `flash_attn` → `llama_context_params.flash_attn_type`; KV → `type_k = type_v`. Обходы: квантованный KV
+  без flash attention невозможен (контекст не создаётся) — flash включается принудительно; если контекст с такими параметрами не создался, повтор с f16 и flash AUTO.
+  Фактически применённые параметры — `LlamaAssistant.appliedOptions`, в строке `llm_done … llama_opts="…"` и в `<имя>.llm.json`.
+  Хостовая проверка (Qwen3-1.7B, протокол одной расшифровки): пик RSS 2.71 → 1.64 ГБ, время запроса ×2–2.5 — `artifacts/test-results/llm-integration/`.
+* **Протокол** `protocol_mode = chunk_merge` (`ProtocolFlow`): запись режется по бюджету контекста, на каждый фрагмент — тот же `protocol_system.txt` (до 450 токенов),
+  разделы сливаются в коде (`ProtocolMerge.mergeProtocols`, порт `merge_protocols`); иной режим — прежнее «конспект → протокол». `filter_quotes` убирает цитаты, которых
+  нет в расшифровке дословно. Порт 1:1 сверяется с эталоном `bench_llm/android_flow.py` по примерам, посчитанным самим Python-кодом (`tools/gen_llm_cases.py` → `src/test/resources/llm_cases.json`).
+* **Вопросы:** если расшифровка не помещается в бюджет, она режется на фрагменты по `qa_chunk_budget_ratio` (0.25) от бюджета и берётся самый подходящий (≈ 1000 токенов на запрос).
+* **`llm.quality = draft`** (lite, Qwen3-0.6B): над протоколом плашка «Черновой протокол — упрощённая модель», в вопросах — предупреждение.
+* Промпты — ровно файлы `src/eval/bench_llm/prompts/android/` (тест `PromptAssetsTest` сверяет побайтно).
+
 ## Промпты LLM
 
-`assets/prompts/protocol_system.txt`, `qa_system.txt`, `protocol_notes_system.txt` — временные; их можно заменить файлами
-(llm-bench) без правки кода. Длинные записи: конспект по фрагментам → протокол; вопросы — выбор релевантных фрагментов.
+`assets/prompts/protocol_system.txt`, `qa_system.txt`, `protocol_notes_system.txt` — финальные версии llm-bench (`src/eval/bench_llm/prompts/android/`). Длинные записи: конспект по фрагментам → протокол; вопросы — выбор релевантных фрагментов.

@@ -178,4 +178,49 @@ class TierConfigTest {
         assertEquals("ru", c.language.effectiveMode)
         assertFalse(c.requiredModelPaths().contains("lid/m.onnx"))
     }
+
+    @Test
+    fun `llm runtime and protocol options default to the previous behaviour`() {
+        val c = TierConfig.parse("""{"llm":{"model":"llm/x.gguf"}}""").llm
+        assertFalse(c.noRepack)
+        assertFalse(c.flashAttn)
+        assertEquals("f16", c.kvCacheType)
+        assertTrue(c.useMmap)
+        assertFalse(c.chunkMergeProtocol)
+        assertFalse(c.filterQuotes)
+        assertEquals(1.0, c.qaChunkBudgetRatio, 0.0)
+        assertFalse(c.isDraft)
+    }
+
+    @Test
+    fun `shipped tier configs carry the B48 llm options`() {
+        for (tier in listOf("lite", "medium", "hard")) {
+            val c = TierConfig.parse(java.io.File(TestPaths.repoRoot, "config/tiers/$tier.json").readText()).llm
+            assertTrue(c.noRepack && c.flashAttn && c.useMmap && c.filterQuotes && c.chunkMergeProtocol, tier)
+            assertEquals("q8_0", c.kvCacheType, tier)
+            assertEquals(0.25, c.qaChunkBudgetRatio, 0.0, tier)
+            assertEquals(tier == "lite", c.isDraft, tier)
+        }
+    }
+
+    @Test
+    fun `shipped tier configs enable live preview with canonical model dir`() {
+        for (tier in listOf("lite", "medium", "hard")) {
+            val c = TierConfig.parse(load(tier))
+            assertTrue(c.live.enabled, tier)
+            assertEquals("asr/streaming-zipformer-small-ru-int8", c.live.modelDir, tier)
+            assertEquals(listOf("asr/streaming-zipformer-small-ru-int8"), c.optionalModelPaths(), tier)
+            // превью необязательно: его модель не входит ни в обязательные, ни в requiredModelPaths (наборы без неё остаются полными)
+            assertFalse("asr/streaming-zipformer-small-ru-int8" in c.requiredModelPaths(), tier)
+            assertFalse("asr/streaming-zipformer-small-ru-int8" in c.essentialModelPaths(), tier)
+            assertTrue(c.live.endpoint.minTrailingSilenceS in 0.3..2.0, tier)
+        }
+    }
+
+    @Test
+    fun `config without live block means no preview`() {
+        val c = TierConfig.parse("{\"tier\":\"x\"}")
+        assertFalse(c.live.enabled)
+        assertTrue(c.optionalModelPaths().isEmpty())
+    }
 }

@@ -2,32 +2,26 @@ package ru.neurosteno.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ru.neurosteno.app.models.DownloadUi
 import ru.neurosteno.app.models.ModelSetRow
@@ -35,6 +29,13 @@ import ru.neurosteno.app.ui.Format
 import ru.neurosteno.app.ui.components.ConfirmDialog
 import ru.neurosteno.app.ui.components.MessageCard
 import ru.neurosteno.app.ui.components.NeuroTopBar
+import ru.neurosteno.app.ui.theme.Brutal
+import ru.neurosteno.app.ui.theme.BrutalButton
+import ru.neurosteno.app.ui.theme.BrutalButtonStyle
+import ru.neurosteno.app.ui.theme.BrutalCard
+import ru.neurosteno.app.ui.theme.BrutalProgress
+import ru.neurosteno.app.ui.theme.BrutalTag
+import ru.neurosteno.app.ui.theme.ButtonLabel
 
 /** Действия над наборами моделей (общие для экрана «Модели» и первого запуска варианта online). */
 class ModelActions(
@@ -56,24 +57,26 @@ fun ModelsScreen(
     onDismissMessage: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Scaffold(topBar = { NeuroTopBar("Модели", onBack = onBack) }) { padding ->
+    Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Модели", onBack = onBack) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Text(
-                    "Все вычисления выполняются на устройстве. Интернет нужен только для скачивания наборов моделей — и только по вашей кнопке. " +
-                        "Свободно на устройстве: ${Format.bytes(freeBytes)}.",
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BrutalTag("СВОБОДНО ${Format.bytes(freeBytes).uppercase()}", fill = Brutal.accent)
+                    Text(
+                        "Все вычисления выполняются на устройстве. Интернет нужен только для скачивания наборов моделей — и только по вашей кнопке.",
+                        style = MaterialTheme.typography.bodyMedium, color = Brutal.muted,
+                    )
+                }
             }
-            if (message != null) item { MessageCard(message, isError = true) { TextButton(onClick = onDismissMessage) { Text("Понятно") } } }
+            if (message != null) item { MessageCard(message, isError = true) { BrutalButton(onClick = onDismissMessage, style = BrutalButtonStyle.Secondary, height = 44.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Понятно") } } }
             if (bundledSetId != null && rows.none { it.id == bundledSetId && it.installed }) {
                 item {
                     MessageCard("Встроенный набор «$bundledSetId» сейчас удалён из хранилища приложения. Его можно восстановить из APK без интернета.") {
-                        Button(onClick = actions.restoreBuiltin, modifier = Modifier.testTag("btn_restore_builtin")) { Text("Восстановить из APK") }
+                        BrutalButton(onClick = actions.restoreBuiltin, modifier = Modifier.fillMaxWidth().testTag("btn_restore_builtin")) { ButtonLabel("Восстановить из APK") }
                     }
                 }
             }
@@ -88,48 +91,46 @@ fun ModelSetCard(row: ModelSetRow, bundledSetId: String?, actions: ModelActions,
     var confirmDownload by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     val isBundled = row.id == bundledSetId
-    Card(
+    BrutalCard(
         Modifier.fillMaxWidth().semantics(mergeDescendants = false) { contentDescription = "Набор моделей ${row.title}" },
-        colors = CardDefaults.cardColors(
-            containerColor = if (row.active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
+        fill = if (row.active) Brutal.accent else Brutal.bg,
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Text(row.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                if (row.active) AssistChip(onClick = {}, label = { Text("Активный") })
-                else if (row.recommended && !row.installed) AssistChip(onClick = {}, label = { Text("Рекомендуем") })
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(row.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f, fill = false))
+                if (row.active) BrutalTag("АКТИВНЫЙ", fill = Brutal.ink)
+                else if (row.recommended && !row.installed) BrutalTag("РЕКОМЕНДУЕМ", fill = Brutal.accent)
             }
             if (row.description.isNotBlank()) Text(row.description, style = MaterialTheme.typography.bodyMedium)
-            Text(statusLine(row, isBundled), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(statusLine(row, isBundled), style = MaterialTheme.typography.labelMedium, color = if (row.active) Brutal.onAccent else Brutal.muted)
 
             when (val d = row.download) {
                 is DownloadUi.Running -> {
                     val frac = if (d.totalBytes > 0) (d.doneBytes.toFloat() / d.totalBytes).coerceIn(0f, 1f) else 0f
-                    LinearProgressIndicator(progress = { frac }, modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Загрузка набора ${row.title}: ${Format.percent(frac)}" })
+                    BrutalProgress(frac, Modifier.semantics { contentDescription = "Загрузка набора ${row.title}: ${Format.percent(frac)}" })
                     val eta = if (d.speedBps > 0) " · осталось ~${Format.duration((d.totalBytes - d.doneBytes) * 1000 / d.speedBps)}" else ""
                     val speed = if (d.speedBps > 0) " · ${Format.bytes(d.speedBps)}/с" else ""
                     val phase = if (d.file.startsWith("#")) d.file.drop(1) + "… " else ""
                     Text("$phase" + "Загружено ${Format.bytes(d.doneBytes)} из ${Format.bytes(d.totalBytes)} (${Format.percent(frac)})$speed$eta", style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(onClick = { actions.cancel(row.id) }) { Text("Отменить") }
+                    BrutalButton(onClick = { actions.cancel(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Отменить") }
                 }
                 DownloadUi.Queued -> {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    BrutalProgress(null)
                     Text("Ожидание сети или запуска…", style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(onClick = { actions.cancel(row.id) }) { Text("Отменить") }
+                    BrutalButton(onClick = { actions.cancel(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Отменить") }
                 }
                 is DownloadUi.Paused -> {
                     Text("Загрузка приостановлена: на устройстве уже ${Format.bytes(d.partialBytes)}. Можно продолжить с этого места.", style = MaterialTheme.typography.bodySmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { actions.download(row.id) }) { Text("Продолжить") }
-                        OutlinedButton(onClick = { actions.discardPartial(row.id) }) { Text("Удалить загруженное") }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        BrutalButton(onClick = { actions.download(row.id) }, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Продолжить") }
+                        BrutalButton(onClick = { actions.discardPartial(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Удалить загруженное") }
                     }
                 }
                 is DownloadUi.Failed -> {
                     MessageCard(d.message, isError = true)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { actions.download(row.id) }) { Text("Повторить") }
-                        if (d.partialBytes > 0) OutlinedButton(onClick = { actions.discardPartial(row.id) }) { Text("Сбросить") }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        BrutalButton(onClick = { actions.download(row.id) }, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Повторить") }
+                        if (d.partialBytes > 0) BrutalButton(onClick = { actions.discardPartial(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Сбросить") }
                     }
                 }
                 DownloadUi.Idle -> IdleActions(row, isBundled, primaryDownload, actions, onAskDownload = { confirmDownload = true }, onAskDelete = { confirmDelete = true })
@@ -172,20 +173,23 @@ private fun IdleActions(
     onAskDownload: () -> Unit,
     onAskDelete: () -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (row.installed) {
-            if (!row.active) Button(onClick = { actions.activate(row.id) }, modifier = Modifier.testTag("btn_activate_${row.id}")) { Text("Сделать активным") }
-            OutlinedButton(onClick = onAskDelete, modifier = Modifier.testTag("btn_delete_${row.id}")) {
-                Text(if (isBundled) "Удалить встроенный набор" else "Удалить")
+            if (!row.active) BrutalButton(onClick = { actions.activate(row.id) }, height = 48.dp, modifier = Modifier.fillMaxWidth().testTag("btn_activate_${row.id}")) { ButtonLabel("Сделать активным") }
+            BrutalButton(onClick = onAskDelete, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth().testTag("btn_delete_${row.id}")) {
+                ButtonLabel(if (isBundled) "Удалить встроенный набор" else "Удалить")
             }
         } else {
-            if (isBundled) Button(onClick = actions.restoreBuiltin) { Text("Восстановить из APK") }
+            if (isBundled) BrutalButton(onClick = actions.restoreBuiltin, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Восстановить из APK") }
             if (row.inCatalog && row.downloadBytes > 0) {
                 val label = "Скачать (${Format.bytes(row.downloadBytes)})"
-                if (primaryDownload && !isBundled) Button(onClick = onAskDownload, modifier = Modifier.testTag("btn_download_${row.id}")) { Text(label) }
-                else OutlinedButton(onClick = onAskDownload, modifier = Modifier.testTag("btn_download_${row.id}")) { Text(label) }
+                BrutalButton(
+                    onClick = onAskDownload, height = 48.dp,
+                    style = if (primaryDownload && !isBundled) BrutalButtonStyle.Primary else BrutalButtonStyle.Secondary,
+                    modifier = Modifier.fillMaxWidth().testTag("btn_download_${row.id}"),
+                ) { ButtonLabel(label) }
             }
-            if (row.incomplete && !row.inCatalog) OutlinedButton(onClick = onAskDelete) { Text("Удалить") }
+            if (row.incomplete && !row.inCatalog) BrutalButton(onClick = onAskDelete, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Удалить") }
         }
     }
 }
