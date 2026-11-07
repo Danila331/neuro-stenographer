@@ -136,6 +136,9 @@ fun TranscriptScreen(
     var speakerIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     var menuIndex by rememberSaveable { mutableStateOf<Int?>(null) }
 
+    // «Назад» при открытом поиске сначала закрывает поиск (а не выходит с экрана)
+    androidx.activity.compose.BackHandler(enabled = searching) { searching = false; session.setQuery("") }
+
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()

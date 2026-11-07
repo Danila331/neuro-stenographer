@@ -2,8 +2,10 @@ package ru.neurosteno.app.export
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import ru.neurosteno.app.data.RunInfo
 import ru.neurosteno.app.edit.EditableTranscript
 import ru.neurosteno.core.SrtExporter
 import ru.neurosteno.core.Transcript
@@ -30,7 +32,7 @@ object Exports {
      * Текст файла выбранного формата. Идентификаторы в [t] канонические (TranscriptEditor.canonical), поэтому имена
      * применяются напрямую. JSON по ТЗ имён не содержит -- только `speaker_N`.
      */
-    fun render(format: ExportFormat, t: EditableTranscript, source: Transcript): String {
+    fun render(format: ExportFormat, t: EditableTranscript, source: Transcript, run: RunInfo? = null): String {
         val tr = transcriptOf(t, source)
         val names: (String) -> String = { t.displayName(it) }
         return when (format) {
@@ -38,15 +40,28 @@ object Exports {
             ExportFormat.TXT -> TxtExporter(names).export(tr)
             ExportFormat.SRT -> SrtExporter(names).export(tr)
             ExportFormat.VTT -> VttExporter(names).export(tr)
-            ExportFormat.FULL_JSON -> fullJsonWithSpeakers(t, tr)
+            ExportFormat.FULL_JSON -> fullJsonWithSpeakers(t, tr, run)
         }
     }
 
     /** `toFullJson` из :core + ключ `speakers` (id -> отображаемое имя); основной блок `transcript` не меняется. */
-    private fun fullJsonWithSpeakers(t: EditableTranscript, tr: Transcript): String {
+    private fun fullJsonWithSpeakers(t: EditableTranscript, tr: Transcript, run: RunInfo?): String {
         val base = Json.parseToJsonElement(TranscriptJson.toFullJson(tr)) as JsonObject
         val speakers = buildJsonObject { t.speakerIds.forEach { put(it, t.displayName(it)) } }
-        val merged = JsonObject(LinkedHashMap(base).apply { put("speakers", speakers) })
+        val merged = JsonObject(LinkedHashMap(base).apply {
+            put("speakers", speakers)
+            // пик памяти, потоки и устройство -- в meta (BACKLOG B33); нулевые/пустые значения не пишем
+            if (run != null && this["meta"] is JsonObject) {
+                val meta = LinkedHashMap((this["meta"] as JsonObject).toMap())
+                if (run.peakPssMb > 0) meta["peak_pss_mb"] = JsonPrimitive(run.peakPssMb)
+                if (run.threads > 0) meta["threads"] = JsonPrimitive(run.threads)
+                if (run.device.isNotBlank()) meta["device_model"] = JsonPrimitive(run.device)
+                if (run.androidSdk > 0) meta["android_sdk"] = JsonPrimitive(run.androidSdk)
+                if (run.totalRamMb > 0) meta["total_ram_mb"] = JsonPrimitive(run.totalRamMb)
+                if (run.appVersion.isNotBlank()) meta["app_version"] = JsonPrimitive(run.appVersion)
+                put("meta", JsonObject(meta))
+            }
+        })
         return pretty.encodeToString(JsonObject.serializer(), merged)
     }
 

@@ -188,7 +188,8 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
             actions = modelActions, onDismissMessage = graph.modelsController::clearMessage, onBack = { nav.pop() },
         )
         Route.Settings -> SettingsScreen(
-            settings = settings, activeSet = activeSet, tier = BuildConfig.TIER, versionName = BuildConfig.VERSION_NAME,
+            settings = settings, configSpellsNumbers = graph.activeConfig()?.first?.postprocess?.spellNumbers ?: false,
+            activeSet = activeSet, tier = BuildConfig.TIER, versionName = BuildConfig.VERSION_NAME,
             historyBytes = remember(entries) { graph.history.usedBytes() },
             onChange = graph.settings::update,
             onModels = { nav.push(Route.Models) }, onStats = { nav.push(Route.Stats) },

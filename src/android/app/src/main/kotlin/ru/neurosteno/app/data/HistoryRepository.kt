@@ -30,13 +30,33 @@ data class HistoryEntry(
     val peakPssMb: Int = 0,
     val deviceTotalMb: Int = 0,
     val warnings: List<String> = emptyList(),
+    /** Число потоков обработки (из плана ресурсов) и устройство -- для статистики и расширенного JSON (B33). */
+    val threads: Int = 0,
+    val device: String = "",
+    val androidSdk: Int = 0,
+    val appVersion: String = "",
     /** Имя файла с копией аудио в каталоге записи (для встроенного плеера); null -- копия не сохранилась. */
     val audioFile: String? = null,
     val edited: Boolean = false,
 ) {
     val title: String get() = sourceName.substringBeforeLast('.', sourceName).ifBlank { sourceName }
     val rtf: Double get() = if (durationMs > 0 && processingMs > 0) processingMs.toDouble() / durationMs else 0.0
+
+    fun runInfo() = RunInfo(peakPssMb, threads, device, androidSdk, deviceTotalMb, appVersion)
 }
+
+/**
+ * Сведения о запуске обработки: пик PSS процесса, число потоков, устройство. Пишутся в `meta` расширенного JSON,
+ * в маркер `<имя>.done.json`, в строку `done …` logcat и в историю приложения (BACKLOG B33).
+ */
+data class RunInfo(
+    val peakPssMb: Int = 0,
+    val threads: Int = 0,
+    val device: String = "",
+    val androidSdk: Int = 0,
+    val totalRamMb: Int = 0,
+    val appVersion: String = "",
+)
 
 /**
  * История расшифровок в приватном каталоге приложения: `history/<id>/{entry.json, transcript.json, audio.<ext>, protocol.txt}`.
@@ -73,8 +93,7 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
         sourceName: String,
         transcript: Transcript,
         warnings: List<String> = emptyList(),
-        peakPssMb: Int = 0,
-        deviceTotalMb: Int = 0,
+        run: RunInfo = RunInfo(),
         modelSetId: String? = null,
         audio: (() -> InputStream)? = null,
     ): HistoryEntry = synchronized(lock) {
@@ -89,7 +108,7 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
         }
         val stored = StoredTranscript.of(transcript)
         File(dir, TRANSCRIPT).writeText(stored.encode(), Charsets.UTF_8)
-        val entry = describe(id, sourceName, created, stored, warnings, peakPssMb, deviceTotalMb, modelSetId, audioName)
+        val entry = describe(id, sourceName, created, stored, warnings, run, modelSetId, audioName)
         File(dir, ENTRY).writeText(JSON.encodeToString(HistoryEntry.serializer(), entry), Charsets.UTF_8)
         publish(entry)
         entry
@@ -103,7 +122,7 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
     fun saveTranscript(id: String, stored: StoredTranscript): HistoryEntry? = synchronized(lock) {
         val old = get(id) ?: return null
         File(dir(id), TRANSCRIPT).writeText(stored.encode(), Charsets.UTF_8)
-        val entry = describe(id, old.sourceName, old.createdAt, stored, old.warnings, old.peakPssMb, old.deviceTotalMb, old.modelSetId, old.audioFile)
+        val entry = describe(id, old.sourceName, old.createdAt, stored, old.warnings, old.runInfo(), old.modelSetId, old.audioFile)
             .copy(processingMs = old.processingMs, stageMs = old.stageMs, tier = old.tier, language = old.language, edited = stored.edited)
         File(dir(id), ENTRY).writeText(JSON.encodeToString(HistoryEntry.serializer(), entry), Charsets.UTF_8)
         publish(entry)
@@ -133,15 +152,16 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
 
     private fun describe(
         id: String, sourceName: String, created: Long, stored: StoredTranscript, warnings: List<String>,
-        peakPssMb: Int, deviceTotalMb: Int, modelSetId: String?, audioFile: String?,
+        run: RunInfo, modelSetId: String?, audioFile: String?,
     ): HistoryEntry {
         val preview = stored.utterances.firstOrNull()?.text?.let { if (it.length > PREVIEW_CHARS) it.take(PREVIEW_CHARS).trimEnd() + "…" else it } ?: ""
         return HistoryEntry(
             id = id, sourceName = sourceName, createdAt = created, durationMs = stored.meta.audioDurationMs,
             speakerCount = stored.utterances.map { it.speaker }.distinct().size, utteranceCount = stored.utterances.size,
             preview = preview, language = stored.meta.language, tier = stored.meta.tier, modelSetId = modelSetId,
-            processingMs = stored.meta.processingMs, stageMs = stored.meta.stageMs, peakPssMb = peakPssMb,
-            deviceTotalMb = deviceTotalMb, warnings = warnings, audioFile = audioFile, edited = stored.edited,
+            processingMs = stored.meta.processingMs, stageMs = stored.meta.stageMs, peakPssMb = run.peakPssMb,
+            deviceTotalMb = run.totalRamMb, warnings = warnings, threads = run.threads, device = run.device,
+            androidSdk = run.androidSdk, appVersion = run.appVersion, audioFile = audioFile, edited = stored.edited,
         )
     }
 

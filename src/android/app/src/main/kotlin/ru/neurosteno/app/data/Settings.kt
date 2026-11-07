@@ -14,6 +14,18 @@ enum class LanguageChoice(val id: String, val label: String) {
     }
 }
 
+/**
+ * Числа в тексте (`postprocess.numbers` конфига): [DIGITS] -- как выдаёт модель (`as_is`), [WORDS] -- словами («25» -> «двадцать пять»).
+ * [CONFIG] -- пользователь ещё не выбирал, действует значение из конфига уровня.
+ */
+enum class NumbersChoice(val id: String) {
+    CONFIG("config"), DIGITS("digits"), WORDS("words");
+
+    companion object {
+        fun of(id: String?) = entries.firstOrNull { it.id == id } ?: CONFIG
+    }
+}
+
 enum class ThemeChoice(val id: String, val label: String) {
     SYSTEM("system", "Как в системе"), LIGHT("light", "Светлая"), DARK("dark", "Тёмная");
 
@@ -27,6 +39,7 @@ data class AppSettings(
     /** 0 -- автоопределение числа говорящих, 1..8 -- фиксированное. */
     val numSpeakers: Int = 0,
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
+    val numbers: NumbersChoice = NumbersChoice.CONFIG,
     /** Пользователь удалил встроенный набор моделей: не восстанавливать его автоматически при запуске. */
     val builtinDeleted: Boolean = false,
 ) {
@@ -46,6 +59,7 @@ class SettingsRepository(context: Context) {
         language = LanguageChoice.of(prefs.getString(K_LANG, null)),
         numSpeakers = prefs.getInt(K_SPEAKERS, 0).coerceIn(0, AppSettings.MAX_SPEAKERS),
         theme = ThemeChoice.of(prefs.getString(K_THEME, null)),
+        numbers = NumbersChoice.of(prefs.getString(K_NUMBERS, null)),
         builtinDeleted = prefs.getBoolean(K_BUILTIN_DELETED, false),
     )
 
@@ -56,6 +70,7 @@ class SettingsRepository(context: Context) {
                 .putString(K_LANG, next.language.id)
                 .putInt(K_SPEAKERS, next.numSpeakers)
                 .putString(K_THEME, next.theme.id)
+                .putString(K_NUMBERS, next.numbers.id)
                 .putBoolean(K_BUILTIN_DELETED, next.builtinDeleted)
                 .apply()
             _state.value = next
@@ -66,6 +81,7 @@ class SettingsRepository(context: Context) {
         const val K_LANG = "language"
         const val K_SPEAKERS = "num_speakers"
         const val K_THEME = "theme"
+        const val K_NUMBERS = "numbers"
         const val K_BUILTIN_DELETED = "builtin_deleted"
     }
 }
