@@ -217,8 +217,10 @@ class PCfg:
 class Prepared:
     """Everything cached for one file / (seg, emb, shift, exclude_overlap)."""
 
-    def __init__(self, item_id: str, audio: np.ndarray, cfg: PCfg):
-        self.audio, self.cfg = audio, cfg
+    def __init__(self, item_id: str, audio: np.ndarray, cfg: PCfg, keep_audio: bool = True):
+        self.n_samples = len(audio)
+        self.audio = audio if keep_audio else None
+        self.cfg = cfg
         self.labels, self.sh, self.sm = stage_a(item_id, audio, cfg.seg, cfg.seg_int8, cfg.shift)
         tag = f"{cfg.seg}_{int(cfg.seg_int8)}_{cfg.shift}"
         self.pairs, self.embs = stage_b(item_id, audio, self.labels, self.sh, self.sm, tag, cfg.emb,
@@ -229,5 +231,5 @@ class Prepared:
         if cl is None:
             cl = cluster_fast(self.embs, c.threshold if threshold is None else threshold,
                               c.num_speakers if num_speakers is None else num_speakers)
-        return assemble(self.labels, self.sh, self.sm, len(self.audio), self.pairs, cl,
+        return assemble(self.labels, self.sh, self.sm, self.n_samples, self.pairs, cl,
                         c.min_on if min_on is None else min_on, c.min_off if min_off is None else min_off)
