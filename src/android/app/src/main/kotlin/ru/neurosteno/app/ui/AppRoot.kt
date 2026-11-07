@@ -32,6 +32,8 @@ import ru.neurosteno.app.ui.screens.ModelsScreen
 import ru.neurosteno.app.ui.screens.OnlineSetupScreen
 import ru.neurosteno.app.ui.screens.ProcessingScreen
 import ru.neurosteno.app.ui.screens.ProtocolScreen
+import ru.neurosteno.app.ui.screens.LicenseTextScreen
+import ru.neurosteno.app.ui.screens.LicensesScreen
 import ru.neurosteno.app.ui.screens.RecordScreen
 import ru.neurosteno.app.ui.screens.SearchActions
 import ru.neurosteno.app.ui.screens.SearchScreen
@@ -262,7 +264,7 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
             activeSet = activeSet, tier = BuildConfig.TIER, versionName = BuildConfig.VERSION_NAME,
             historyBytes = remember(entries) { graph.history.usedBytes() },
             onChange = graph.settings::update,
-            onModels = { nav.push(Route.Models) }, onStats = { nav.push(Route.Stats) },
+            onModels = { nav.push(Route.Models) }, onStats = { nav.push(Route.Stats) }, onLicenses = { nav.push(Route.Licenses) },
             onClearHistory = {
                 entries.forEach { vm.closeSession(it.id) }
                 graph.history.clear()
@@ -272,6 +274,15 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
         Route.Stats -> StatsScreen(
             entries = entries, deviceTotalMb = entries.maxOfOrNull { it.deviceTotalMb } ?: 0, tier = BuildConfig.TIER, onBack = { nav.pop() },
         )
+        Route.Licenses -> {
+            val notices = remember { ru.neurosteno.app.licenses.Notices.load(graph.appContext) }
+            LicensesScreen(notices, onOpen = { nav.push(Route.LicenseText(it.id)) }, onBack = { nav.pop() })
+        }
+        is Route.LicenseText -> {
+            val notice = remember(route.noticeId) { ru.neurosteno.app.licenses.Notices.load(graph.appContext).firstOrNull { it.id == route.noticeId } }
+            if (notice == null) LaunchedEffect(Unit) { nav.pop() }
+            else LicenseTextScreen(notice, remember(notice) { ru.neurosteno.app.licenses.Notices.licenseText(graph.appContext, notice) }, onBack = { nav.pop() })
+        }
         Route.Record -> {
             val rec by vm.recorder.ui.collectAsStateWithLifecycle()
             val liveUi by vm.live.ui.collectAsStateWithLifecycle()

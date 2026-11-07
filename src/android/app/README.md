@@ -101,6 +101,13 @@ JSON и в строке logcat `done <имя>: … peak_pss_mb=… threads=… d
   `InsightScreenshotsTest` снимает все состояния в светлой и тёмной теме (запуск вручную: `adb shell am instrument -w -e class ru.neurosteno.app.InsightScreenshotsTest ...`);
   `app/tools/insight_check.sh` -- сквозная проверка на эмуляторе на настоящих движках (выжимка, переходы, экспорт TXT/PDF, поиск и ответ).
 
+## Лицензии (Настройки → «Лицензии и модели»)
+
+Экран `LicensesScreen` (модели, библиотеки, шрифты; тап -- `LicenseTextScreen` с полным текстом из `assets/licenses/`, офлайн). Реестр -- `assets/third_party_notices.json`,
+его генерирует `src/android/tools/gen_notices.py` (версии из `libs.versions.toml`, поставляемые модели из `config/models.json`); сверка -- `docs/LICENSES.md`.
+Тесты: `licenses/NoticesTest` (JVM: лицензия и файл текста у каждого пункта, версии, полнота моделей), `LicensesScreenTest` (Compose, на устройстве).
+У CC BY 4.0 (Parakeet) и бинарной лицензии ObjectBox вложена только справка со ссылкой (`text_complete = false`).
+
 ## Экраны (`ui/screens`)
 
 | Экран | Что есть |
