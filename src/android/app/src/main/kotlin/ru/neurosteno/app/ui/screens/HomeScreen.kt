@@ -227,7 +227,8 @@ private fun HistoryCard(e: HistoryEntry, onOpen: () -> Unit, onDelete: () -> Uni
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(e.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(date, style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     BrutalTag(Format.clock(e.durationMs), fill = Brutal.accent)
                     BrutalTag(speakers)
                     BrutalTag(utterances)

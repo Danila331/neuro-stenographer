@@ -145,13 +145,13 @@ fun BrutalButton(
                 role = Role.Button
                 if (contentDescription != null) this.contentDescription = contentDescription
             },
+        propagateMinConstraints = true, // fillMaxWidth()/weight() вызывающего растягивают и лицо кнопки; без них -- ширина по содержимому
     ) {
         // тень остаётся на месте, лицо кнопки сдвигается к ней
         Box(Modifier.matchParentSize().offset(shadow, shadow).background(if (enabled) Brutal.ink else Brutal.muted, BrutalShape))
         Row(
             Modifier
                 .offset(shift, shift)
-                .fillMaxWidth()
                 .defaultMinSize(minHeight = height)
                 .background(if (enabled) fill else Brutal.panel, BrutalShape)
                 .border(BrutalDims.BorderThick, if (enabled) Brutal.ink else Brutal.muted, BrutalShape)

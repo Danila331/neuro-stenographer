@@ -1,0 +1,611 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 524,
+      "end_ms": 5724,
+      "text": "Ставлю на голосование предложение о новой меске для общего зала. Уточните. Синий размер большой на два лица.",
+      "words": [
+        {
+          "text": "Ставлю",
+          "start_ms": 524,
+          "end_ms": 764,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 844,
+          "end_ms": 884,
+          "confidence": null
+        },
+        {
+          "text": "голосование",
+          "start_ms": 924,
+          "end_ms": 1324,
+          "confidence": null
+        },
+        {
+          "text": "предложение",
+          "start_ms": 1484,
+          "end_ms": 1764,
+          "confidence": null
+        },
+        {
+          "text": "о",
+          "start_ms": 1924,
+          "end_ms": 1964,
+          "confidence": null
+        },
+        {
+          "text": "новой",
+          "start_ms": 2004,
+          "end_ms": 2124,
+          "confidence": null
+        },
+        {
+          "text": "меске",
+          "start_ms": 2244,
+          "end_ms": 2524,
+          "confidence": null
+        },
+        {
+          "text": "для",
+          "start_ms": 2564,
+          "end_ms": 2604,
+          "confidence": null
+        },
+        {
+          "text": "общего",
+          "start_ms": 2684,
+          "end_ms": 2924,
+          "confidence": null
+        },
+        {
+          "text": "зала.",
+          "start_ms": 3044,
+          "end_ms": 3204,
+          "confidence": null
+        },
+        {
+          "text": "Уточните.",
+          "start_ms": 3644,
+          "end_ms": 4044,
+          "confidence": null
+        },
+        {
+          "text": "Синий",
+          "start_ms": 4284,
+          "end_ms": 4444,
+          "confidence": null
+        },
+        {
+          "text": "размер",
+          "start_ms": 4804,
+          "end_ms": 4964,
+          "confidence": null
+        },
+        {
+          "text": "большой",
+          "start_ms": 5124,
+          "end_ms": 5284,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 5404,
+          "end_ms": 5444,
+          "confidence": null
+        },
+        {
+          "text": "два",
+          "start_ms": 5484,
+          "end_ms": 5524,
+          "confidence": null
+        },
+        {
+          "text": "лица.",
+          "start_ms": 5644,
+          "end_ms": 5724,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 5884,
+      "end_ms": 9644,
+      "text": "Синий цвет мне не нравится. У нас не конкурс цветов. А я не конкурсная.",
+      "words": [
+        {
+          "text": "Синий",
+          "start_ms": 5884,
+          "end_ms": 6044,
+          "confidence": null
+        },
+        {
+          "text": "цвет",
+          "start_ms": 6164,
+          "end_ms": 6284,
+          "confidence": null
+        },
+        {
+          "text": "мне",
+          "start_ms": 6484,
+          "end_ms": 6524,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 6644,
+          "end_ms": 6684,
+          "confidence": null
+        },
+        {
+          "text": "нравится.",
+          "start_ms": 6804,
+          "end_ms": 7084,
+          "confidence": null
+        },
+        {
+          "text": "У",
+          "start_ms": 7804,
+          "end_ms": 7844,
+          "confidence": null
+        },
+        {
+          "text": "нас",
+          "start_ms": 7884,
+          "end_ms": 7924,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 8004,
+          "end_ms": 8044,
+          "confidence": null
+        },
+        {
+          "text": "конкурс",
+          "start_ms": 8124,
+          "end_ms": 8404,
+          "confidence": null
+        },
+        {
+          "text": "цветов.",
+          "start_ms": 8484,
+          "end_ms": 8644,
+          "confidence": null
+        },
+        {
+          "text": "А",
+          "start_ms": 8844,
+          "end_ms": 8884,
+          "confidence": null
+        },
+        {
+          "text": "я",
+          "start_ms": 8964,
+          "end_ms": 9004,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 9044,
+          "end_ms": 9084,
+          "confidence": null
+        },
+        {
+          "text": "конкурсная.",
+          "start_ms": 9204,
+          "end_ms": 9644,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 9964,
+      "end_ms": 10124,
+      "text": "Можно мне?",
+      "words": [
+        {
+          "text": "Можно",
+          "start_ms": 9964,
+          "end_ms": 10004,
+          "confidence": null
+        },
+        {
+          "text": "мне?",
+          "start_ms": 10084,
+          "end_ms": 10124,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 10444,
+      "end_ms": 10844,
+      "text": "Я просто против.",
+      "words": [
+        {
+          "text": "Я",
+          "start_ms": 10444,
+          "end_ms": 10484,
+          "confidence": null
+        },
+        {
+          "text": "просто",
+          "start_ms": 10564,
+          "end_ms": 10604,
+          "confidence": null
+        },
+        {
+          "text": "против.",
+          "start_ms": 10804,
+          "end_ms": 10844,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 11164,
+      "end_ms": 12844,
+      "text": "Я лянок. Но я тоже имею.",
+      "words": [
+        {
+          "text": "Я",
+          "start_ms": 11164,
+          "end_ms": 11204,
+          "confidence": null
+        },
+        {
+          "text": "лянок.",
+          "start_ms": 11324,
+          "end_ms": 12004,
+          "confidence": null
+        },
+        {
+          "text": "Но",
+          "start_ms": 12204,
+          "end_ms": 12244,
+          "confidence": null
+        },
+        {
+          "text": "я",
+          "start_ms": 12324,
+          "end_ms": 12364,
+          "confidence": null
+        },
+        {
+          "text": "тоже",
+          "start_ms": 12484,
+          "end_ms": 12524,
+          "confidence": null
+        },
+        {
+          "text": "имею.",
+          "start_ms": 12684,
+          "end_ms": 12844,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 13124,
+      "end_ms": 13244,
+      "text": "Конечно,",
+      "words": [
+        {
+          "text": "Конечно,",
+          "start_ms": 13124,
+          "end_ms": 13244,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 13604,
+      "end_ms": 15804,
+      "text": "миска будет синяя, но с рыбками нарисованная.",
+      "words": [
+        {
+          "text": "миска",
+          "start_ms": 13604,
+          "end_ms": 13844,
+          "confidence": null
+        },
+        {
+          "text": "будет",
+          "start_ms": 13924,
+          "end_ms": 13964,
+          "confidence": null
+        },
+        {
+          "text": "синяя,",
+          "start_ms": 14124,
+          "end_ms": 14444,
+          "confidence": null
+        },
+        {
+          "text": "но",
+          "start_ms": 14604,
+          "end_ms": 14644,
+          "confidence": null
+        },
+        {
+          "text": "с",
+          "start_ms": 14764,
+          "end_ms": 14804,
+          "confidence": null
+        },
+        {
+          "text": "рыбками",
+          "start_ms": 14924,
+          "end_ms": 15204,
+          "confidence": null
+        },
+        {
+          "text": "нарисованная.",
+          "start_ms": 15324,
+          "end_ms": 15804,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 16044,
+      "end_ms": 16804,
+      "text": "Хорошая идея.",
+      "words": [
+        {
+          "text": "Хорошая",
+          "start_ms": 16044,
+          "end_ms": 16364,
+          "confidence": null
+        },
+        {
+          "text": "идея.",
+          "start_ms": 16524,
+          "end_ms": 16804,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 17084,
+      "end_ms": 19204,
+      "text": "С рыбками, но это другое дело.",
+      "words": [
+        {
+          "text": "С",
+          "start_ms": 17084,
+          "end_ms": 17124,
+          "confidence": null
+        },
+        {
+          "text": "рыбками,",
+          "start_ms": 17244,
+          "end_ms": 17644,
+          "confidence": null
+        },
+        {
+          "text": "но",
+          "start_ms": 18004,
+          "end_ms": 18044,
+          "confidence": null
+        },
+        {
+          "text": "это",
+          "start_ms": 18404,
+          "end_ms": 18444,
+          "confidence": null
+        },
+        {
+          "text": "другое",
+          "start_ms": 18684,
+          "end_ms": 18924,
+          "confidence": null
+        },
+        {
+          "text": "дело.",
+          "start_ms": 19044,
+          "end_ms": 19204,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 19444,
+      "end_ms": 21009,
+      "text": "Так голосуем. Разой куски?",
+      "words": [
+        {
+          "text": "Так",
+          "start_ms": 19444,
+          "end_ms": 19484,
+          "confidence": null
+        },
+        {
+          "text": "голосуем.",
+          "start_ms": 19684,
+          "end_ms": 20004,
+          "confidence": null
+        },
+        {
+          "text": "Разой",
+          "start_ms": 20209,
+          "end_ms": 20369,
+          "confidence": null
+        },
+        {
+          "text": "куски?",
+          "start_ms": 20609,
+          "end_ms": 21009,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 21969,
+      "end_ms": 22529,
+      "text": "Я тоже за.",
+      "words": [
+        {
+          "text": "Я",
+          "start_ms": 21969,
+          "end_ms": 22009,
+          "confidence": null
+        },
+        {
+          "text": "тоже",
+          "start_ms": 22169,
+          "end_ms": 22209,
+          "confidence": null
+        },
+        {
+          "text": "за.",
+          "start_ms": 22489,
+          "end_ms": 22529,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 23009,
+      "end_ms": 24489,
+      "text": "Хорошо, воздерживаюсь.",
+      "words": [
+        {
+          "text": "Хорошо,",
+          "start_ms": 23009,
+          "end_ms": 23049,
+          "confidence": null
+        },
+        {
+          "text": "воздерживаюсь.",
+          "start_ms": 23729,
+          "end_ms": 24489,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 25209,
+      "end_ms": 27769,
+      "text": "Два за. Один воздержался. Против— нет. Решение принято.",
+      "words": [
+        {
+          "text": "Два",
+          "start_ms": 25209,
+          "end_ms": 25289,
+          "confidence": null
+        },
+        {
+          "text": "за.",
+          "start_ms": 25409,
+          "end_ms": 25449,
+          "confidence": null
+        },
+        {
+          "text": "Один",
+          "start_ms": 25609,
+          "end_ms": 25689,
+          "confidence": null
+        },
+        {
+          "text": "воздержался.",
+          "start_ms": 25809,
+          "end_ms": 26169,
+          "confidence": null
+        },
+        {
+          "text": "Против—",
+          "start_ms": 26449,
+          "end_ms": 26569,
+          "confidence": null
+        },
+        {
+          "text": "нет.",
+          "start_ms": 26729,
+          "end_ms": 26769,
+          "confidence": null
+        },
+        {
+          "text": "Решение",
+          "start_ms": 27049,
+          "end_ms": 27289,
+          "confidence": null
+        },
+        {
+          "text": "принято.",
+          "start_ms": 27489,
+          "end_ms": 27769,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_3",
+      "start_ms": 28329,
+      "end_ms": 28609,
+      "text": "Няу.",
+      "words": [
+        {
+          "text": "Няу.",
+          "start_ms": 28329,
+          "end_ms": 28609,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-medium",
+    "tier": "medium",
+    "language": "ru",
+    "audio_duration_ms": 30015,
+    "processing_ms": 7672,
+    "rtf": 0.256,
+    "stage_ms": {
+      "decode": 92,
+      "vad": 545,
+      "lid": 953,
+      "asr": 4652,
+      "diarization": 4272,
+      "align": 2,
+      "punctuation": 0,
+      "export": 2,
+      "relabel": 1341,
+      "total": 7672
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/emb-eres2net-base-200k/model.onnx",
+      "llm": "llm/qwen3-1.7b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 533,
+    "threads": 4,
+    "device_model": "Google sdk_gphone64_arm64",
+    "android_sdk": 35,
+    "total_ram_mb": 3920
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1",
+    "speaker_2": "Говорящий 2",
+    "speaker_3": "Говорящий 3"
+  }
+}

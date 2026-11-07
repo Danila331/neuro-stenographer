@@ -76,8 +76,11 @@ fun NeuroTopBar(
             if (onBack != null) {
                 BrutalIconButton(onClick = onBack, contentDescription = "Назад") { M3Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
             }
+            // при крупном системном шрифте длинное слово заголовка не помещается в строку -- уменьшаем кегль, а не рвём слово
+            val big = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f
+            val titleStyle = MaterialTheme.typography.titleLarge.let { if (big) it.copy(fontSize = it.fontSize * 0.6f, lineHeight = it.lineHeight * 0.6f) else it }
             Text(
-                title, style = MaterialTheme.typography.titleLarge, color = Brutal.ink, maxLines = titleMaxLines, overflow = TextOverflow.Ellipsis,
+                title, style = titleStyle, color = Brutal.ink, maxLines = titleMaxLines, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).padding(horizontal = 4.dp).semantics { heading() },
             )
             actions()

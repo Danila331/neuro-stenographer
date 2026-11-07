@@ -72,11 +72,11 @@ fun ModelsScreen(
                     )
                 }
             }
-            if (message != null) item { MessageCard(message, isError = true) { BrutalButton(onClick = onDismissMessage, style = BrutalButtonStyle.Secondary, height = 44.dp) { ButtonLabel("Понятно") } } }
+            if (message != null) item { MessageCard(message, isError = true) { BrutalButton(onClick = onDismissMessage, style = BrutalButtonStyle.Secondary, height = 44.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Понятно") } } }
             if (bundledSetId != null && rows.none { it.id == bundledSetId && it.installed }) {
                 item {
                     MessageCard("Встроенный набор «$bundledSetId» сейчас удалён из хранилища приложения. Его можно восстановить из APK без интернета.") {
-                        BrutalButton(onClick = actions.restoreBuiltin, modifier = Modifier.testTag("btn_restore_builtin")) { ButtonLabel("Восстановить из APK") }
+                        BrutalButton(onClick = actions.restoreBuiltin, modifier = Modifier.fillMaxWidth().testTag("btn_restore_builtin")) { ButtonLabel("Восстановить из APK") }
                     }
                 }
             }
@@ -112,25 +112,25 @@ fun ModelSetCard(row: ModelSetRow, bundledSetId: String?, actions: ModelActions,
                     val speed = if (d.speedBps > 0) " · ${Format.bytes(d.speedBps)}/с" else ""
                     val phase = if (d.file.startsWith("#")) d.file.drop(1) + "… " else ""
                     Text("$phase" + "Загружено ${Format.bytes(d.doneBytes)} из ${Format.bytes(d.totalBytes)} (${Format.percent(frac)})$speed$eta", style = MaterialTheme.typography.bodySmall)
-                    BrutalButton(onClick = { actions.cancel(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp) { ButtonLabel("Отменить") }
+                    BrutalButton(onClick = { actions.cancel(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Отменить") }
                 }
                 DownloadUi.Queued -> {
                     BrutalProgress(null)
                     Text("Ожидание сети или запуска…", style = MaterialTheme.typography.bodySmall)
-                    BrutalButton(onClick = { actions.cancel(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp) { ButtonLabel("Отменить") }
+                    BrutalButton(onClick = { actions.cancel(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Отменить") }
                 }
                 is DownloadUi.Paused -> {
                     Text("Загрузка приостановлена: на устройстве уже ${Format.bytes(d.partialBytes)}. Можно продолжить с этого места.", style = MaterialTheme.typography.bodySmall)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        BrutalButton(onClick = { actions.download(row.id) }, height = 48.dp) { ButtonLabel("Продолжить") }
-                        BrutalButton(onClick = { actions.discardPartial(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp) { ButtonLabel("Удалить загруженное") }
+                        BrutalButton(onClick = { actions.download(row.id) }, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Продолжить") }
+                        BrutalButton(onClick = { actions.discardPartial(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Удалить загруженное") }
                     }
                 }
                 is DownloadUi.Failed -> {
                     MessageCard(d.message, isError = true)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        BrutalButton(onClick = { actions.download(row.id) }, height = 48.dp) { ButtonLabel("Повторить") }
-                        if (d.partialBytes > 0) BrutalButton(onClick = { actions.discardPartial(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp) { ButtonLabel("Сбросить") }
+                        BrutalButton(onClick = { actions.download(row.id) }, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Повторить") }
+                        if (d.partialBytes > 0) BrutalButton(onClick = { actions.discardPartial(row.id) }, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Сбросить") }
                     }
                 }
                 DownloadUi.Idle -> IdleActions(row, isBundled, primaryDownload, actions, onAskDownload = { confirmDownload = true }, onAskDelete = { confirmDelete = true })

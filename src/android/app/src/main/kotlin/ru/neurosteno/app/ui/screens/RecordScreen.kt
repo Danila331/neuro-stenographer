@@ -71,7 +71,7 @@ fun RecordScreen(
             }
             if (permissionDenied) {
                 MessageCard("Для записи нужен доступ к микрофону. Выбор готового файла работает и без него.") {
-                    BrutalButton(onClick = onOpenAppSettings, style = BrutalButtonStyle.Secondary, height = 48.dp) { ButtonLabel("Открыть настройки приложения") }
+                    BrutalButton(onClick = onOpenAppSettings, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Открыть настройки приложения") }
                 }
             }
             ui.error?.let { MessageCard(it, isError = true) }

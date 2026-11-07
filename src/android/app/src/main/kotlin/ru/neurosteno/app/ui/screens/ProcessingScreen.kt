@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
+import ru.neurosteno.app.ui.theme.BrutalDivider
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -105,7 +107,7 @@ fun ProcessingScreen(
         }
     }
     val stagesBlock: @Composable () -> Unit = {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             val stages = buildList {
                 addAll(VISIBLE_STAGES)
                 state.fractions[Stage.DENOISE]?.let { if (it in 0.001f..0.999f) add(1, Stage.DENOISE) }
@@ -113,25 +115,28 @@ fun ProcessingScreen(
             stages.forEach { st -> StageRow(st, state.fractions[st] ?: 0f, active = state.fractions[st]?.let { it > 0f && it < 1f } == true) }
         }
     }
-    val footerBlock: @Composable () -> Unit = {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            if (showNotificationHint) {
-                BrutalPlaque("Включите уведомления, чтобы видеть прогресс, когда приложение свёрнуто. Обработка идёт и без них.", kind = PlaqueKind.Neutral) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        BrutalButton(onClick = onEnableNotifications, height = 44.dp) { ButtonLabel("Включить") }
-                        BrutalButton(onClick = onDismissNotificationHint, style = BrutalButtonStyle.Secondary, height = 44.dp) { ButtonLabel("Не сейчас") }
-                    }
+    val hintBlock: @Composable () -> Unit = {
+        if (showNotificationHint) {
+            BrutalPlaque("Включите уведомления, чтобы видеть прогресс, когда приложение свёрнуто. Обработка идёт и без них.", kind = PlaqueKind.Neutral) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    BrutalButton(onClick = onEnableNotifications, height = 44.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Включить") }
+                    BrutalButton(onClick = onDismissNotificationHint, style = BrutalButtonStyle.Secondary, height = 44.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Не сейчас") }
                 }
             }
-            BrutalButton(
-                onClick = onCancel, enabled = !state.cancelling, style = BrutalButtonStyle.Secondary,
-                modifier = Modifier.fillMaxWidth().testTag(Tags.CANCEL),
-            ) { ButtonLabel("Отменить") }
-            Text(
-                "Обработка идёт на устройстве, без интернета. Приложение можно свернуть: процесс продолжится в фоне.",
-                style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
-            )
         }
+    }
+    // «Отменить» всегда на виду (в портрете закреплена внизу, а не уезжает под список стадий)
+    val cancelButton: @Composable () -> Unit = {
+        BrutalButton(
+            onClick = onCancel, enabled = !state.cancelling, style = BrutalButtonStyle.Secondary,
+            modifier = Modifier.fillMaxWidth().testTag(Tags.CANCEL),
+        ) { ButtonLabel("Отменить") }
+    }
+    val noteBlock: @Composable () -> Unit = {
+        Text(
+            "Обработка идёт на устройстве, без интернета. Приложение можно свернуть: процесс продолжится в фоне.",
+            style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
+        )
     }
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Обработка записи") }) { padding ->
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
@@ -139,16 +144,20 @@ fun ProcessingScreen(
                 // альбомная ориентация: слева общий прогресс и «Отменить», справа стадии -- всё видно без прокрутки
                 Row(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        headerBlock(); footerBlock()
+                        headerBlock(); hintBlock(); cancelButton(); noteBlock()
                     }
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { stagesBlock() }
                 }
             } else {
-                Column(
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    headerBlock(); stagesBlock(); footerBlock()
+                Column(Modifier.fillMaxSize()) {
+                    Column(
+                        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        headerBlock(); stagesBlock(); hintBlock(); noteBlock()
+                    }
+                    BrutalDivider()
+                    Box(Modifier.padding(horizontal = 20.dp, vertical = 10.dp).navigationBarsPadding()) { cancelButton() }
                 }
             }
         }
@@ -166,7 +175,7 @@ private fun StageRow(stage: Stage, fraction: Float, active: Boolean) {
     }
     val fill = if (active) Brutal.accent else Brutal.bg
     Row(
-        Modifier.fillMaxWidth().defaultMinSize(minHeight = 52.dp)
+        Modifier.fillMaxWidth().defaultMinSize(minHeight = 46.dp)
             .background(fill, BrutalShape).border(if (active) BrutalDims.BorderThick else BrutalDims.Border, if (done || active) Brutal.ink else Brutal.muted, BrutalShape)
             .padding(horizontal = 10.dp, vertical = 6.dp)
             .semantics(mergeDescendants = true) { contentDescription = "$title: $status" },

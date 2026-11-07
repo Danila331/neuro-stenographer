@@ -259,7 +259,7 @@ fun TranscriptScreen(
                 title = "Выбрано: ${selection.size}",
                 onBack = { selRaw = -1L },
                 actions = {
-                    BrutalButton(onClick = { showFragmentSheet = true }, height = 48.dp, modifier = Modifier.testTag("btn_fragment_reprocess")) { ButtonLabel("Обработать заново") }
+                    BrutalButton(onClick = { showFragmentSheet = true }, height = 48.dp, modifier = Modifier.testTag("btn_fragment_reprocess")) { ButtonLabel("Заново") }
                 },
             )
           } else
@@ -540,7 +540,7 @@ private fun UtteranceCard(
         borderWidth = if (matched || selected) BrutalDims.BorderThick + 1.dp else BrutalDims.Border,
     ) {
         Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.weight(1f).padding(end = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SpeakerChip(name, u.speakerId, Modifier.weight(1f, fill = false))
                     BrutalTag(time, fill = if (selected) Brutal.ink else Brutal.bg)
@@ -599,7 +599,7 @@ private fun SearchBar(query: String, count: Int, cursor: Int, onQuery: (String) 
             BrutalIconButton(onClick = { onStep(1) }, contentDescription = "Следующее совпадение", enabled = count > 0) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
             BrutalIconButton(onClick = onClose, contentDescription = "Закрыть поиск") { Icon(Icons.Default.Close, contentDescription = null) }
         }
-        BrutalTag(if (query.isBlank()) "ВВЕДИТЕ СЛОВО ИЛИ ФРАЗУ" else if (count == 0) "НИЧЕГО НЕ НАЙДЕНО" else "${cursor + 1} ИЗ $count", textStyle = MaterialTheme.typography.labelSmall)
+        BrutalTag(if (query.isBlank()) "Введите слово или фразу" else if (count == 0) "Ничего не найдено" else "${cursor + 1} из $count", textStyle = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -610,8 +610,10 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
     val duration = state.durationMs.coerceAtLeast(1)
     Column(Modifier.fillMaxWidth().background(Brutal.bg)) {
         BrutalDivider(thickness = BrutalDims.BorderThick)
-        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        val landscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val btn = if (landscape) 56.dp else 64.dp
+        val seek: @Composable (Modifier) -> Unit = { mod ->
+            Row(mod, verticalAlignment = Alignment.CenterVertically) {
                 BrutalTag(Format.clock(((dragging ?: (state.positionMs.toFloat() / duration)) * duration).toLong()), fill = Brutal.ink)
                 BrutalSlider(
                     value = dragging ?: (state.positionMs.toFloat() / duration).coerceIn(0f, 1f),
@@ -621,11 +623,13 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
                 )
                 BrutalTag(Format.clock(state.durationMs))
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+        }
+        val controls: @Composable (Modifier) -> Unit = { mod ->
+            Row(mod, horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
                 BrutalIconButton(onClick = { player.seekBy(-10_000) }, contentDescription = "Назад на 10 секунд") { Icon(AppIcons.Replay10, contentDescription = null) }
                 BrutalIconButton(
                     onClick = { player.toggle() }, contentDescription = if (state.playing) "Пауза" else "Воспроизвести", fill = Brutal.accent,
-                    modifier = Modifier.size(64.dp).testTag("btn_play_pause"),
+                    modifier = Modifier.size(btn).testTag("btn_play_pause"),
                 ) {
                     if (state.playing) Icon(AppIcons.Pause, contentDescription = null, modifier = Modifier.size(32.dp)) else Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(34.dp))
                 }
@@ -641,6 +645,18 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer) {
                         }
                     }
                 }
+            }
+        }
+        if (landscape) {
+            // в альбомной ориентации плеер -- одна строка, чтобы остаться компактным и не съедать список реплик
+            Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                controls(Modifier)
+                seek(Modifier.weight(1f).padding(start = 12.dp))
+            }
+        } else {
+            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
+                seek(Modifier.fillMaxWidth())
+                controls(Modifier.fillMaxWidth())
             }
         }
     }
