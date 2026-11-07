@@ -77,7 +77,7 @@ Android-приложение, которое **полностью офлайн**
 
 1. Поставить **`neurosteno-medium-<версия>.apk`** (основной; модели внутри, интернет не нужен):
    `adb install -r neurosteno-medium-<версия>.apk` — `docs/INSTALL.md`.
-   TODO(финал): ссылка на APK (GitHub Release, B49; пока файлы лежат вне git); sha256 — `artifacts/apk/SHA256SUMS.txt`.
+   Скачать: [GitHub Release v0.1.0](https://github.com/Danila331/neuro-stenographer/releases/tag/v0.1.0) (medium, lite, online; контрольные суммы — `SHA256SUMS.txt` там же и в `artifacts/apk/SHA256SUMS.txt`). Вариант hard (2,94 ГиБ) не влезает в лимит GitHub на файл, по запросу собирается из исходников (`scripts/build_all.sh hard`).
 2. Открыть приложение → **«Выбрать аудиофайл»** → выбрать запись. Обработка стартует сама, диалогов и разрешений нет.
 3. На экране расшифровки → **«Экспорт JSON»** (файл по ТЗ через системный выбор места сохранения).
 4. Без UI: результат сохраняется сам в `Android/data/ru.neurosteno.app.medium/files/results/<имя>.json`

@@ -13,7 +13,7 @@
 
 ## Установка APK
 
-Файлы `neurosteno-{lite,medium,hard,online}-0.1.0.apk` (в git не входят, размер > 100 МБ; ссылка на скачивание — TODO(финал), B49) кладутся в `artifacts/apk/`;
+Файлы `neurosteno-{lite,medium,hard,online}-0.1.0.apk` (в git не входят, размер > 100 МБ; скачать: [GitHub Release v0.1.0](https://github.com/Danila331/neuro-stenographer/releases/tag/v0.1.0), там medium, lite и online; hard не выложен из-за лимита 2 ГиБ на файл) кладутся в `artifacts/apk/`;
 размеры и sha256 — `artifacts/apk/SHA256SUMS.txt`, проверка `shasum -a 256 -c SHA256SUMS.txt`. Для жюри — `neurosteno-medium-0.1.0.apk` (1,78 ГиБ).
 
 - **adb:** `adb install -r artifacts/apk/neurosteno-medium-0.1.0.apk` (на эмуляторе — тот же ключ `adb`).
