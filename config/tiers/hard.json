@@ -56,18 +56,33 @@
   },
   "diarization": {
     "segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
-    "embedding": "diar/embedding/model.onnx",
+    "embedding": "diar/emb-eres2netv2/model.onnx",
     "clustering": {
       "method": "fast_clustering",
-      "threshold": 0.85,
+      "threshold": 0.5,
       "num_speakers": null,
       "max_speakers": 8
     },
     "min_duration_on_s": 0.2,
     "min_duration_off_s": 0.3,
     "enabled": true,
-    "window_shift_ratio": 0.1,
-    "num_threads": null
+    "window_shift_ratio": 1.0,
+    "num_threads": null,
+    "relabel": {
+      "enabled": true,
+      "gap_ms": 200,
+      "max_unit_ms": 12000,
+      "split_min_side_ms": 300,
+      "pad_ms": 40,
+      "embed_max_s": 10,
+      "min_reliable_ms": 800,
+      "k_min": 2,
+      "k_max": 6,
+      "max_cluster_units": 400,
+      "refine": 1,
+      "k1_silhouette_thr": 0.1,
+      "_pending_k1": "защита от монологов: подобрать порог (refpipe)"
+    }
   },
   "align": {
     "max_gap_ms": 1500,
