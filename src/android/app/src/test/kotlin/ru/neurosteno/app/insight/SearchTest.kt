@@ -42,7 +42,7 @@ class SearchTest {
 
     @Test
     fun queryTermsDropQuestionWordsAndKeepStems() {
-        assertEquals(listOf("мыш", "склад"), QueryTerms.of("Что говорил Говорящий 1 про мышей на складе?"))
+        assertEquals(listOf("мыш", "скла"), QueryTerms.of("Что говорил Говорящий 1 про мышей на складе?"))
         assertTrue(QueryTerms.of("что это было").isEmpty())
     }
 
@@ -91,7 +91,9 @@ class SearchTest {
         assertTrue(repo.search("что это", SearchScope.HISTORY, null).isEmpty())
     }
 
-    private fun controller(scope: TestScope, records: List<SearchRecord> = listOf(rec1, rec2)) = SearchController(FakeSearchRepository { records }, scope)
+    /** Область контроллера -- вне TestScope (сборщик состояния индекса бесконечен), но на том же планировщике: advanceUntilIdle её продвигает. */
+    private fun controller(scope: TestScope, records: List<SearchRecord> = listOf(rec1, rec2)) =
+        SearchController(FakeSearchRepository { records }, kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.test.StandardTestDispatcher(scope.testScheduler) + kotlinx.coroutines.SupervisorJob()))
 
     @Test
     fun controllerSearchesThenAnswersWithCitations() = runTest {

@@ -1,6 +1,12 @@
 package ru.neurosteno.app.insight
 
 import ru.neurosteno.core.Utterance
+import ru.neurosteno.core.summary.SummaryDecision
+import ru.neurosteno.core.summary.SummaryDoc
+import ru.neurosteno.core.summary.SummaryPoint
+import ru.neurosteno.core.summary.SummaryRef
+import ru.neurosteno.core.summary.SummaryTask
+import ru.neurosteno.core.summary.SummaryTopic
 
 /**
  * Режимы фейков для отладки и скриншотов (debug-сборка переключает их через `DebugInsightReceiver`). В тестах -- свои значения.
@@ -38,7 +44,7 @@ object FakeSummaryBuilder {
 
     /** Быстрая (extractive) выжимка: мгновенно, цитаты реплик. */
     fun extractive(utts: List<Utterance>, groupSize: Int = 6): SummaryDoc {
-        if (utts.isEmpty()) return SummaryDoc(mode = SummaryDoc.MODE_EXTRACTIVE)
+        if (utts.isEmpty()) return SummaryDoc(mode = SUMMARY_MODE_EXTRACTIVE)
         val topics = utts.indices.chunked(groupSize).filter { it.isNotEmpty() }.map { idx ->
             val slice = idx.map { utts[it] }
             val words = slice.flatMap { u -> Regex("[а-яёa-z]{4,}", RegexOption.IGNORE_CASE).findAll(u.text.lowercase()).map { it.value }.toList() }
@@ -54,7 +60,7 @@ object FakeSummaryBuilder {
                 .take(2).map { SummaryTask("", utts[it].text.trim(), listOf(ref(utts, it))) }
             SummaryTopic(title, slice.first().startMs, slice.last().endMs, points, decisions, tasks)
         }
-        return SummaryDoc(mode = SummaryDoc.MODE_EXTRACTIVE, topics = topics)
+        return SummaryDoc(mode = SUMMARY_MODE_EXTRACTIVE, topics = topics)
     }
 
     /** «ИИ-версия» для фейка: пересказанные пункты, исполнители задач и обзор. Структура и ссылки те же. */
@@ -67,7 +73,7 @@ object FakeSummaryBuilder {
             )
         }
         val overview = if (topics.isEmpty()) "" else "Разговор о том, как " + topics.take(3).joinToString(", ") { it.title.lowercase() } + "; приняты решения по ключевым вопросам."
-        return quick.copy(mode = SummaryDoc.MODE_LLM, model = "fake-qwen3-1.7b", done = true, fragments = topics.size, fragmentsDone = topics.size, overview = overview, topics = topics)
+        return quick.copy(mode = SUMMARY_MODE_LLM, model = "fake-qwen3-1.7b", done = true, fragments = topics.size, fragmentsDone = topics.size, overview = overview, topics = topics)
     }
 
     private fun retell(s: String): String = s.trim().trimEnd('.', '!', '?', '…').let { it.replaceFirstChar { c -> c.uppercase() } }

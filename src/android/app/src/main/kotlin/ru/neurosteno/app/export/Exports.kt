@@ -22,6 +22,9 @@ enum class ExportFormat(val label: String, val extension: String, val mimeType: 
     FULL_JSON("Расширенный JSON", "full.json", "application/json"),
     /** Бинарный печатный документ: рендерится [PdfExporter], а не [Exports.render]. */
     PDF("PDF (расшифровка + протокол)", "pdf", "application/pdf"),
+    /** Выжимка (B50): отдельные файлы с суффиксом `.summary`. */
+    SUMMARY_TXT("Выжимка (TXT)", "summary.txt", "text/plain"),
+    SUMMARY_PDF("Выжимка (PDF)", "summary.pdf", "application/pdf"),
 }
 
 object Exports {
@@ -44,6 +47,7 @@ object Exports {
             ExportFormat.VTT -> VttExporter(names).export(tr)
             ExportFormat.FULL_JSON -> fullJsonWithSpeakers(t, tr, run)
             ExportFormat.PDF -> throw UnsupportedOperationException("PDF бинарный: используйте PdfExporter")
+            ExportFormat.SUMMARY_TXT, ExportFormat.SUMMARY_PDF -> throw UnsupportedOperationException("Выжимка экспортируется через SummaryExport / PdfExporter")
         }
     }
 

@@ -27,6 +27,22 @@ class AppGraph(private val context: Context) {
     /** Выжимка записей (B50): запуск из ProcessingService, состояние для экрана выжимки. */
     val summary: ru.neurosteno.app.summary.SummaryRunner by lazy { ru.neurosteno.app.summary.SummaryRunner(context, this) }
 
+    /** Порт выжимки для экрана (B50): настоящий движок через [summary]. */
+    val summaryRepository: ru.neurosteno.app.insight.SummaryRepository by lazy { ru.neurosteno.app.insight.GraphSummaryRepository(context, this) }
+
+    /**
+     * Порт поиска для экрана «AI-поиск» (B51). Движок поиска ещё не слит: в debug-сборке работает фейк (подсчёт совпавших основ слов по
+     * реплика истории, шаблонный «ответ»), в release -- `null`, и плитка «AI-поиск» остаётся неактивной («СКОРО»): выдавать
+     * имитацию ИИ за настоящую функцию нельзя.
+     */
+    val searchRepository: ru.neurosteno.app.insight.SearchRepository? by lazy {
+        if (BuildConfig.DEBUG) ru.neurosteno.app.insight.FakeSearchRepository {
+            history.entries.value.mapNotNull { e ->
+                history.loadTranscript(e.id)?.let { st -> ru.neurosteno.app.insight.SearchRecord(e.id, e.title, st.toTranscript().utterances, st.speakerNames) }
+            }
+        } else null
+    }
+
     val history: HistoryRepository by lazy { HistoryRepository(File(context.filesDir, "history")) }
 
     /** Каталог наборов для загрузки (assets/model_sets.json; в debug-сборке его можно подменить файлом в files/). */

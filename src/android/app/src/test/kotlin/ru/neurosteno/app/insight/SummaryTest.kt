@@ -14,6 +14,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import ru.neurosteno.app.TestData
+import ru.neurosteno.core.summary.SummaryDoc
+import ru.neurosteno.core.summary.SummaryRef
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SummaryTest {
@@ -96,10 +98,11 @@ class SummaryTest {
         val first = repo.state("a").value as SummaryState.Shown
         assertEquals("extractive", first.doc.mode)
         assertTrue(first.working)
-        assertEquals(0, first.doc.fragmentsDone)
+        assertEquals(0, first.progress!!.done)
+        assertEquals("Загрузка модели…", first.progress!!.stage)
         advanceUntilIdle()
         val done = repo.state("a").value as SummaryState.Shown
-        assertTrue(done.doc.isLlm && !done.working)
+        assertTrue(done.doc.isLlm && !done.working && done.doc.done)
         assertTrue(done.doc.overview.isNotBlank())
     }
 
@@ -111,7 +114,7 @@ class SummaryTest {
         advanceUntilIdle()
         val s = repo.state("a").value as SummaryState.Shown
         assertEquals("extractive", s.doc.mode)
-        assertTrue(s.doc.done)
+        assertFalse(s.working)
         assertFalse(repo.caps().canRunLlm)
     }
 
@@ -122,8 +125,10 @@ class SummaryTest {
         assertEquals("мало памяти", repo.caps().llmUnavailableReason)
         repo.build("a", utts, useLlm = true)
         advanceUntilIdle()
-        assertTrue((repo.state("a").value as SummaryState.Shown).doc.done)
-        assertFalse((repo.state("a").value as SummaryState.Shown).doc.isLlm)
+        val s = repo.state("a").value as SummaryState.Shown
+        assertFalse(s.working)
+        assertFalse(s.doc.isLlm)
+        assertEquals("мало памяти", s.notice) // пользователь видит, почему ИИ-версии нет
     }
 
     @Test
@@ -134,7 +139,8 @@ class SummaryTest {
         repo.cancel("a")
         advanceUntilIdle()
         val s = repo.state("a").value as SummaryState.Shown
-        assertTrue(s.doc.done && !s.doc.isLlm)
+        assertTrue(!s.working && !s.doc.isLlm)
+        assertTrue(s.notice!!.startsWith("Остановлено"))
     }
 
     @Test

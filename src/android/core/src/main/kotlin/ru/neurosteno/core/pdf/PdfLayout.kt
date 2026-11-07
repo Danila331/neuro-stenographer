@@ -25,8 +25,11 @@ object PdfLayout {
         val b = Builder(metrics, geo)
         b.header(model)
         b.legend(model)
-        b.transcript(model)
-        model.protocol?.takeIf { it.isNotBlank() }?.let { b.protocol(it) }
+        model.summary?.let { b.summary(it) }
+        if (model.includeTranscript) {
+            b.transcript(model)
+            model.protocol?.takeIf { it.isNotBlank() }?.let { b.protocol(it) }
+        }
         return b.finish(model.footerNote)
     }
 
@@ -146,6 +149,50 @@ object PdfLayout {
             y += 10f
         }
 
+        // ---------------- выжимка ----------------
+        fun summary(sum: PdfSummary) {
+            sectionHeading("Выжимка", 3 * lh(BODY))
+            val note = if (sum.llm) "ИИ-выжимка. Черновик — проверьте по репликам." else "Быстрая выжимка (без ИИ): темы и цитаты реплик. Черновик — проверьте по репликам."
+            wrap(note, g.contentWidth, PdfFont.SMALL, SMALL, m).forEach { y += lh(SMALL); ops += PdfOp.Text(g.left, y - SMALL * 0.28f, it, PdfFont.SMALL, SMALL) }
+            y += 6f
+            if (sum.overview.isNotBlank()) {
+                val ls = wrap(sum.overview.trim(), g.contentWidth, PdfFont.BODY, BODY, m).map { Line(0f, listOf(Piece(it, PdfFont.BODY, BODY, 0f))) }
+                placeBlock(ls, g.left, "", "", swatch = false)
+                y += 8f
+            }
+            for (t in sum.topics) {
+                val head = "${clock(t.startMs)}–${clock(t.endMs)}"
+                val titleX = g.left + m.width("$head  ", PdfFont.MONO, MONO)
+                val titleLines = wrap(t.title, g.right - titleX, PdfFont.BOLD, BODY + 0.5f, m)
+                ensure(titleLines.size * lh(BODY) + 2 * lh(BODY)) // заголовок темы не остаётся один внизу страницы
+                y += 4f
+                titleLines.forEachIndexed { i, l ->
+                    y += lh(BODY)
+                    if (i == 0) ops += PdfOp.Text(g.left, y - BODY * 0.28f, head, PdfFont.MONO, MONO)
+                    ops += PdfOp.Text(titleX, y - BODY * 0.28f, l, PdfFont.BOLD, BODY + 0.5f)
+                }
+                y += 3f
+                val textX = g.left + 12f
+                for (it in t.items) {
+                    val label = when (it.kind) {
+                        PdfSummaryItem.Kind.POINT -> "${it.speakerName}:"
+                        PdfSummaryItem.Kind.DECISION -> "Решение:"
+                        PdfSummaryItem.Kind.TASK -> if (it.who.isNotBlank()) "Задача (${it.who}):" else "Задача:"
+                    }
+                    val tail = it.tMs?.let { ms -> " [${clock(ms)}]" }.orEmpty()
+                    val labelW = m.width("$label ", PdfFont.BOLD, BODY)
+                    val parts = wrap(it.text.ifBlank { "…" } + tail, g.right - textX, PdfFont.BODY, BODY, m, firstLineWidth = max(g.right - textX - labelW, 10f))
+                    val lines = parts.mapIndexed { i, p ->
+                        if (i == 0) Line(0f, listOf(Piece(label, PdfFont.BOLD, BODY, 0f), Piece(p, PdfFont.BODY, BODY, labelW))) else Line(0f, listOf(Piece(p, PdfFont.BODY, BODY, 0f)))
+                    }
+                    placeBlock(lines, textX, "", it.speakerId.orEmpty(), swatch = it.kind == PdfSummaryItem.Kind.POINT && it.speakerId != null)
+                    y += 3f
+                }
+                y += 5f
+            }
+            y += 8f
+        }
+
         // ---------------- реплики ----------------
         fun transcript(model: PdfDocModel) {
             if (model.utterances.isEmpty()) return
@@ -180,14 +227,14 @@ object PdfLayout {
         }
 
         /** Укладывает строки блока (с контролем висячих строк); таймкод и цвет рисуются у первой строки на странице начала. */
-        private fun placeBlock(lines: List<Line>, textX: Float, timecode: String, speakerId: String) {
+        private fun placeBlock(lines: List<Line>, textX: Float, timecode: String, speakerId: String, swatch: Boolean = timecode.isNotEmpty()) {
             var from = 0
             var firstChunk = true
             while (from < lines.size) {
                 val remain = lines.size - from
                 var fit = ((g.bottom - y) / lh(BODY)).toInt()
                 if (fit >= remain) {
-                    drawLines(lines, from, remain, textX, if (firstChunk) timecode else null, speakerId)
+                    drawLines(lines, from, remain, textX, if (firstChunk) timecode else null, speakerId, firstChunk && swatch)
                     return
                 }
                 // блок не помещается целиком: делим так, чтобы на обеих страницах осталось не меньше двух строк
@@ -198,23 +245,21 @@ object PdfLayout {
                 if (take < 1) {
                     if (atTop()) take = max(1, fit) else { newPage(); continue }
                 }
-                drawLines(lines, from, take, textX, if (firstChunk) timecode else null, speakerId)
+                drawLines(lines, from, take, textX, if (firstChunk) timecode else null, speakerId, firstChunk && swatch)
                 from += take
                 firstChunk = false
                 newPage()
             }
         }
 
-        private fun drawLines(lines: List<Line>, from: Int, count: Int, textX: Float, timecode: String?, speakerId: String) {
+        private fun drawLines(lines: List<Line>, from: Int, count: Int, textX: Float, timecode: String?, speakerId: String, swatch: Boolean = !timecode.isNullOrEmpty()) {
             for (i in from until from + count) {
                 val top = y
                 y += lh(BODY)
                 val base = y - BODY * 0.28f
-                if (i == from && !timecode.isNullOrEmpty()) {
-                    ops += PdfOp.Text(g.left, base, timecode, PdfFont.MONO, MONO)
-                    // цвет говорящего -- маркер в левом поле (скан глазами по странице)
-                    ops += PdfOp.Swatch(g.left - 11f, top + 2.5f, 6f, speakerId)
-                }
+                if (i == from && !timecode.isNullOrEmpty()) ops += PdfOp.Text(g.left, base, timecode, PdfFont.MONO, MONO)
+                // цвет говорящего -- маркер в левом поле (скан глазами по странице)
+                if (i == from && swatch) ops += PdfOp.Swatch(g.left - 11f, top + 2.5f, 6f, speakerId)
                 for (p in lines[i].pieces) ops += PdfOp.Text(textX + p.dx, base, p.text, p.font, p.size)
             }
         }

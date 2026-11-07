@@ -33,6 +33,11 @@ import ru.neurosteno.app.ui.screens.OnlineSetupScreen
 import ru.neurosteno.app.ui.screens.ProcessingScreen
 import ru.neurosteno.app.ui.screens.ProtocolScreen
 import ru.neurosteno.app.ui.screens.RecordScreen
+import ru.neurosteno.app.ui.screens.SearchActions
+import ru.neurosteno.app.ui.screens.SearchScreen
+import ru.neurosteno.app.ui.screens.SummaryActions
+import ru.neurosteno.app.ui.screens.SummaryScreen
+import ru.neurosteno.app.ui.screens.searchSuggestions
 import ru.neurosteno.app.ui.screens.SettingsScreen
 import ru.neurosteno.app.ui.screens.StatsScreen
 import ru.neurosteno.app.ui.screens.TranscriptScreen
@@ -102,10 +107,20 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
     LaunchedEffect(Unit) {
         snapshotFlow { nav.stack.toList() }.collect { stack ->
             vm.retain(
-                transcripts = stack.filterIsInstance<Route.Transcript>().map { it.entryId }.toSet() + stack.filterIsInstance<Route.Protocol>().map { it.entryId },
+                transcripts = stack.filterIsInstance<Route.Transcript>().map { it.entryId }.toSet() + stack.filterIsInstance<Route.Protocol>().map { it.entryId } +
+                    stack.filterIsInstance<Route.Summary>().map { it.entryId },
                 protocolOpen = stack.any { it is Route.Protocol },
             )
         }
+    }
+
+    val focus by vm.focus.collectAsStateWithLifecycle()
+    // переход к реплике записи [entryId] на времени [ms] (из выжимки или поиска): возвращаемся к открытой расшифровке либо открываем её
+    fun openAt(entryId: String, ms: Long) {
+        vm.requestFocus(entryId, ms)
+        val target = Route.Transcript(entryId)
+        val idx = nav.stack.indexOfLast { it == target }
+        if (idx >= 0) while (nav.stack.size - 1 > idx) nav.pop() else nav.push(target)
     }
 
     BackHandler(enabled = nav.canPop) { nav.pop() }
@@ -156,6 +171,7 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
                     onDelete = { vm.deleteEntry(it.id) },
                     onModels = { nav.push(Route.Models) },
                     onSettings = { nav.push(Route.Settings) },
+                    onSearch = if (vm.search != null && entries.isNotEmpty()) ({ nav.push(Route.Search(null)) }) else null,
                 )
             }
         }
@@ -174,7 +190,56 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
                 onProtocol = { nav.push(Route.Protocol(route.entryId)) },
                 onStartFragment = host::startFragment,
                 onCancelFragment = host::cancelFragment,
+                onSummary = { nav.push(Route.Summary(route.entryId)) },
+                onSearch = if (vm.search != null) ({ nav.push(Route.Search(route.entryId)) }) else null,
+                focusMs = focus?.takeIf { it.entryId == route.entryId }?.ms,
+                focusToken = focus?.takeIf { it.entryId == route.entryId }?.token ?: 0L,
+                onFocusConsumed = { focus?.let { vm.consumeFocus(it.token) } },
             )
+        }
+        is Route.Summary -> {
+            val session = remember(route.entryId) { vm.session(route.entryId) }
+            val doc by session.doc.collectAsStateWithLifecycle()
+            val state by vm.summary.state(route.entryId).collectAsStateWithLifecycle()
+            val llmUi by vm.llm.ui.collectAsStateWithLifecycle()
+            val caps = remember(state, llmUi.running, processing) { vm.summary.caps() }
+            // LLM одна: пока на экране «Протокол» идёт генерация, выжимку не запускаем (и наоборот -- её отказ по своей стороне)
+            val blocked = if (caps.llmMode && llmUi.running) "Сейчас составляется протокол — ИИ занят. Дождитесь его окончания или остановите протокол, затем запустите выжимку." else null
+            // lite (extractive): выжимка мгновенная -- строим сразу при открытии, если её ещё нет
+            LaunchedEffect(route.entryId, state, caps.llmMode) {
+                if (state is ru.neurosteno.app.insight.SummaryState.None && !caps.llmMode) doc?.let { vm.summary.build(route.entryId, it.transcript.utterances, useLlm = false) }
+            }
+            SummaryScreen(
+                state = state, caps = caps, blockedReason = blocked,
+                names = { id -> doc?.transcript?.displayName(id) ?: ru.neurosteno.app.edit.EditableTranscript.defaultName(id) },
+                actions = SummaryActions(
+                    onBack = { nav.pop() },
+                    onBuild = { doc?.let { vm.summary.build(route.entryId, it.transcript.utterances, useLlm = true) } },
+                    onCancel = { vm.summary.cancel(route.entryId) },
+                    onJump = { t, _ -> openAt(route.entryId, t) },
+                    onExportTxt = { host.export(route.entryId, ExportFormat.SUMMARY_TXT) },
+                    onExportPdf = { host.export(route.entryId, ExportFormat.SUMMARY_PDF) },
+                ),
+            )
+        }
+        is Route.Search -> {
+            val controller = vm.search
+            if (controller == null) { LaunchedEffect(Unit) { nav.pop() } } else {
+                val ui by controller.ui.collectAsStateWithLifecycle()
+                val session = remember(route.entryId) { route.entryId?.let { vm.session(it) } }
+                val doc = session?.doc?.collectAsStateWithLifecycle()?.value
+                val entry = session?.entry?.collectAsStateWithLifecycle()?.value
+                LaunchedEffect(route) { controller.open(route.entryId) }
+                SearchScreen(
+                    ui = ui,
+                    suggestions = remember(doc) { searchSuggestions(doc?.transcript?.speakerIds?.firstOrNull()?.let { doc.transcript.displayName(it) }) },
+                    recordTitle = entry?.title,
+                    actions = SearchActions(
+                        onBack = { nav.pop() }, onQuery = controller::setQuery, onSubmit = controller::submit, onScope = controller::setScope,
+                        onAnswer = controller::answer, onStopAnswer = controller::stopAnswer, onOpen = { rid, ms -> openAt(rid, ms) },
+                    ),
+                )
+            }
         }
         is Route.Protocol -> {
             val session = remember(route.entryId) { vm.session(route.entryId) }

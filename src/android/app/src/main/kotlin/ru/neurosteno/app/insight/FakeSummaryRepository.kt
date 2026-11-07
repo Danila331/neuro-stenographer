@@ -29,16 +29,21 @@ class FakeSummaryRepository(private val scope: CoroutineScope, private val names
         val st = flow(entryId)
         val quick = FakeSummaryBuilder.extractive(utterances)
         if (quick.isEmpty) { st.value = SummaryState.Failed("В записи нет реплик для выжимки."); return }
-        val llm = useLlm && caps().canRunLlm
-        if (!llm) { st.value = SummaryState.Shown(quick); return }
+        val caps = caps()
+        if (!(useLlm && caps.canRunLlm)) {
+            // lite (extractive) или ИИ недоступен: быстрая версия и пояснение, почему ИИ-версии не будет
+            st.value = SummaryState.Shown(quick, notice = caps.llmUnavailableReason?.takeIf { caps.llmMode })
+            return
+        }
         val total = quick.topics.size.coerceAtLeast(1)
-        st.value = SummaryState.Shown(quick.copy(done = false, fragments = total, fragmentsDone = 0))
+        fun progress(i: Int) = SummaryProgress(if (i == 0) "Загрузка модели…" else "Фрагмент $i из $total", i, total)
+        st.value = SummaryState.Shown(quick.copy(fragments = total), progress(0))
         jobs[entryId] = scope.launch {
             for (i in 1..total) {
-                if (FakeInsightConfig.summaryHoldWorking) { while (isActive && FakeInsightConfig.summaryHoldWorking) delay(200) }
+                while (isActive && FakeInsightConfig.summaryHoldWorking) delay(200)
                 if (FakeInsightConfig.summaryStepMs > 0) delay(FakeInsightConfig.summaryStepMs)
                 if (!isActive) return@launch
-                if (i < total) st.value = SummaryState.Shown(quick.copy(done = false, fragments = total, fragmentsDone = i))
+                if (i < total) st.value = SummaryState.Shown(quick.copy(fragments = total, fragmentsDone = i), progress(i))
             }
             st.value = SummaryState.Shown(FakeSummaryBuilder.llm(quick, names))
         }
@@ -46,6 +51,6 @@ class FakeSummaryRepository(private val scope: CoroutineScope, private val names
 
     override fun cancel(entryId: String) {
         jobs.remove(entryId)?.cancel()
-        (flow(entryId).value as? SummaryState.Shown)?.let { flow(entryId).value = SummaryState.Shown(it.doc.copy(done = true)) }
+        (flow(entryId).value as? SummaryState.Shown)?.let { flow(entryId).value = SummaryState.Shown(it.doc, notice = "Остановлено: показана быстрая выжимка.") }
     }
 }
