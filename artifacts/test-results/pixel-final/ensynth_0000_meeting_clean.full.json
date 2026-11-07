@@ -1,0 +1,2454 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 626,
+      "end_ms": 3986,
+      "text": "Chop fine the onion, sweet pepper and tomato with the rosemary.",
+      "words": [
+        {
+          "text": "Chop",
+          "start_ms": 626,
+          "end_ms": 866,
+          "confidence": null
+        },
+        {
+          "text": "fine",
+          "start_ms": 1026,
+          "end_ms": 1186,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 1346,
+          "end_ms": 1426,
+          "confidence": null
+        },
+        {
+          "text": "onion,",
+          "start_ms": 1506,
+          "end_ms": 1746,
+          "confidence": null
+        },
+        {
+          "text": "sweet",
+          "start_ms": 1986,
+          "end_ms": 2306,
+          "confidence": null
+        },
+        {
+          "text": "pepper",
+          "start_ms": 2386,
+          "end_ms": 2626,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 2786,
+          "end_ms": 2826,
+          "confidence": null
+        },
+        {
+          "text": "tomato",
+          "start_ms": 2866,
+          "end_ms": 3266,
+          "confidence": null
+        },
+        {
+          "text": "with",
+          "start_ms": 3346,
+          "end_ms": 3426,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 3426,
+          "end_ms": 3586,
+          "confidence": null
+        },
+        {
+          "text": "rosemary.",
+          "start_ms": 3586,
+          "end_ms": 3986,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 4226,
+      "end_ms": 5986,
+      "text": "Ram was the first to recover from his surprise.",
+      "words": [
+        {
+          "text": "Ram",
+          "start_ms": 4226,
+          "end_ms": 4466,
+          "confidence": null
+        },
+        {
+          "text": "was",
+          "start_ms": 4546,
+          "end_ms": 4626,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 4706,
+          "end_ms": 4786,
+          "confidence": null
+        },
+        {
+          "text": "first",
+          "start_ms": 4786,
+          "end_ms": 4946,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 4946,
+          "end_ms": 5026,
+          "confidence": null
+        },
+        {
+          "text": "recover",
+          "start_ms": 5026,
+          "end_ms": 5346,
+          "confidence": null
+        },
+        {
+          "text": "from",
+          "start_ms": 5346,
+          "end_ms": 5426,
+          "confidence": null
+        },
+        {
+          "text": "his",
+          "start_ms": 5506,
+          "end_ms": 5666,
+          "confidence": null
+        },
+        {
+          "text": "surprise.",
+          "start_ms": 5666,
+          "end_ms": 5986,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 6306,
+      "end_ms": 11266,
+      "text": "A book could be written about this restaurant, and that all would not be told for all its secrets can never be known.",
+      "words": [
+        {
+          "text": "A",
+          "start_ms": 6306,
+          "end_ms": 6386,
+          "confidence": null
+        },
+        {
+          "text": "book",
+          "start_ms": 6386,
+          "end_ms": 6546,
+          "confidence": null
+        },
+        {
+          "text": "could",
+          "start_ms": 6626,
+          "end_ms": 6786,
+          "confidence": null
+        },
+        {
+          "text": "be",
+          "start_ms": 6786,
+          "end_ms": 6866,
+          "confidence": null
+        },
+        {
+          "text": "written",
+          "start_ms": 6866,
+          "end_ms": 7106,
+          "confidence": null
+        },
+        {
+          "text": "about",
+          "start_ms": 7186,
+          "end_ms": 7346,
+          "confidence": null
+        },
+        {
+          "text": "this",
+          "start_ms": 7346,
+          "end_ms": 7506,
+          "confidence": null
+        },
+        {
+          "text": "restaurant,",
+          "start_ms": 7506,
+          "end_ms": 7906,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 8066,
+          "end_ms": 8226,
+          "confidence": null
+        },
+        {
+          "text": "that",
+          "start_ms": 8226,
+          "end_ms": 8386,
+          "confidence": null
+        },
+        {
+          "text": "all",
+          "start_ms": 8386,
+          "end_ms": 8546,
+          "confidence": null
+        },
+        {
+          "text": "would",
+          "start_ms": 8626,
+          "end_ms": 8786,
+          "confidence": null
+        },
+        {
+          "text": "not",
+          "start_ms": 8786,
+          "end_ms": 8946,
+          "confidence": null
+        },
+        {
+          "text": "be",
+          "start_ms": 8946,
+          "end_ms": 9026,
+          "confidence": null
+        },
+        {
+          "text": "told",
+          "start_ms": 9026,
+          "end_ms": 9186,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 9346,
+          "end_ms": 9506,
+          "confidence": null
+        },
+        {
+          "text": "all",
+          "start_ms": 9506,
+          "end_ms": 9666,
+          "confidence": null
+        },
+        {
+          "text": "its",
+          "start_ms": 9666,
+          "end_ms": 9826,
+          "confidence": null
+        },
+        {
+          "text": "secrets",
+          "start_ms": 9906,
+          "end_ms": 10306,
+          "confidence": null
+        },
+        {
+          "text": "can",
+          "start_ms": 10466,
+          "end_ms": 10626,
+          "confidence": null
+        },
+        {
+          "text": "never",
+          "start_ms": 10706,
+          "end_ms": 10866,
+          "confidence": null
+        },
+        {
+          "text": "be",
+          "start_ms": 10866,
+          "end_ms": 10946,
+          "confidence": null
+        },
+        {
+          "text": "known.",
+          "start_ms": 11026,
+          "end_ms": 11266,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 11666,
+      "end_ms": 13506,
+      "text": "Think I don't know you, mister Orficer?",
+      "words": [
+        {
+          "text": "Think",
+          "start_ms": 11666,
+          "end_ms": 11906,
+          "confidence": null
+        },
+        {
+          "text": "I",
+          "start_ms": 11986,
+          "end_ms": 12066,
+          "confidence": null
+        },
+        {
+          "text": "don't",
+          "start_ms": 12066,
+          "end_ms": 12306,
+          "confidence": null
+        },
+        {
+          "text": "know",
+          "start_ms": 12306,
+          "end_ms": 12386,
+          "confidence": null
+        },
+        {
+          "text": "you,",
+          "start_ms": 12466,
+          "end_ms": 12546,
+          "confidence": null
+        },
+        {
+          "text": "mister",
+          "start_ms": 12706,
+          "end_ms": 12946,
+          "confidence": null
+        },
+        {
+          "text": "Orficer?",
+          "start_ms": 12946,
+          "end_ms": 13506,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 14386,
+      "end_ms": 19906,
+      "text": "I could speak too, said Don Quixote, but that is not a sufficient reason for believing that what we see is the enchanted man.",
+      "words": [
+        {
+          "text": "I",
+          "start_ms": 14386,
+          "end_ms": 14466,
+          "confidence": null
+        },
+        {
+          "text": "could",
+          "start_ms": 14546,
+          "end_ms": 14706,
+          "confidence": null
+        },
+        {
+          "text": "speak",
+          "start_ms": 14786,
+          "end_ms": 14946,
+          "confidence": null
+        },
+        {
+          "text": "too,",
+          "start_ms": 15026,
+          "end_ms": 15106,
+          "confidence": null
+        },
+        {
+          "text": "said",
+          "start_ms": 15346,
+          "end_ms": 15506,
+          "confidence": null
+        },
+        {
+          "text": "Don",
+          "start_ms": 15506,
+          "end_ms": 15746,
+          "confidence": null
+        },
+        {
+          "text": "Quixote,",
+          "start_ms": 15826,
+          "end_ms": 16226,
+          "confidence": null
+        },
+        {
+          "text": "but",
+          "start_ms": 16466,
+          "end_ms": 16626,
+          "confidence": null
+        },
+        {
+          "text": "that",
+          "start_ms": 16626,
+          "end_ms": 16786,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 16786,
+          "end_ms": 16946,
+          "confidence": null
+        },
+        {
+          "text": "not",
+          "start_ms": 16946,
+          "end_ms": 17026,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 17186,
+          "end_ms": 17266,
+          "confidence": null
+        },
+        {
+          "text": "sufficient",
+          "start_ms": 17266,
+          "end_ms": 17746,
+          "confidence": null
+        },
+        {
+          "text": "reason",
+          "start_ms": 17826,
+          "end_ms": 18066,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 18066,
+          "end_ms": 18146,
+          "confidence": null
+        },
+        {
+          "text": "believing",
+          "start_ms": 18306,
+          "end_ms": 18546,
+          "confidence": null
+        },
+        {
+          "text": "that",
+          "start_ms": 18626,
+          "end_ms": 18706,
+          "confidence": null
+        },
+        {
+          "text": "what",
+          "start_ms": 18786,
+          "end_ms": 18866,
+          "confidence": null
+        },
+        {
+          "text": "we",
+          "start_ms": 18866,
+          "end_ms": 18946,
+          "confidence": null
+        },
+        {
+          "text": "see",
+          "start_ms": 19026,
+          "end_ms": 19106,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 19186,
+          "end_ms": 19266,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 19266,
+          "end_ms": 19346,
+          "confidence": null
+        },
+        {
+          "text": "enchanted",
+          "start_ms": 19426,
+          "end_ms": 19746,
+          "confidence": null
+        },
+        {
+          "text": "man.",
+          "start_ms": 19826,
+          "end_ms": 19906,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 20226,
+      "end_ms": 21826,
+      "text": "What a queer dream he thought to himself.",
+      "words": [
+        {
+          "text": "What",
+          "start_ms": 20226,
+          "end_ms": 20306,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 20386,
+          "end_ms": 20466,
+          "confidence": null
+        },
+        {
+          "text": "queer",
+          "start_ms": 20466,
+          "end_ms": 20706,
+          "confidence": null
+        },
+        {
+          "text": "dream",
+          "start_ms": 20706,
+          "end_ms": 20946,
+          "confidence": null
+        },
+        {
+          "text": "he",
+          "start_ms": 21106,
+          "end_ms": 21186,
+          "confidence": null
+        },
+        {
+          "text": "thought",
+          "start_ms": 21186,
+          "end_ms": 21346,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 21426,
+          "end_ms": 21506,
+          "confidence": null
+        },
+        {
+          "text": "himself.",
+          "start_ms": 21506,
+          "end_ms": 21826,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 22601,
+      "end_ms": 31081,
+      "text": "Lobster in miniature If your worship knew that, returned Sacho, woe bet me in all my kindred why did you let me taste it?",
+      "words": [
+        {
+          "text": "Lobster",
+          "start_ms": 22601,
+          "end_ms": 23081,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 23161,
+          "end_ms": 23241,
+          "confidence": null
+        },
+        {
+          "text": "miniature",
+          "start_ms": 23401,
+          "end_ms": 23961,
+          "confidence": null
+        },
+        {
+          "text": "If",
+          "start_ms": 25001,
+          "end_ms": 25161,
+          "confidence": null
+        },
+        {
+          "text": "your",
+          "start_ms": 25241,
+          "end_ms": 25401,
+          "confidence": null
+        },
+        {
+          "text": "worship",
+          "start_ms": 25481,
+          "end_ms": 25881,
+          "confidence": null
+        },
+        {
+          "text": "knew",
+          "start_ms": 26041,
+          "end_ms": 26201,
+          "confidence": null
+        },
+        {
+          "text": "that,",
+          "start_ms": 26281,
+          "end_ms": 26441,
+          "confidence": null
+        },
+        {
+          "text": "returned",
+          "start_ms": 26521,
+          "end_ms": 26841,
+          "confidence": null
+        },
+        {
+          "text": "Sacho,",
+          "start_ms": 26921,
+          "end_ms": 27401,
+          "confidence": null
+        },
+        {
+          "text": "woe",
+          "start_ms": 27561,
+          "end_ms": 27881,
+          "confidence": null
+        },
+        {
+          "text": "bet",
+          "start_ms": 27881,
+          "end_ms": 27961,
+          "confidence": null
+        },
+        {
+          "text": "me",
+          "start_ms": 28441,
+          "end_ms": 28521,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 28601,
+          "end_ms": 28681,
+          "confidence": null
+        },
+        {
+          "text": "all",
+          "start_ms": 28761,
+          "end_ms": 28921,
+          "confidence": null
+        },
+        {
+          "text": "my",
+          "start_ms": 28921,
+          "end_ms": 29001,
+          "confidence": null
+        },
+        {
+          "text": "kindred",
+          "start_ms": 29081,
+          "end_ms": 29401,
+          "confidence": null
+        },
+        {
+          "text": "why",
+          "start_ms": 29641,
+          "end_ms": 29801,
+          "confidence": null
+        },
+        {
+          "text": "did",
+          "start_ms": 29881,
+          "end_ms": 30041,
+          "confidence": null
+        },
+        {
+          "text": "you",
+          "start_ms": 30041,
+          "end_ms": 30201,
+          "confidence": null
+        },
+        {
+          "text": "let",
+          "start_ms": 30201,
+          "end_ms": 30281,
+          "confidence": null
+        },
+        {
+          "text": "me",
+          "start_ms": 30361,
+          "end_ms": 30521,
+          "confidence": null
+        },
+        {
+          "text": "taste",
+          "start_ms": 30521,
+          "end_ms": 30841,
+          "confidence": null
+        },
+        {
+          "text": "it?",
+          "start_ms": 30841,
+          "end_ms": 31081,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 31458,
+      "end_ms": 34578,
+      "text": "I wish you would believe me that I am in as great trouble about it as you are.",
+      "words": [
+        {
+          "text": "I",
+          "start_ms": 31458,
+          "end_ms": 31618,
+          "confidence": null
+        },
+        {
+          "text": "wish",
+          "start_ms": 31618,
+          "end_ms": 31778,
+          "confidence": null
+        },
+        {
+          "text": "you",
+          "start_ms": 31778,
+          "end_ms": 31858,
+          "confidence": null
+        },
+        {
+          "text": "would",
+          "start_ms": 31858,
+          "end_ms": 32018,
+          "confidence": null
+        },
+        {
+          "text": "believe",
+          "start_ms": 32018,
+          "end_ms": 32338,
+          "confidence": null
+        },
+        {
+          "text": "me",
+          "start_ms": 32338,
+          "end_ms": 32418,
+          "confidence": null
+        },
+        {
+          "text": "that",
+          "start_ms": 32498,
+          "end_ms": 32658,
+          "confidence": null
+        },
+        {
+          "text": "I",
+          "start_ms": 32658,
+          "end_ms": 32738,
+          "confidence": null
+        },
+        {
+          "text": "am",
+          "start_ms": 32738,
+          "end_ms": 32818,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 32978,
+          "end_ms": 33058,
+          "confidence": null
+        },
+        {
+          "text": "as",
+          "start_ms": 33058,
+          "end_ms": 33218,
+          "confidence": null
+        },
+        {
+          "text": "great",
+          "start_ms": 33218,
+          "end_ms": 33378,
+          "confidence": null
+        },
+        {
+          "text": "trouble",
+          "start_ms": 33378,
+          "end_ms": 33618,
+          "confidence": null
+        },
+        {
+          "text": "about",
+          "start_ms": 33778,
+          "end_ms": 33938,
+          "confidence": null
+        },
+        {
+          "text": "it",
+          "start_ms": 33938,
+          "end_ms": 34098,
+          "confidence": null
+        },
+        {
+          "text": "as",
+          "start_ms": 34098,
+          "end_ms": 34258,
+          "confidence": null
+        },
+        {
+          "text": "you",
+          "start_ms": 34258,
+          "end_ms": 34418,
+          "confidence": null
+        },
+        {
+          "text": "are.",
+          "start_ms": 34418,
+          "end_ms": 34578,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 35058,
+      "end_ms": 38258,
+      "text": "Didn't I say so? Worse luck to my line, said Sancho.",
+      "words": [
+        {
+          "text": "Didn't",
+          "start_ms": 35058,
+          "end_ms": 35458,
+          "confidence": null
+        },
+        {
+          "text": "I",
+          "start_ms": 35538,
+          "end_ms": 35618,
+          "confidence": null
+        },
+        {
+          "text": "say",
+          "start_ms": 35698,
+          "end_ms": 35858,
+          "confidence": null
+        },
+        {
+          "text": "so?",
+          "start_ms": 35858,
+          "end_ms": 36018,
+          "confidence": null
+        },
+        {
+          "text": "Worse",
+          "start_ms": 36178,
+          "end_ms": 36498,
+          "confidence": null
+        },
+        {
+          "text": "luck",
+          "start_ms": 36578,
+          "end_ms": 36898,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 36898,
+          "end_ms": 37058,
+          "confidence": null
+        },
+        {
+          "text": "my",
+          "start_ms": 37058,
+          "end_ms": 37218,
+          "confidence": null
+        },
+        {
+          "text": "line,",
+          "start_ms": 37218,
+          "end_ms": 37378,
+          "confidence": null
+        },
+        {
+          "text": "said",
+          "start_ms": 37538,
+          "end_ms": 37618,
+          "confidence": null
+        },
+        {
+          "text": "Sancho.",
+          "start_ms": 37778,
+          "end_ms": 38258,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 38658,
+      "end_ms": 42818,
+      "text": "And you have not found out anything, came in quick frightened tones.",
+      "words": [
+        {
+          "text": "And",
+          "start_ms": 38658,
+          "end_ms": 38818,
+          "confidence": null
+        },
+        {
+          "text": "you",
+          "start_ms": 39778,
+          "end_ms": 39938,
+          "confidence": null
+        },
+        {
+          "text": "have",
+          "start_ms": 40018,
+          "end_ms": 40178,
+          "confidence": null
+        },
+        {
+          "text": "not",
+          "start_ms": 40178,
+          "end_ms": 40258,
+          "confidence": null
+        },
+        {
+          "text": "found",
+          "start_ms": 40418,
+          "end_ms": 40578,
+          "confidence": null
+        },
+        {
+          "text": "out",
+          "start_ms": 40578,
+          "end_ms": 40738,
+          "confidence": null
+        },
+        {
+          "text": "anything,",
+          "start_ms": 40818,
+          "end_ms": 41058,
+          "confidence": null
+        },
+        {
+          "text": "came",
+          "start_ms": 41378,
+          "end_ms": 41538,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 41618,
+          "end_ms": 41778,
+          "confidence": null
+        },
+        {
+          "text": "quick",
+          "start_ms": 41778,
+          "end_ms": 42018,
+          "confidence": null
+        },
+        {
+          "text": "frightened",
+          "start_ms": 42098,
+          "end_ms": 42498,
+          "confidence": null
+        },
+        {
+          "text": "tones.",
+          "start_ms": 42498,
+          "end_ms": 42818,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 43218,
+      "end_ms": 47058,
+      "text": "Put this in a double whirler and let cook until thick, stirring constantly.",
+      "words": [
+        {
+          "text": "Put",
+          "start_ms": 43218,
+          "end_ms": 43458,
+          "confidence": null
+        },
+        {
+          "text": "this",
+          "start_ms": 43538,
+          "end_ms": 43698,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 43698,
+          "end_ms": 43778,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 43778,
+          "end_ms": 43858,
+          "confidence": null
+        },
+        {
+          "text": "double",
+          "start_ms": 43858,
+          "end_ms": 44098,
+          "confidence": null
+        },
+        {
+          "text": "whirler",
+          "start_ms": 44178,
+          "end_ms": 44578,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 44738,
+          "end_ms": 44818,
+          "confidence": null
+        },
+        {
+          "text": "let",
+          "start_ms": 44818,
+          "end_ms": 44978,
+          "confidence": null
+        },
+        {
+          "text": "cook",
+          "start_ms": 45058,
+          "end_ms": 45218,
+          "confidence": null
+        },
+        {
+          "text": "until",
+          "start_ms": 45298,
+          "end_ms": 45538,
+          "confidence": null
+        },
+        {
+          "text": "thick,",
+          "start_ms": 45618,
+          "end_ms": 45858,
+          "confidence": null
+        },
+        {
+          "text": "stirring",
+          "start_ms": 46098,
+          "end_ms": 46498,
+          "confidence": null
+        },
+        {
+          "text": "constantly.",
+          "start_ms": 46658,
+          "end_ms": 47058,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 47538,
+      "end_ms": 50258,
+      "text": "That my father, Sir Risding, has smuggled goods here,",
+      "words": [
+        {
+          "text": "That",
+          "start_ms": 47538,
+          "end_ms": 47618,
+          "confidence": null
+        },
+        {
+          "text": "my",
+          "start_ms": 47778,
+          "end_ms": 47858,
+          "confidence": null
+        },
+        {
+          "text": "father,",
+          "start_ms": 47858,
+          "end_ms": 48018,
+          "confidence": null
+        },
+        {
+          "text": "Sir",
+          "start_ms": 48178,
+          "end_ms": 48338,
+          "confidence": null
+        },
+        {
+          "text": "Risding,",
+          "start_ms": 48418,
+          "end_ms": 48898,
+          "confidence": null
+        },
+        {
+          "text": "has",
+          "start_ms": 49218,
+          "end_ms": 49298,
+          "confidence": null
+        },
+        {
+          "text": "smuggled",
+          "start_ms": 49378,
+          "end_ms": 49778,
+          "confidence": null
+        },
+        {
+          "text": "goods",
+          "start_ms": 49858,
+          "end_ms": 50098,
+          "confidence": null
+        },
+        {
+          "text": "here,",
+          "start_ms": 50178,
+          "end_ms": 50258,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 50803,
+      "end_ms": 58723,
+      "text": "I say, Come to San Francisco advisely, for while the crab is found all along the coast, it is prepared nowhere so deliciously as in San Francisco.",
+      "words": [
+        {
+          "text": "I",
+          "start_ms": 50803,
+          "end_ms": 50883,
+          "confidence": null
+        },
+        {
+          "text": "say,",
+          "start_ms": 50963,
+          "end_ms": 51123,
+          "confidence": null
+        },
+        {
+          "text": "Come",
+          "start_ms": 51363,
+          "end_ms": 51603,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 51603,
+          "end_ms": 51763,
+          "confidence": null
+        },
+        {
+          "text": "San",
+          "start_ms": 51763,
+          "end_ms": 51923,
+          "confidence": null
+        },
+        {
+          "text": "Francisco",
+          "start_ms": 51923,
+          "end_ms": 52563,
+          "confidence": null
+        },
+        {
+          "text": "advisely,",
+          "start_ms": 52723,
+          "end_ms": 53283,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 53443,
+          "end_ms": 53603,
+          "confidence": null
+        },
+        {
+          "text": "while",
+          "start_ms": 53603,
+          "end_ms": 53683,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 53763,
+          "end_ms": 53843,
+          "confidence": null
+        },
+        {
+          "text": "crab",
+          "start_ms": 53923,
+          "end_ms": 54323,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 54323,
+          "end_ms": 54483,
+          "confidence": null
+        },
+        {
+          "text": "found",
+          "start_ms": 54483,
+          "end_ms": 54643,
+          "confidence": null
+        },
+        {
+          "text": "all",
+          "start_ms": 54803,
+          "end_ms": 54963,
+          "confidence": null
+        },
+        {
+          "text": "along",
+          "start_ms": 54963,
+          "end_ms": 55203,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 55203,
+          "end_ms": 55363,
+          "confidence": null
+        },
+        {
+          "text": "coast,",
+          "start_ms": 55363,
+          "end_ms": 55603,
+          "confidence": null
+        },
+        {
+          "text": "it",
+          "start_ms": 55763,
+          "end_ms": 55843,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 55843,
+          "end_ms": 56003,
+          "confidence": null
+        },
+        {
+          "text": "prepared",
+          "start_ms": 56003,
+          "end_ms": 56403,
+          "confidence": null
+        },
+        {
+          "text": "nowhere",
+          "start_ms": 56483,
+          "end_ms": 56803,
+          "confidence": null
+        },
+        {
+          "text": "so",
+          "start_ms": 56883,
+          "end_ms": 57043,
+          "confidence": null
+        },
+        {
+          "text": "deliciously",
+          "start_ms": 57043,
+          "end_ms": 57683,
+          "confidence": null
+        },
+        {
+          "text": "as",
+          "start_ms": 57683,
+          "end_ms": 57843,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 57843,
+          "end_ms": 58003,
+          "confidence": null
+        },
+        {
+          "text": "San",
+          "start_ms": 58003,
+          "end_ms": 58163,
+          "confidence": null
+        },
+        {
+          "text": "Francisco.",
+          "start_ms": 58163,
+          "end_ms": 58723,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 59523,
+      "end_ms": 64003,
+      "text": "Don't know as he has been seen about here, do you, said Girl, looking at her searchingly. No, sir.",
+      "words": [
+        {
+          "text": "Don't",
+          "start_ms": 59523,
+          "end_ms": 59843,
+          "confidence": null
+        },
+        {
+          "text": "know",
+          "start_ms": 59923,
+          "end_ms": 60003,
+          "confidence": null
+        },
+        {
+          "text": "as",
+          "start_ms": 60083,
+          "end_ms": 60163,
+          "confidence": null
+        },
+        {
+          "text": "he",
+          "start_ms": 60243,
+          "end_ms": 60323,
+          "confidence": null
+        },
+        {
+          "text": "has",
+          "start_ms": 60323,
+          "end_ms": 60403,
+          "confidence": null
+        },
+        {
+          "text": "been",
+          "start_ms": 60483,
+          "end_ms": 60563,
+          "confidence": null
+        },
+        {
+          "text": "seen",
+          "start_ms": 60643,
+          "end_ms": 60803,
+          "confidence": null
+        },
+        {
+          "text": "about",
+          "start_ms": 60883,
+          "end_ms": 61043,
+          "confidence": null
+        },
+        {
+          "text": "here,",
+          "start_ms": 61043,
+          "end_ms": 61123,
+          "confidence": null
+        },
+        {
+          "text": "do",
+          "start_ms": 61283,
+          "end_ms": 61363,
+          "confidence": null
+        },
+        {
+          "text": "you,",
+          "start_ms": 61363,
+          "end_ms": 61443,
+          "confidence": null
+        },
+        {
+          "text": "said",
+          "start_ms": 61603,
+          "end_ms": 61683,
+          "confidence": null
+        },
+        {
+          "text": "Girl,",
+          "start_ms": 61763,
+          "end_ms": 62083,
+          "confidence": null
+        },
+        {
+          "text": "looking",
+          "start_ms": 62243,
+          "end_ms": 62323,
+          "confidence": null
+        },
+        {
+          "text": "at",
+          "start_ms": 62403,
+          "end_ms": 62483,
+          "confidence": null
+        },
+        {
+          "text": "her",
+          "start_ms": 62483,
+          "end_ms": 62563,
+          "confidence": null
+        },
+        {
+          "text": "searchingly.",
+          "start_ms": 62643,
+          "end_ms": 63203,
+          "confidence": null
+        },
+        {
+          "text": "No,",
+          "start_ms": 63443,
+          "end_ms": 63523,
+          "confidence": null
+        },
+        {
+          "text": "sir.",
+          "start_ms": 63683,
+          "end_ms": 64003,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 64723,
+      "end_ms": 66083,
+      "text": "Lobsters and lobsters",
+      "words": [
+        {
+          "text": "Lobsters",
+          "start_ms": 64723,
+          "end_ms": 65203,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 65443,
+          "end_ms": 65603,
+          "confidence": null
+        },
+        {
+          "text": "lobsters",
+          "start_ms": 65603,
+          "end_ms": 66083,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 67923,
+      "end_ms": 69043,
+      "text": "I say, where's your master?",
+      "words": [
+        {
+          "text": "I",
+          "start_ms": 67923,
+          "end_ms": 68083,
+          "confidence": null
+        },
+        {
+          "text": "say,",
+          "start_ms": 68083,
+          "end_ms": 68163,
+          "confidence": null
+        },
+        {
+          "text": "where's",
+          "start_ms": 68323,
+          "end_ms": 68723,
+          "confidence": null
+        },
+        {
+          "text": "your",
+          "start_ms": 68723,
+          "end_ms": 68803,
+          "confidence": null
+        },
+        {
+          "text": "master?",
+          "start_ms": 68803,
+          "end_ms": 69043,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 69603,
+      "end_ms": 70643,
+      "text": "Bisque of crawfish",
+      "words": [
+        {
+          "text": "Bisque",
+          "start_ms": 69603,
+          "end_ms": 70003,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 70003,
+          "end_ms": 70083,
+          "confidence": null
+        },
+        {
+          "text": "crawfish",
+          "start_ms": 70163,
+          "end_ms": 70643,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 71203,
+      "end_ms": 72803,
+      "text": "Hello, he said. Who are you?",
+      "words": [
+        {
+          "text": "Hello,",
+          "start_ms": 71203,
+          "end_ms": 71523,
+          "confidence": null
+        },
+        {
+          "text": "he",
+          "start_ms": 71683,
+          "end_ms": 71843,
+          "confidence": null
+        },
+        {
+          "text": "said.",
+          "start_ms": 71843,
+          "end_ms": 72003,
+          "confidence": null
+        },
+        {
+          "text": "Who",
+          "start_ms": 72243,
+          "end_ms": 72403,
+          "confidence": null
+        },
+        {
+          "text": "are",
+          "start_ms": 72483,
+          "end_ms": 72563,
+          "confidence": null
+        },
+        {
+          "text": "you?",
+          "start_ms": 72643,
+          "end_ms": 72803,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 73879,
+      "end_ms": 76039,
+      "text": "Then this is an inn said Don Quixote.",
+      "words": [
+        {
+          "text": "Then",
+          "start_ms": 73879,
+          "end_ms": 74119,
+          "confidence": null
+        },
+        {
+          "text": "this",
+          "start_ms": 74199,
+          "end_ms": 74359,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 74359,
+          "end_ms": 74439,
+          "confidence": null
+        },
+        {
+          "text": "an",
+          "start_ms": 74519,
+          "end_ms": 74599,
+          "confidence": null
+        },
+        {
+          "text": "inn",
+          "start_ms": 74759,
+          "end_ms": 74919,
+          "confidence": null
+        },
+        {
+          "text": "said",
+          "start_ms": 75079,
+          "end_ms": 75159,
+          "confidence": null
+        },
+        {
+          "text": "Don",
+          "start_ms": 75239,
+          "end_ms": 75399,
+          "confidence": null
+        },
+        {
+          "text": "Quixote.",
+          "start_ms": 75639,
+          "end_ms": 76039,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 76359,
+      "end_ms": 80359,
+      "text": "A fellow who was shut up in prison for life might do it, he said, but not in a case like this.",
+      "words": [
+        {
+          "text": "A",
+          "start_ms": 76359,
+          "end_ms": 76439,
+          "confidence": null
+        },
+        {
+          "text": "fellow",
+          "start_ms": 76439,
+          "end_ms": 76599,
+          "confidence": null
+        },
+        {
+          "text": "who",
+          "start_ms": 76759,
+          "end_ms": 76839,
+          "confidence": null
+        },
+        {
+          "text": "was",
+          "start_ms": 76839,
+          "end_ms": 76919,
+          "confidence": null
+        },
+        {
+          "text": "shut",
+          "start_ms": 76919,
+          "end_ms": 77079,
+          "confidence": null
+        },
+        {
+          "text": "up",
+          "start_ms": 77159,
+          "end_ms": 77239,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 77319,
+          "end_ms": 77399,
+          "confidence": null
+        },
+        {
+          "text": "prison",
+          "start_ms": 77399,
+          "end_ms": 77639,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 77719,
+          "end_ms": 77799,
+          "confidence": null
+        },
+        {
+          "text": "life",
+          "start_ms": 77879,
+          "end_ms": 78039,
+          "confidence": null
+        },
+        {
+          "text": "might",
+          "start_ms": 78199,
+          "end_ms": 78359,
+          "confidence": null
+        },
+        {
+          "text": "do",
+          "start_ms": 78439,
+          "end_ms": 78519,
+          "confidence": null
+        },
+        {
+          "text": "it,",
+          "start_ms": 78519,
+          "end_ms": 78679,
+          "confidence": null
+        },
+        {
+          "text": "he",
+          "start_ms": 78839,
+          "end_ms": 78999,
+          "confidence": null
+        },
+        {
+          "text": "said,",
+          "start_ms": 78999,
+          "end_ms": 79079,
+          "confidence": null
+        },
+        {
+          "text": "but",
+          "start_ms": 79239,
+          "end_ms": 79399,
+          "confidence": null
+        },
+        {
+          "text": "not",
+          "start_ms": 79399,
+          "end_ms": 79559,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 79559,
+          "end_ms": 79639,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 79639,
+          "end_ms": 79719,
+          "confidence": null
+        },
+        {
+          "text": "case",
+          "start_ms": 79719,
+          "end_ms": 80039,
+          "confidence": null
+        },
+        {
+          "text": "like",
+          "start_ms": 80039,
+          "end_ms": 80199,
+          "confidence": null
+        },
+        {
+          "text": "this.",
+          "start_ms": 80199,
+          "end_ms": 80359,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 80759,
+      "end_ms": 84839,
+      "text": "Serve in a chafing dish with toasted crackers or thin slices of toasted bread",
+      "words": [
+        {
+          "text": "Serve",
+          "start_ms": 80759,
+          "end_ms": 81079,
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "start_ms": 81079,
+          "end_ms": 81239,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 81239,
+          "end_ms": 81319,
+          "confidence": null
+        },
+        {
+          "text": "chafing",
+          "start_ms": 81319,
+          "end_ms": 81639,
+          "confidence": null
+        },
+        {
+          "text": "dish",
+          "start_ms": 81719,
+          "end_ms": 81879,
+          "confidence": null
+        },
+        {
+          "text": "with",
+          "start_ms": 82039,
+          "end_ms": 82199,
+          "confidence": null
+        },
+        {
+          "text": "toasted",
+          "start_ms": 82199,
+          "end_ms": 82599,
+          "confidence": null
+        },
+        {
+          "text": "crackers",
+          "start_ms": 82599,
+          "end_ms": 82999,
+          "confidence": null
+        },
+        {
+          "text": "or",
+          "start_ms": 83159,
+          "end_ms": 83319,
+          "confidence": null
+        },
+        {
+          "text": "thin",
+          "start_ms": 83319,
+          "end_ms": 83439,
+          "confidence": null
+        },
+        {
+          "text": "slices",
+          "start_ms": 83559,
+          "end_ms": 83959,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 83959,
+          "end_ms": 84119,
+          "confidence": null
+        },
+        {
+          "text": "toasted",
+          "start_ms": 84119,
+          "end_ms": 84519,
+          "confidence": null
+        },
+        {
+          "text": "bread",
+          "start_ms": 84519,
+          "end_ms": 84839,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 85266,
+      "end_ms": 87106,
+      "text": "Beg pardon, sir, didn't mean any harm.",
+      "words": [
+        {
+          "text": "Beg",
+          "start_ms": 85266,
+          "end_ms": 85506,
+          "confidence": null
+        },
+        {
+          "text": "pardon,",
+          "start_ms": 85586,
+          "end_ms": 85906,
+          "confidence": null
+        },
+        {
+          "text": "sir,",
+          "start_ms": 85986,
+          "end_ms": 86146,
+          "confidence": null
+        },
+        {
+          "text": "didn't",
+          "start_ms": 86306,
+          "end_ms": 86546,
+          "confidence": null
+        },
+        {
+          "text": "mean",
+          "start_ms": 86626,
+          "end_ms": 86706,
+          "confidence": null
+        },
+        {
+          "text": "any",
+          "start_ms": 86706,
+          "end_ms": 86786,
+          "confidence": null
+        },
+        {
+          "text": "harm.",
+          "start_ms": 86866,
+          "end_ms": 87106,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 87586,
+      "end_ms": 94226,
+      "text": "So far, it has been used mostly for garnishment of other dishes, and it is only recently that the Holf Brow has been making a specialty of them.",
+      "words": [
+        {
+          "text": "So",
+          "start_ms": 87586,
+          "end_ms": 87746,
+          "confidence": null
+        },
+        {
+          "text": "far,",
+          "start_ms": 87826,
+          "end_ms": 87906,
+          "confidence": null
+        },
+        {
+          "text": "it",
+          "start_ms": 88066,
+          "end_ms": 88146,
+          "confidence": null
+        },
+        {
+          "text": "has",
+          "start_ms": 88146,
+          "end_ms": 88306,
+          "confidence": null
+        },
+        {
+          "text": "been",
+          "start_ms": 88306,
+          "end_ms": 88466,
+          "confidence": null
+        },
+        {
+          "text": "used",
+          "start_ms": 88466,
+          "end_ms": 88626,
+          "confidence": null
+        },
+        {
+          "text": "mostly",
+          "start_ms": 88706,
+          "end_ms": 88946,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 89026,
+          "end_ms": 89186,
+          "confidence": null
+        },
+        {
+          "text": "garnishment",
+          "start_ms": 89186,
+          "end_ms": 89746,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 89826,
+          "end_ms": 89986,
+          "confidence": null
+        },
+        {
+          "text": "other",
+          "start_ms": 89986,
+          "end_ms": 90146,
+          "confidence": null
+        },
+        {
+          "text": "dishes,",
+          "start_ms": 90146,
+          "end_ms": 90546,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 90706,
+          "end_ms": 90866,
+          "confidence": null
+        },
+        {
+          "text": "it",
+          "start_ms": 90946,
+          "end_ms": 91026,
+          "confidence": null
+        },
+        {
+          "text": "is",
+          "start_ms": 91026,
+          "end_ms": 91186,
+          "confidence": null
+        },
+        {
+          "text": "only",
+          "start_ms": 91186,
+          "end_ms": 91266,
+          "confidence": null
+        },
+        {
+          "text": "recently",
+          "start_ms": 91426,
+          "end_ms": 91746,
+          "confidence": null
+        },
+        {
+          "text": "that",
+          "start_ms": 91826,
+          "end_ms": 91986,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 91986,
+          "end_ms": 92146,
+          "confidence": null
+        },
+        {
+          "text": "Holf",
+          "start_ms": 92146,
+          "end_ms": 92466,
+          "confidence": null
+        },
+        {
+          "text": "Brow",
+          "start_ms": 92546,
+          "end_ms": 92786,
+          "confidence": null
+        },
+        {
+          "text": "has",
+          "start_ms": 92946,
+          "end_ms": 93026,
+          "confidence": null
+        },
+        {
+          "text": "been",
+          "start_ms": 93106,
+          "end_ms": 93266,
+          "confidence": null
+        },
+        {
+          "text": "making",
+          "start_ms": 93266,
+          "end_ms": 93386,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 93426,
+          "end_ms": 93586,
+          "confidence": null
+        },
+        {
+          "text": "specialty",
+          "start_ms": 93586,
+          "end_ms": 93906,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 93986,
+          "end_ms": 94066,
+          "confidence": null
+        },
+        {
+          "text": "them.",
+          "start_ms": 94146,
+          "end_ms": 94226,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 94466,
+      "end_ms": 95826,
+      "text": "Rittie Graham looked ghastly.",
+      "words": [
+        {
+          "text": "Rittie",
+          "start_ms": 94466,
+          "end_ms": 94866,
+          "confidence": null
+        },
+        {
+          "text": "Graham",
+          "start_ms": 94866,
+          "end_ms": 95186,
+          "confidence": null
+        },
+        {
+          "text": "looked",
+          "start_ms": 95186,
+          "end_ms": 95426,
+          "confidence": null
+        },
+        {
+          "text": "ghastly.",
+          "start_ms": 95426,
+          "end_ms": 95826,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 96386,
+      "end_ms": 101746,
+      "text": "Allow this to boil and then add a quart of strong consum, and let all continue boiling for half an hour.",
+      "words": [
+        {
+          "text": "Allow",
+          "start_ms": 96386,
+          "end_ms": 96626,
+          "confidence": null
+        },
+        {
+          "text": "this",
+          "start_ms": 96706,
+          "end_ms": 96866,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 96866,
+          "end_ms": 97026,
+          "confidence": null
+        },
+        {
+          "text": "boil",
+          "start_ms": 97026,
+          "end_ms": 97266,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 97346,
+          "end_ms": 97506,
+          "confidence": null
+        },
+        {
+          "text": "then",
+          "start_ms": 97506,
+          "end_ms": 97666,
+          "confidence": null
+        },
+        {
+          "text": "add",
+          "start_ms": 97666,
+          "end_ms": 97826,
+          "confidence": null
+        },
+        {
+          "text": "a",
+          "start_ms": 97906,
+          "end_ms": 97986,
+          "confidence": null
+        },
+        {
+          "text": "quart",
+          "start_ms": 97986,
+          "end_ms": 98226,
+          "confidence": null
+        },
+        {
+          "text": "of",
+          "start_ms": 98306,
+          "end_ms": 98386,
+          "confidence": null
+        },
+        {
+          "text": "strong",
+          "start_ms": 98386,
+          "end_ms": 98786,
+          "confidence": null
+        },
+        {
+          "text": "consum,",
+          "start_ms": 98786,
+          "end_ms": 99186,
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "start_ms": 99506,
+          "end_ms": 99666,
+          "confidence": null
+        },
+        {
+          "text": "let",
+          "start_ms": 99746,
+          "end_ms": 99906,
+          "confidence": null
+        },
+        {
+          "text": "all",
+          "start_ms": 99986,
+          "end_ms": 100146,
+          "confidence": null
+        },
+        {
+          "text": "continue",
+          "start_ms": 100226,
+          "end_ms": 100626,
+          "confidence": null
+        },
+        {
+          "text": "boiling",
+          "start_ms": 100626,
+          "end_ms": 101026,
+          "confidence": null
+        },
+        {
+          "text": "for",
+          "start_ms": 101026,
+          "end_ms": 101186,
+          "confidence": null
+        },
+        {
+          "text": "half",
+          "start_ms": 101186,
+          "end_ms": 101426,
+          "confidence": null
+        },
+        {
+          "text": "an",
+          "start_ms": 101506,
+          "end_ms": 101586,
+          "confidence": null
+        },
+        {
+          "text": "hour.",
+          "start_ms": 101586,
+          "end_ms": 101746,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 102066,
+      "end_ms": 104706,
+      "text": "Certainly, sir. Smugglers are smugglers indeed.",
+      "words": [
+        {
+          "text": "Certainly,",
+          "start_ms": 102066,
+          "end_ms": 102466,
+          "confidence": null
+        },
+        {
+          "text": "sir.",
+          "start_ms": 102626,
+          "end_ms": 102786,
+          "confidence": null
+        },
+        {
+          "text": "Smugglers",
+          "start_ms": 103026,
+          "end_ms": 103586,
+          "confidence": null
+        },
+        {
+          "text": "are",
+          "start_ms": 103666,
+          "end_ms": 103746,
+          "confidence": null
+        },
+        {
+          "text": "smugglers",
+          "start_ms": 103746,
+          "end_ms": 104306,
+          "confidence": null
+        },
+        {
+          "text": "indeed.",
+          "start_ms": 104386,
+          "end_ms": 104706,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 105301,
+      "end_ms": 111061,
+      "text": "If they do not let themselves be seen, they let themselves be felt, said Santa, if not let my shoulders speak to the point.",
+      "words": [
+        {
+          "text": "If",
+          "start_ms": 105301,
+          "end_ms": 105461,
+          "confidence": null
+        },
+        {
+          "text": "they",
+          "start_ms": 105541,
+          "end_ms": 105701,
+          "confidence": null
+        },
+        {
+          "text": "do",
+          "start_ms": 105701,
+          "end_ms": 105861,
+          "confidence": null
+        },
+        {
+          "text": "not",
+          "start_ms": 105861,
+          "end_ms": 106021,
+          "confidence": null
+        },
+        {
+          "text": "let",
+          "start_ms": 106021,
+          "end_ms": 106181,
+          "confidence": null
+        },
+        {
+          "text": "themselves",
+          "start_ms": 106181,
+          "end_ms": 106501,
+          "confidence": null
+        },
+        {
+          "text": "be",
+          "start_ms": 106581,
+          "end_ms": 106661,
+          "confidence": null
+        },
+        {
+          "text": "seen,",
+          "start_ms": 106661,
+          "end_ms": 106821,
+          "confidence": null
+        },
+        {
+          "text": "they",
+          "start_ms": 107061,
+          "end_ms": 107221,
+          "confidence": null
+        },
+        {
+          "text": "let",
+          "start_ms": 107221,
+          "end_ms": 107301,
+          "confidence": null
+        },
+        {
+          "text": "themselves",
+          "start_ms": 107461,
+          "end_ms": 107781,
+          "confidence": null
+        },
+        {
+          "text": "be",
+          "start_ms": 107781,
+          "end_ms": 107941,
+          "confidence": null
+        },
+        {
+          "text": "felt,",
+          "start_ms": 107941,
+          "end_ms": 108181,
+          "confidence": null
+        },
+        {
+          "text": "said",
+          "start_ms": 108341,
+          "end_ms": 108501,
+          "confidence": null
+        },
+        {
+          "text": "Santa,",
+          "start_ms": 108501,
+          "end_ms": 108901,
+          "confidence": null
+        },
+        {
+          "text": "if",
+          "start_ms": 109141,
+          "end_ms": 109301,
+          "confidence": null
+        },
+        {
+          "text": "not",
+          "start_ms": 109301,
+          "end_ms": 109381,
+          "confidence": null
+        },
+        {
+          "text": "let",
+          "start_ms": 109541,
+          "end_ms": 109701,
+          "confidence": null
+        },
+        {
+          "text": "my",
+          "start_ms": 109701,
+          "end_ms": 109861,
+          "confidence": null
+        },
+        {
+          "text": "shoulders",
+          "start_ms": 109861,
+          "end_ms": 110261,
+          "confidence": null
+        },
+        {
+          "text": "speak",
+          "start_ms": 110261,
+          "end_ms": 110501,
+          "confidence": null
+        },
+        {
+          "text": "to",
+          "start_ms": 110581,
+          "end_ms": 110741,
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "start_ms": 110741,
+          "end_ms": 110901,
+          "confidence": null
+        },
+        {
+          "text": "point.",
+          "start_ms": 110901,
+          "end_ms": 111061,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-medium",
+    "tier": "medium",
+    "language": "en",
+    "audio_duration_ms": 111631,
+    "processing_ms": 16136,
+    "rtf": 0.145,
+    "stage_ms": {
+      "decode": 83,
+      "vad": 2243,
+      "lid": 3640,
+      "asr": 6675,
+      "diarization": 10127,
+      "align": 2,
+      "punctuation": 0,
+      "export": 0,
+      "relabel": 3330,
+      "total": 16136
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/emb-eres2net-base-200k/model.onnx",
+      "llm": "llm/qwen3-1.7b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 584,
+    "threads": 4,
+    "device_model": "Google Pixel 10",
+    "android_sdk": 37,
+    "total_ram_mb": 11563
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1",
+    "speaker_2": "Говорящий 2"
+  }
+}

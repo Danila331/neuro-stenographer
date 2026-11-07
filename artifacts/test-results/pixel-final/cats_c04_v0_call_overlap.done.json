@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "cats_c04_v0_call_overlap.wav",
+  "finished_at_ms": 1794066532247,
+  "audio_duration_ms": 30015,
+  "processing_ms": 4529,
+  "rtf": 0.151,
+  "language": "ru",
+  "utterances": 8,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 25,
+    "vad": 445,
+    "lid": 939,
+    "asr": 2109,
+    "diarization": 2208,
+    "align": 0,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 998,
+    "total": 4529
+  },
+  "peak_pss_mb": 516,
+  "threads": 4,
+  "device_model": "Google Pixel 10",
+  "android_sdk": 37,
+  "total_ram_mb": 11563,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "cats_c04_v0_call_overlap.json",
+    "cats_c04_v0_call_overlap.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

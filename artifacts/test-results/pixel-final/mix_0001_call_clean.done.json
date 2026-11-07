@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "mix_0001_call_clean.wav",
+  "finished_at_ms": 1794066638968,
+  "audio_duration_ms": 127724,
+  "processing_ms": 22331,
+  "rtf": 0.175,
+  "language": "ru",
+  "utterances": 23,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 75,
+    "vad": 2839,
+    "lid": 3822,
+    "asr": 12031,
+    "diarization": 12976,
+    "align": 3,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 3511,
+    "total": 22331
+  },
+  "peak_pss_mb": 584,
+  "threads": 4,
+  "device_model": "Google Pixel 10",
+  "android_sdk": 37,
+  "total_ram_mb": 11563,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "mix_0001_call_clean.json",
+    "mix_0001_call_clean.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}

@@ -1,0 +1,37 @@
+{
+  "status": "done",
+  "source": "synth_0002_meeting_farfield.wav",
+  "finished_at_ms": 1794066583198,
+  "audio_duration_ms": 161553,
+  "processing_ms": 14506,
+  "rtf": 0.09,
+  "language": "ru",
+  "utterances": 8,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 68,
+    "vad": 1126,
+    "lid": 2028,
+    "asr": 8927,
+    "diarization": 10383,
+    "align": 1,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 2325,
+    "total": 14506
+  },
+  "peak_pss_mb": 724,
+  "threads": 4,
+  "device_model": "Google Pixel 10",
+  "android_sdk": 37,
+  "total_ram_mb": 11563,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "synth_0002_meeting_farfield.json",
+    "synth_0002_meeting_farfield.full.json"
+  ],
+  "problems": [],
+  "warnings": []
+}
