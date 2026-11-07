@@ -232,7 +232,7 @@ def to_json(rec: Record, topics: list[Topic], overview: str = "") -> dict:
 # ---------------------------------------------------------------- run ----------------------------------------------------------------
 def summarize(srv, rec: Record, vecs=None, n_ctx: int = 4096, max_new: int = 700, target_chars: int = 1500, min_support: float = 0.3,
               use_grammar: bool = True, overview: bool = False, cache_prompt: bool = True, relink: bool = True, merge_sim: float = 0.45,
-              merge_cos: float | None = None, seg_kw: dict | None = None, own_refs: bool = True) -> dict:
+              merge_cos: float | None = None, seg_kw: dict | None = None, own_refs: bool = True, item_support: float = 0.5) -> dict:
     from .llm import chatml
     system = system_prompt()
     st = Stats()
@@ -245,7 +245,7 @@ def summarize(srv, rec: Record, vecs=None, n_ctx: int = 4096, max_new: int = 700
                          cache_prompt=cache_prompt)
         calls.append({k: r[k] for k in ("prompt_n", "cache_n", "prompt_ms", "predicted_n", "predicted_ms", "stop")})
         d = parse_json(_extract(r["text"]), st)
-        t = validate(d, rec, lo, hi, st, min_support, relink) if d else None
+        t = validate(d, rec, lo, hi, st, min_support, relink, item_support) if d else None
         if t:
             t.centroid = None if vecs is None else vecs[lo:hi].mean(0)
             topics.append(t)

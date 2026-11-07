@@ -94,6 +94,7 @@ def main():
     ap.add_argument("--n-ctx", type=int, default=4096)
     ap.add_argument("--no-grammar", action="store_true")
     ap.add_argument("--min-support", type=float, default=0.3)
+    ap.add_argument("--item-support", type=float, default=0.5)
     ap.add_argument("--no-relink", action="store_true")
     ap.add_argument("--seg-model", default="rubert-tiny2", help="embedder for topic cuts ('none' = size-based cuts)")
     ap.add_argument("--target", type=int, default=1500, help="max fragment size, chars")
@@ -103,6 +104,7 @@ def main():
     ap.add_argument("--merge-cos", type=float, default=None)
     ap.add_argument("--overview", action="store_true")
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--extractive", action="store_true", help="no-LLM digest (lite fallback)")
     ap.add_argument("--flags", default=None, help="llama-server extra flags; default = phone flags (-nr, KV q8_0, fa)")
     a = ap.parse_args()
     docs = [d for d in all_docs("asr", long=True) if (d.id in a.docs if a.docs else d.id != "L16")]
@@ -112,6 +114,20 @@ def main():
         emb = make(a.seg_model)
         vecs = {d.id: emb.embed([u.text for u in d.rec.utts], "doc") for d in docs}
         emb.close()
+    if a.extractive:
+        from . import extractive as X
+        rows = []
+        for d in docs:
+            topics = X.digest(d.rec, vecs[d.id], a.target, k=a.k, alpha=a.alpha)
+            sc = score_doc(d, topics)
+            sc.update(doc=d.id, model="extractive", wall_s=0.0, items=0, dropped=0, refs=0, ref_bad=0, parse_failed=0, repaired=0, json=S.to_json(d.rec, topics))
+            rows.append(sc)
+            print(json.dumps({k: (round(v, 2) if isinstance(v, float) else v) for k, v in sc.items() if k != "json"}, ensure_ascii=False), flush=True)
+        RES.mkdir(exist_ok=True)
+        (RES / f"summary_extractive_{a.tag}.json").write_text(json.dumps({"args": vars(a), "peak": {}, "rows": rows}, ensure_ascii=False, indent=1))
+        agg = {k: round(float(np.mean([r[k] for r in rows if r.get(k) is not None])), 3) for k in ("cov_range", "cov_kw", "cov_both", "grounded", "attrib", "facts_recall", "who_ok", "claims_recall", "claims_misattr") if any(r.get(k) is not None for r in rows)}
+        print("AGG extractive", json.dumps(agg, ensure_ascii=False), flush=True)
+        return
     for m in a.models:
         rows = []
         extra = a.flags.split() if a.flags else None
@@ -119,7 +135,7 @@ def main():
             for d in docs:
                 t0 = time.perf_counter()
                 r = S.summarize(srv, d.rec, vecs[d.id], n_ctx=a.n_ctx, use_grammar=not a.no_grammar, min_support=a.min_support, overview=a.overview,
-                                target_chars=a.target, relink=not a.no_relink, merge_sim=a.merge_sim, merge_cos=a.merge_cos,
+                                target_chars=a.target, relink=not a.no_relink, item_support=a.item_support, merge_sim=a.merge_sim, merge_cos=a.merge_cos,
                                 seg_kw={"k": a.k, "alpha": a.alpha})
                 wall = time.perf_counter() - t0
                 sc = score_doc(d, r["topics"])

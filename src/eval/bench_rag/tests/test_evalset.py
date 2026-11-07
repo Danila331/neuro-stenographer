@@ -1,3 +1,8 @@
+import pytest
+
+from bench_rag.data import ASR_DIR
+
+pytestmark = pytest.mark.skipif(not ASR_DIR.exists(), reason="needs $ROOT/.cache/runs/refpipe-medium-relabel")
 from bench_rag.evalset import build_questions
 
 
