@@ -114,8 +114,8 @@ class SearchController(private val repo: SearchRepository, private val scope: Co
                 repo.answer(q, cur.hits).collectLatest { ev ->
                     _ui.value = _ui.value.copy(
                         answer = when (ev) {
-                            is AnswerEvent.Partial -> AnswerUi.Generating(ev.text)
-                            is AnswerEvent.Done -> if (CitationParser.isRefusal(ev.text)) AnswerUi.Refused else AnswerUi.Done(ev.text.trim())
+                            is AnswerEvent.Partial -> AnswerUi.Generating(AnswerPolish.dedupe(ev.text))
+                            is AnswerEvent.Done -> if (CitationParser.isRefusal(ev.text)) AnswerUi.Refused else AnswerUi.Done(AnswerPolish.dedupe(ev.text.trim()))
                             is AnswerEvent.Failed -> AnswerUi.Failed(ev.message)
                         },
                     )

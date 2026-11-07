@@ -67,6 +67,14 @@ class FakeSearchRepository(private val records: () -> List<SearchRecord>) : Sear
             emit(AnswerEvent.Done("В найденных фрагментах этого нет."))
             return@flow
         }
+        if (FakeInsightConfig.searchAnswerMode == "duplicate") {
+            // как реальный сбой малой модели: предложение повторено после ссылки
+            val l = hits.first().lines.first()
+            val one = "${l.speakerName} сказал: ${l.text.trim().trimEnd('.')}."
+            val cite = "[${clock(l.startMs)}, Говорящий ${l.speakerId.removePrefix("speaker_")}]"
+            emit(AnswerEvent.Done("$one $cite $one"))
+            return@flow
+        }
         val top = hits.first()
         val line = top.lines.maxByOrNull { l -> top.terms.count { t -> l.text.lowercase().replace('ё', 'е').contains(t) } } ?: top.lines.first()
         fun cite(l: HitLine) = "[${clock(l.startMs)}, Говорящий ${l.speakerId.removePrefix("speaker_")}]"

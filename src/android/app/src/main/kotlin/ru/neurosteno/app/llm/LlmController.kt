@@ -223,7 +223,8 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
     }
 
     private fun setAnswer(index: Int, text: String, done: Boolean) {
-        _ui.update { s -> s.copy(qa = s.qa.mapIndexed { i, item -> if (i == index) item.copy(answer = text, done = done) else item }) }
+        val shown = ru.neurosteno.app.insight.AnswerPolish.dedupe(text) // повторы предложений у малых моделей
+        _ui.update { s -> s.copy(qa = s.qa.mapIndexed { i, item -> if (i == index) item.copy(answer = shown, done = done) else item }) }
     }
 
     fun stop() {
