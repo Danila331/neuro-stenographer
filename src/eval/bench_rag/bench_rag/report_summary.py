@@ -24,12 +24,28 @@ def copy_stats(rows, docs):
     return (cr / n if n else 0.0), (float(np.mean(wl)) if wl else 0.0)
 
 
+def long_row(f, docs):
+    d = json.load(open(f))
+    r = next((x for x in d["rows"] if x["doc"] == "L16"), None)
+    if not r:
+        return
+    audio = docs["L16"].rec.duration_ms / 1000
+    ph = r["pp_s"] * 2.4 + r["tg_s"] * 3.8
+    ph2 = r["pp_s"] * (1 + r["cached_tok"] / max(1, r["prompt_tok"])) * 2.4 + r["tg_s"] * 3.8
+    print(f"| {f.split('/')[-1][8:-5]} | {audio / 60:.1f} мин / {len(docs['L16'].rec.utts)} реплик | {r['frags']} | {r['topics_gen']} (эталон 16) | {r['cov_range']:.2f} / {r['cov_kw']:.2f} | {r.get('facts_recall') or 0:.2f} | {r['gen_tok']} | {r['wall_s']:.0f} | {ph:.0f} ({ph / audio:.2f}×) | {ph2:.0f} |")
+
+
 def main(files):
     docs = {d.id: d for d in all_docs("asr", long=True)}
+    if files and files[0] == "--long":
+        print("| модель | запись | фрагментов | тем | покрытие: диапазон / ключ. | решения и задачи | токенов сгенерировано | с ПК | с телефона (оценка) | без кэша префикса |")
+        for f in files[1:]:
+            long_row(f, docs)
+        return
     print("| run | docs | topic cov (range) | topic cov (keywords) | grounded | speaker attribution | decisions/tasks recall | assignee ok | per-speaker claims recall (d1-d3) | misattributed | refs valid before filter | items dropped | verbatim share of points | words/point | s/doc PC | s/doc phone (est.) | + no prefix cache | peak RSS MB |")
     for f in files:
         d = json.load(open(f))
-        rows = [r for r in d["rows"]]
+        rows = [r for r in d["rows"] if r["doc"] != "L16"]
         g = lambda k: [r[k] for r in rows if r.get(k) is not None]
         m = lambda k: f"{np.mean(g(k)):.2f}" if g(k) else "-"
         items, drop, refs, bad = (sum(r.get(k, 0) for r in rows) for k in ("items", "dropped", "refs", "ref_bad"))

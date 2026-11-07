@@ -23,3 +23,15 @@
 | labse-ru-turbo | turn | global | 0.393 | 0.554 | 0.476 | 0.471 | 0.4 | 0.7 |
 | labse-ru-turbo | win3 | record/history | 0.696 | 0.929 | 0.797 | 0.941 | 1.0 | 0.85 |
 | labse-ru-turbo | win3 | global | 0.554 | 0.821 | 0.67 | 0.647 | 0.933 | 0.85 |
+| qwen3-emb-0.6b | turn | record/history | 0.554 | 0.857 | 0.684 | 0.882 | 0.933 | 0.85 |
+| qwen3-emb-0.6b | turn | global | 0.411 | 0.625 | 0.51 | 0.529 | 0.467 | 0.85 |
+| qwen3-emb-0.6b | win3 | record/history | 0.786 | 0.946 | 0.858 | 0.941 | 1.0 | 0.9 |
+| qwen3-emb-0.6b | win3 | global | 0.589 | 0.839 | 0.707 | 0.647 | 0.933 | 0.9 |
+| user-base-torch | turn | record/history | 0.5 | 0.804 | 0.631 | 0.941 | 0.733 | 0.75 |
+| user-base-torch | turn | global | 0.321 | 0.536 | 0.418 | 0.412 | 0.333 | 0.75 |
+| user-base-torch | win3 | record/history | 0.661 | 0.929 | 0.778 | 1.0 | 1.0 | 0.8 |
+| user-base-torch | win3 | global | 0.518 | 0.786 | 0.635 | 0.588 | 0.933 | 0.8 |
+| e5-small-offq | turn | record/history | 0.482 | 0.821 | 0.628 | 0.882 | 0.867 | 0.8 |
+| e5-small-offq | turn | global | 0.375 | 0.607 | 0.476 | 0.471 | 0.533 | 0.8 |
+| e5-small-offq | win3 | record/history | 0.75 | 0.964 | 0.847 | 1.0 | 1.0 | 0.9 |
+| e5-small-offq | win3 | global | 0.518 | 0.839 | 0.666 | 0.647 | 0.933 | 0.9 |
