@@ -187,6 +187,18 @@ MODELS: tuple[Model, ...] = (
         "CC-BY-4.0 (NVIDIA Parakeet-TDT-0.6B-v3, 25 European languages incl. ru+en)", ("",), kind="asr",
         note="candidate: one multilingual transducer for ru+en; TDT gives token durations",
     ),
+    Model(
+        "asr/streaming-zipformer-small-ru-int8",
+        tuple(F(f"{HF}/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16/resolve/main/{n}", n, size, sha,
+                alias=(f"sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16/{n}",))
+              for n, size, sha in [
+                  ("encoder.int8.onnx", 26214060, "e0db705e94ec35d803b1df4f40cda23d064e1142977c80ab288430b109777a9d"),
+                  ("decoder.onnx", 2093080, "89b3088a9e20e1ef7f2e85ce1a3478afe6a9c4ac57369cabcc4beb8e95328ea0"),
+                  ("joiner.int8.onnx", 259417, "b55784b071ab7512eab4c7c44e4f5478284ef33c83562cc6a249b972515a31e5"),
+                  ("tokens.txt", 6388, "93bbbc0bae6b78c0bbb743d4aa9fded3bb5ff3aac5f0200e3a769a5a05e0fdf6")]),
+        "Apache-2.0 (alphacep vosk-model-small-streaming-ru)", ("lite", "medium", "hard"), kind="asr",
+        note="live transcription while recording (config `live`), streaming zipformer; preview only",
+    ),
     # ---------------------------------------------------------------- diarization
     Model(
         "diar/pyannote-segmentation-3.0",
@@ -457,6 +469,7 @@ def config_model_paths(cfg: dict) -> set[str]:
     add((cfg.get("audio", {}).get("denoise") or {}).get("model"))
     add((cfg.get("llm") or {}).get("model"))
     add((cfg.get("punctuation") or {}).get("model"))
+    add((cfg.get("live") or {}).get("model_dir"))
     return out
 
 

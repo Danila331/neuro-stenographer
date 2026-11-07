@@ -22,7 +22,7 @@ import numpy as np
 from . import __version__
 from .align import AlignParams, align
 from .asr import AsrEngine
-from .audio import decode_audio, denoise, estimate_snr_db, normalize_gain
+from .audio import agc, decode_audio, denoise, estimate_snr_db, normalize_gain, segment_gain
 from .config import DEFAULTS, canonical, config_hash, deep_merge
 from .diar import Diarizer, SubprocessDiarizer
 from .lid import LanguageId, smooth_languages
@@ -234,13 +234,15 @@ class Pipeline:
         t = time.perf_counter()
         ng = cfg["audio"].get("normalize_gain") or {}
         scope = ng.get("scope", "all") if ng.get("enabled") else "all"
-        x_asr, chunk_gain = None, None
+        x_asr, chunk_gain, seg_gain = None, None, None
         if scope == "all":          # every stage sees the normalised signal
             x, gain_db = normalize_gain(x, ng)
         elif scope == "asr":        # VAD / rescue / diarization see the ORIGINAL signal, ASR+LID the normalised copy
             x_asr, gain_db = normalize_gain(x, ng)
         elif scope == "asr_chunk":  # every ASR chunk is peak-normalised on its own (gain from the chunk's peak)
             gain_db, chunk_gain = 0.0, ng
+        elif scope == "asr_segment":  # every VAD segment is peak-normalised on its own, ASR input only
+            gain_db, seg_gain = 0.0, ng
         else:
             raise ValueError(f"unknown normalize_gain.scope {scope!r}")
         if x_asr is None:
@@ -255,8 +257,15 @@ class Pipeline:
             snr = estimate_snr_db(x)
             info["snr_db"] = None if snr == float("inf") else round(snr, 2)
             if snr < float(dn.get("snr_threshold_db", 12.0)):
-                y = denoise(x, self.root / dn["model"], self.threads)
-                x = np.pad(y, (0, max(0, len(x) - len(y))))[: len(x)].astype(np.float32)
+                src = x_asr if dn.get("scope") == "asr" else x   # scope asr: only the ASR/LID input is denoised
+                y = denoise(src, self.root / dn["model"], self.threads)
+                y = np.pad(y, (0, max(0, len(x) - len(y))))[: len(x)].astype(np.float32)
+                if dn.get("scope") == "asr":
+                    x_asr = y
+                else:
+                    x = y
+                    if x_asr is not None and scope != "asr":
+                        x_asr = x
                 info["denoised"] = True
         stage["denoise"] = _ms(t)
 
@@ -264,6 +273,7 @@ class Pipeline:
         asr_parts = {k: c.get(k) for k in ("vad", "asr", "asr_en", "language")}
         asr_parts["denoise"] = c["audio"]["denoise"]
         asr_parts["gain"] = c["audio"].get("normalize_gain")
+        asr_parts["agc"] = c["audio"].get("agc")
         # only drop_tiny_chunks changes the cached ASR output; numbers / strip_dashes are applied after the cache
         asr_parts["post"] = {"numbers": "as_is", "drop_tiny_chunks": (c.get("postprocess") or {}).get("drop_tiny_chunks")}
         asr_parts["keep_punct"] = self.keep_punct
@@ -271,6 +281,11 @@ class Pipeline:
         diar_cache = self._ckey("diar", audio_key, {"d": c["diarization"], "n": num_speakers,
                                                     "denoise": c["audio"]["denoise"],
                                                     "gain": self._diar_gain()})
+
+        agc_cfg = (cfg["audio"].get("agc") or {})
+        if agc_cfg.get("enabled"):
+            x_asr = agc(x_asr, agc_cfg)
+            info["agc"] = True
 
         def run_asr():
             hit = self._cload(asr_cache)
@@ -283,6 +298,7 @@ class Pipeline:
             t1 = time.perf_counter()
             speech, chunks = speech_chunks(x, cfg, self.vad)
             vad_ms = _ms(t1)
+            xa = segment_gain(x_asr, [(a_.start_ms, a_.end_ms) for a_ in speech], seg_gain) if seg_gain else x_asr
             t_l = time.perf_counter()
             langs = ["ru"] * len(chunks)
             raw_langs: list = []
@@ -292,12 +308,12 @@ class Pipeline:
             elif self.lid is not None and speech and self.per_chunk:
                 # per chunk (Android LanguageSmoother): LID of the first lid_seconds of every chunk >= 1.5 s, state
                 # starts at ru, no file-level LID
-                raw_langs = [self.lid.detect_chunk(x_asr, c)[0] for c in chunks]
+                raw_langs = [self.lid.detect_chunk(xa, c)[0] for c in chunks]
                 langs = smooth_languages(raw_langs, [c.dur_ms for c in chunks], self.switch_min_ms)
                 en_ms = sum(c.dur_ms for c, l_ in zip(chunks, langs) if l_ == "en")
                 lang = "en" if en_ms > sum(c.dur_ms for c in chunks) - en_ms else "ru"
             elif self.lid is not None and speech:
-                lang, raw = self.lid.detect(x_asr, speech)  # file level: first lid_seconds of speech
+                lang, raw = self.lid.detect(xa, speech)  # file level: first lid_seconds of speech
                 langs = [lang] * len(chunks)
             lid_ms = _ms(t_l)
             info["language"] = lang
@@ -320,14 +336,14 @@ class Pipeline:
                             self.asr_en = AsrEngine(deep_merge(DEFAULTS["asr"], cfg["asr_en"]), self.root, self.threads)
                             info["asr_en_load_ms"] = _ms(t_e)
                         engine = self.asr_en
-                    words.extend(engine.transcribe(x_asr, chunks[i:j], keep_punct=self.keep_punct,
+                    words.extend(engine.transcribe(xa, chunks[i:j], keep_punct=self.keep_punct,
                                                    drop_tiny_chars=self.drop_tiny, chunk_gain=chunk_gain))
                     i = j
             asr_ms = _ms(t2)
             sp_ms = 0
             if self.second and words and "en" not in langs:
                 t3 = time.perf_counter()
-                words, info["second_pass_chunks"] = self.second.apply(x_asr, chunks, words, self.keep_punct)
+                words, info["second_pass_chunks"] = self.second.apply(xa, chunks, words, self.keep_punct)
                 sp_ms = _ms(t3)
             self._csave(asr_cache, {"language": lang, "info": {k: v for k, v in info.items() if k.startswith("language")}, "speech": [[s.start_ms, s.end_ms] for s in speech],
                                     "chunks": [[s.start_ms, s.end_ms] for s in chunks],
