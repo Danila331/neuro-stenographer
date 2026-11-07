@@ -105,7 +105,11 @@ class FragmentResult(
     val removed: List<Utterance>,
     /** Добавленные реплики в том виде, как они лежат в [transcript] (с итоговыми `speaker_N`). */
     val added: List<Utterance>,
-    /** Старый `speaker_N` -> новый `speaker_N` после перенумерации по ТЗ (только говорящие, оставшиеся в расшифровке). */
+    /**
+     * Идентификатор до перенумерации -> итоговый `speaker_N` (перенумерация по ТЗ: по первому появлению). Только говорящие,
+     * оставшиеся в расшифровке; новые говорящие фрагмента присутствуют под своим временным id из [speakerAssignments].
+     * Нужен UI, чтобы перенести пользовательские имена говорящих.
+     */
     val speakerRemap: Map<String, String>,
     val speakerAssignments: List<SpeakerAssignment>,
     /** Язык, на котором распознавали фрагмент; `null`, если не распознавали. */
@@ -179,6 +183,7 @@ class FragmentReprocessor(
         }
 
         fun unchanged(outcome: FragmentOutcome, message: String, range: TimeSpan? = null, language: String? = null): FragmentResult {
+            for (st in Stage.entries) tracker.report(st, 1f)
             val total = (nanoTime() - t0) / 1_000_000
             stageMs["total"] = total
             return FragmentResult(
@@ -229,10 +234,11 @@ class FragmentReprocessor(
             }
         }
         fun noSpeech(): FragmentResult {
-            for (s in listOf(Stage.LID, Stage.ASR, Stage.DIARIZATION, Stage.ALIGN, Stage.PUNCTUATION, Stage.EXPORT)) tracker.report(s, 1f)
             if (request.removeIfNoSpeech && replaced.isNotEmpty()) {
+                tracker.report(Stage.EXPORT, 0f)
                 return finish(kept, emptyList(), replaced, eff, duration, transcript, FragmentOutcome.NO_SPEECH_REMOVED,
                     "Речь в отрезке не найдена, ${replaced.size} реплик удалено", emptyList(), null, warnings, stageMs, t0, nanoTime)
+                    .also { for (st in Stage.entries) tracker.report(st, 1f) }
             }
             return unchanged(FragmentOutcome.NO_SPEECH_KEPT,
                 if (replaced.isEmpty()) "Речь в отрезке не найдена, расшифровка не изменена"
@@ -358,7 +364,9 @@ class FragmentReprocessor(
 
         val outcome = if (replaced.isEmpty()) FragmentOutcome.INSERTED else FragmentOutcome.REPLACED
         val msg = if (replaced.isEmpty()) "Добавлено реплик: ${punctuated.size}" else "Заменено реплик: ${replaced.size} -> ${punctuated.size}"
+        tracker.report(Stage.EXPORT, 0f)
         return finish(kept, punctuated, replaced, eff, duration, transcript, outcome, msg, assignments, language, warnings, stageMs, t0, nanoTime)
+            .also { tracker.report(Stage.EXPORT, 1f) }
     }
 
     // ---------------------------------------------------------------------------------------------
