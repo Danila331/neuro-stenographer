@@ -12,6 +12,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
@@ -59,7 +62,7 @@ class UiKeyPathTest {
             ),
             TranscriptMeta("medium", 20_000, 6_000, mapOf("total" to 6_000L), emptyMap(), "test"),
         )
-        entryId = graph.history.add("ui-test.wav", tr).id
+        entryId = graph.history.add("ui-test.wav", tr, audio = { java.io.ByteArrayInputStream(ByteArray(64)) }).id
     }
 
     @After fun cleanup() {
@@ -156,6 +159,67 @@ class UiKeyPathTest {
         val json = ru.neurosteno.app.export.Exports.render(ExportFormat.JSON, session.doc.value!!.transcript, session.doc.value!!.source)
         assertTrue(json, json.startsWith("{\"transcript\":[{\"speaker_id\":\"speaker_1\""))
         assertTrue(json, !json.contains("Мурзик"))
+        session.close()
+    }
+
+    @Test
+    fun selectionOpensFragmentOptionsAndPassesChosenParameters() {
+        val session = TranscriptSession(graph, entryId!!)
+        var params: ru.neurosteno.app.FragmentParams? = null
+        rule.setContent {
+            NeuroTheme {
+                TranscriptScreen(
+                    session = session, llmAvailability = LlmAvailability.Unavailable("тест"),
+                    onBack = {}, onExport = {}, onShare = {}, onProtocol = {}, onStartFragment = { params = it },
+                )
+            }
+        }
+        rule.waitUntil(5_000) { session.doc.value != null }
+
+        // долгое нажатие -> режим выделения, одна реплика
+        rule.onNodeWithText("добрый день коллеги").performTouchInput { longClick() }
+        rule.onNodeWithText("Выбрано: 1 реплика").assertIsDisplayed()
+        rule.onNodeWithTag("btn_fragment_reprocess").performClick()
+
+        // лист: язык, выкл. по умолчанию «заново определить говорящих»; для одной реплики числа говорящих нет
+        rule.onNodeWithText("Заново определить говорящих").assertIsDisplayed()
+        rule.onNodeWithTag("fragment_lang_as_recorded").assertIsDisplayed()
+        rule.onNodeWithTag("fragment_recompute").performClick()
+        rule.onNodeWithTag("fragment_speakers_2").assertDoesNotExist()
+        rule.onNodeWithTag("btn_fragment_sheet_cancel").performClick()
+
+        // расширяем выделение на соседнюю реплику: теперь число говорящих показывается
+        rule.onNodeWithText("здравствуйте начнём совещание").performClick()
+        rule.onNodeWithText("Выбрано: 2 реплики").assertIsDisplayed()
+        rule.onNodeWithTag("btn_fragment_reprocess").performClick()
+        rule.onNodeWithTag("fragment_lang_en").performClick()
+        rule.onNodeWithTag("fragment_recompute").performClick()
+        rule.onNodeWithTag("fragment_speakers_2").assertIsDisplayed().performClick()
+        rule.onNodeWithTag("btn_fragment_start").performClick()
+
+        rule.waitUntil(5_000) { params != null }
+        val p = params!!
+        assertEquals(entryId, p.entryId)
+        assertEquals(1_000L, p.startMs)
+        assertEquals(6_000L, p.endMs)
+        assertEquals("en", p.language)
+        assertEquals(true, p.recomputeSpeakers)
+        assertEquals(2, p.numSpeakers)
+        session.close()
+    }
+
+    @Test
+    fun itemMenuHasReprocessAction() {
+        val session = TranscriptSession(graph, entryId!!)
+        rule.setContent {
+            NeuroTheme {
+                TranscriptScreen(session = session, llmAvailability = LlmAvailability.Unavailable("тест"), onBack = {}, onExport = {}, onShare = {}, onProtocol = {})
+            }
+        }
+        rule.waitUntil(5_000) { session.doc.value != null }
+        rule.onAllNodes(hasContentDescription("Действия с репликой", substring = true))[0].performClick()
+        rule.onNodeWithText("Обработать заново").assertIsDisplayed().performClick()
+        rule.onNodeWithText("Заново определить говорящих").assertIsDisplayed() // лист открылся сразу
         session.close()
     }
 }

@@ -128,8 +128,26 @@ class MainActivity : ComponentActivity(), AppHost {
     }
 
     override fun startProcessing(uri: Uri, name: String) {
+        if (FragmentState.running) {
+            Toast.makeText(this, "Идёт обработка фрагмента — дождитесь её окончания", Toast.LENGTH_SHORT).show()
+            return
+        }
         ProcessingState.begin(name)
         ContextCompat.startForegroundService(this, ProcessingService.startIntent(this, uri, name))
+    }
+
+    override fun startFragment(params: FragmentParams) {
+        if (ProcessingState.processing.value is ProcessingUi.Running || FragmentState.running) {
+            Toast.makeText(this, "Уже идёт обработка — дождитесь её окончания", Toast.LENGTH_SHORT).show()
+            return
+        }
+        FragmentState.set(FragmentUi.Running(params.entryId, "Фрагмент ${ru.neurosteno.app.ui.Format.clock(params.startMs)}–${ru.neurosteno.app.ui.Format.clock(params.endMs)}"))
+        ContextCompat.startForegroundService(this, ProcessingService.fragmentIntent(this, params))
+    }
+
+    override fun cancelFragment() {
+        FragmentState.markCancelling()
+        startService(ProcessingService.cancelIntent(this))
     }
 
     override fun cancelProcessing() {

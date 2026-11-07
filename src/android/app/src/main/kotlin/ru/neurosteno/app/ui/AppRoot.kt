@@ -52,6 +52,8 @@ interface AppHost {
     fun openAppSettings()
     fun moveToBackground()
     fun cancelProcessing()
+    fun startFragment(params: ru.neurosteno.app.FragmentParams)
+    fun cancelFragment()
     /** Цвет значков строки состояния/навигации под выбранную тему (светлые значки на тёмном фоне и наоборот). */
     fun applySystemBars(dark: Boolean)
 }
@@ -169,6 +171,8 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
                     if (text != null) host.shareText(text, session.entry.value?.title ?: "Расшифровка")
                 },
                 onProtocol = { nav.push(Route.Protocol(route.entryId)) },
+                onStartFragment = host::startFragment,
+                onCancelFragment = host::cancelFragment,
             )
         }
         is Route.Protocol -> {

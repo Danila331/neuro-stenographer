@@ -83,6 +83,17 @@ class HistoryRepositoryTest {
     }
 
     @Test
+    fun undoSnapshotRoundTrip() {
+        val e = repo.add("a.wav", TestData.dialog())
+        assertNull(repo.readUndo(e.id))
+        val stored = repo.loadTranscript(e.id)!!
+        repo.writeUndo(e.id, stored)
+        assertEquals(stored, repo.readUndo(e.id))
+        repo.clearUndo(e.id)
+        assertNull(repo.readUndo(e.id))
+    }
+
+    @Test
     fun clearRemovesEverything() {
         repo.add("a.wav", TestData.dialog()); repo.add("b.wav", TestData.dialog())
         repo.clear()
