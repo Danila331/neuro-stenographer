@@ -39,6 +39,12 @@ object ProcessingState {
     private val _processing = MutableStateFlow<ProcessingUi>(ProcessingUi.Idle)
     val processing: StateFlow<ProcessingUi> = _processing.asStateFlow()
 
+    private val _queued = MutableStateFlow<List<String>>(emptyList())
+    /** Имена файлов, ожидающих очереди обработки (после идущей) -- для экрана обработки. */
+    val queued: StateFlow<List<String>> = _queued.asStateFlow()
+
+    fun setQueued(names: List<String>) { _queued.value = names }
+
     fun setModels(s: ModelsStatus) { _models.value = s }
     fun setProcessing(s: ProcessingUi) { _processing.value = s }
     fun reset() { _processing.value = ProcessingUi.Idle }

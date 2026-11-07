@@ -39,4 +39,15 @@ internal object LlamaNative {
     @JvmStatic external fun lastError(): String
 
     @JvmStatic external fun systemInfo(): String
+
+    // ---- только для тестов (B58): преобразование строк без модели ----
+
+    /** Стандартный UTF-8 строки -- ровно то, что получает токенизатор llama. */
+    @JvmStatic external fun utf8Bytes(s: String): ByteArray?
+
+    /** Прежнее поведение (modified UTF-8 через GetStringUTFChars): воспроизведение ошибки с emoji. */
+    @JvmStatic external fun legacyUtf8Bytes(s: String): ByteArray?
+
+    /** UTF-16 -> UTF-8 -> UTF-16 (как строки lastError/options). */
+    @JvmStatic external fun utf8RoundTrip(s: String): String?
 }

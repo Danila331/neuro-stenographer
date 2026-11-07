@@ -131,11 +131,9 @@ class MainActivity : ComponentActivity(), AppHost {
     }
 
     override fun startProcessing(uri: Uri, name: String) {
-        if (FragmentState.running) {
-            Toast.makeText(this, "Идёт обработка фрагмента — дождитесь её окончания", Toast.LENGTH_SHORT).show()
-            return
-        }
-        ProcessingState.begin(name)
+        // запрос во время другой обработки не теряется: сервис ставит его в очередь (B58); состояние текущей обработки не затираем
+        val busy = ProcessingState.processing.value is ProcessingUi.Running || FragmentState.running
+        if (busy) Toast.makeText(this, "Файл «$name» поставлен в очередь", Toast.LENGTH_SHORT).show() else ProcessingState.begin(name)
         ContextCompat.startForegroundService(this, ProcessingService.startIntent(this, uri, name))
     }
 

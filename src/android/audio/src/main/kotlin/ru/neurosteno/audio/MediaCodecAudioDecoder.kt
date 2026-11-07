@@ -14,6 +14,8 @@ import ru.neurosteno.core.FileAudioInput
 import ru.neurosteno.core.ProgressListener
 import ru.neurosteno.core.Stage
 import ru.neurosteno.core.audio.Pcm
+import ru.neurosteno.core.audio.PcmAccumulator
+import ru.neurosteno.core.audio.StreamBytes
 import ru.neurosteno.core.audio.ResamplerStream
 import ru.neurosteno.core.audio.WavDecoder
 
@@ -64,10 +66,10 @@ class MediaCodecAudioDecoder(private val context: Context) : AudioDecoder {
                 n += r
             }
             if (n < 12 || !WavDecoder.isWav(head)) return null
-            val rest = s.readBytes()
-            if (rest.size > MAX_WAV_BYTES && !force) return null // огромный WAV -- потоково через кодек
+            // весь файл в ОДИН массив (раньше: readBytes + head + rest = две копии); огромный WAV -- потоково через кодек
+            val all = StreamBytes.readAll(head, s, if (force) Int.MAX_VALUE - 16 else MAX_WAV_BYTES) ?: return null
             try {
-                WavDecoder.decode(head + rest)
+                WavDecoder.decode(all)
             } catch (e: IllegalArgumentException) {
                 null // экзотический формат -- пусть попробует платформа
             }
@@ -85,6 +87,7 @@ class MediaCodecAudioDecoder(private val context: Context) : AudioDecoder {
     private fun decodeWithCodec(input: AudioInput, progress: ProgressListener): AudioBuffer {
         val extractor = MediaExtractor()
         var codec: MediaCodec? = null
+        var sink: PcmSink? = null
         try {
             when (input) {
                 is UriAudioInput -> extractor.setDataSource(context, input.uri, null)
@@ -106,9 +109,10 @@ class MediaCodecAudioDecoder(private val context: Context) : AudioDecoder {
 
             val mime = format.getString(MediaFormat.KEY_MIME)!!
             val durationUs = if (format.containsKey(MediaFormat.KEY_DURATION)) format.getLong(MediaFormat.KEY_DURATION) else 0L
-            val sink = PcmSink(
+            sink = PcmSink(
                 sampleRate = format.intOrDefault(MediaFormat.KEY_SAMPLE_RATE, 44_100),
                 channels = format.intOrDefault(MediaFormat.KEY_CHANNEL_COUNT, 1),
+                acc = PcmAccumulator(MAX_SAMPLES.toLong(), spillDir = context.cacheDir),
             )
 
             if (mime == MediaFormat.MIMETYPE_AUDIO_RAW) {
@@ -170,6 +174,7 @@ class MediaCodecAudioDecoder(private val context: Context) : AudioDecoder {
             runCatching { codec?.stop() }
             runCatching { codec?.release() }
             runCatching { extractor.release() }
+            runCatching { sink?.close() } // временный файл PCM удаляется и при отмене/ошибке
         }
     }
 
@@ -196,12 +201,10 @@ class MediaCodecAudioDecoder(private val context: Context) : AudioDecoder {
      * Приёмник PCM: interleaved 16-bit/float -> моно -> потоковый ресемплер -> накопление 16 кГц.
      * Формат (частота/каналы) может измениться в ходе декодирования (INFO_OUTPUT_FORMAT_CHANGED) -- пересоздаём ресемплер.
      */
-    private class PcmSink(sampleRate: Int, channels: Int) {
+    private class PcmSink(sampleRate: Int, channels: Int, private val acc: PcmAccumulator) {
         private var rate = sampleRate
         private var ch = channels
         private var resampler = ResamplerStream(rate, Pcm.TARGET_RATE)
-        private var out = FloatArray(Pcm.TARGET_RATE * 30)
-        private var outLen = 0
         private var shorts = ShortArray(0)
         private var floats = FloatArray(0)
 
@@ -237,17 +240,21 @@ class MediaCodecAudioDecoder(private val context: Context) : AudioDecoder {
             append(resampler.push(mono))
         }
 
+        /** Один массив точного размера; блоки/временный файл освобождаются (раньше: удвоение массива + полная копия -- 2-3 размера записи). */
         fun finish(): AudioBuffer {
             append(resampler.finish())
-            return AudioBuffer(out.copyOf(outLen), Pcm.TARGET_RATE)
+            return AudioBuffer(acc.toFloatArray(), Pcm.TARGET_RATE)
         }
+
+        fun close() = acc.close()
 
         private fun append(x: FloatArray) {
             if (x.isEmpty()) return
-            if (outLen + x.size > MAX_SAMPLES) throw IOException("Запись слишком длинная (больше ${MAX_SAMPLES / Pcm.TARGET_RATE / 3600} ч)")
-            if (outLen + x.size > out.size) out = out.copyOf(maxOf(out.size * 2, outLen + x.size))
-            System.arraycopy(x, 0, out, outLen, x.size)
-            outLen += x.size
+            try {
+                acc.append(x)
+            } catch (e: PcmAccumulator.TooLongException) {
+                throw IOException("Запись слишком длинная (больше ${MAX_SAMPLES / Pcm.TARGET_RATE / 3600} ч)", e)
+            }
         }
     }
 

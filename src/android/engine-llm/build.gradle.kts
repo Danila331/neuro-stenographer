@@ -35,6 +35,10 @@ android {
             version = "3.22.1"
         }
     }
+    testOptions {
+        // тесты нативной части на хосте: каталог с libneurosteno_llm (scripts/build_host_jni.sh), LLM_HOST_BUILD; нет -- тесты пропускаются
+        unitTests.all { test -> System.getenv("LLM_HOST_BUILD")?.let { test.systemProperty("java.library.path", it) } }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
