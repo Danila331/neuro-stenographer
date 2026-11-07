@@ -111,7 +111,7 @@ class Pipeline:
         lang = cfg.get("language") or {}
         self.lang_mode = lang.get("mode", "auto")
         if self.lang_mode == "auto" and lang.get("lid_model") and cfg.get("asr_en"):
-            self.lid = LanguageId(self.root / lang["lid_model"], self.threads, float(lang.get("lid_seconds", 10.0)))
+            self.lid = LanguageId(self.root / lang["lid_model"], 1, float(lang.get("lid_seconds", 10.0)))
         elif self.lang_mode == "auto":
             log.info("language.mode=auto without lid_model/asr_en: using ru")
         if self.lang_mode == "en" and not cfg.get("asr_en"):

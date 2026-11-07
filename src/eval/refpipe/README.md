@@ -77,6 +77,8 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
 * **LanguageId** (`lid.py`) — `language.mode`: `auto` (Whisper-LID по первым `language.lid_seconds`≈10 с речи;
   `en` -> `asr_en`, всё остальное -> `ru`), `ru`, `en`. Без `language.lid_model` или `asr_en` — всегда `ru`. `asr_en` — та же
   структура, что `asr` (недостающие поля берутся из дефолтов).
+* **vad.chunking** — `pack` (по умолчанию, упаковка bench_asr) или `legacy` (первая версия refpipe, ровно то, что делает
+  Android `ChunkPlanner`: паддинг со склейкой, без правила `min_s`). Для паритета с текущим Android: `vad.chunking=legacy`.
 * **vad.rescue** (экспериментально, `vad.rescue={enabled,snr_db,abs_floor_db,bridge_ms,min_ms,margin_ms}`) —
   энергетические кандидаты речи там, где Silero ничего не нашёл (кадры 20 мс; порог = max(10-й перцентиль + `snr_db`,
   `abs_floor_db`); склейка пауз < `bridge_ms`; куски ≥ `min_ms`, не пересекающиеся с VAD ± `margin_ms`).
@@ -88,6 +90,15 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
   (`from_nemo_ctc`), `transducer` (zipformer и т. п.), `whisper` (без меток токенов). Файлы модели ищутся по соглашению
   (`encoder.int8.onnx`, `decoder.onnx`, `joiner.onnx`, `model.int8.onnx`, `tokens.txt`). `asr.batch_size` (по умолчанию 1 =
   как на Android) — чанков за один `decode_streams`.
+* **Постобработка** (`postprocess`): `drop_tiny_chunks` (чанк с ≤ `max_chars` букв/цифр в выводе отбрасывается),
+  `numbers=words` (цифры → слова, `stenoeval.textnorm.spell_numbers`; слово делит интервал поровну),
+  `strip_dashes` (B39): `off` | `after_terminal` — удалить серии «—»/«–» (U+2014/U+2013), стоящие сразу после `. ? ! …`
+  («Уточните.—» → «Уточните.») | `all` — удалить все «—»/«–» (дефис-минус U+002D не трогается). Применяется к словам ASR
+  после `numbers`, до Aligner; слово, ставшее пустым, удаляется.
+* **Язык по чанкам** (`language.per_chunk=true`) — как Android `LanguageSmoother`: LID по первым `lid_seconds` каждого чанка
+  ≥ 1.5 с (LID с 1 потоком, как на Android), бинаризация en/не-en, старт в `ru`, переключение на предсказание p, только если
+  следующий чанк с предсказанием тоже p либо чанк ≥ `language.switch_min_ms` (6000); короткие чанки наследуют состояние.
+  Файловый LID в этом режиме не выполняется.
 * **Слова и время** — sherpa отдаёт только *начало* каждого токена (сетка 40 мс), длительностей у GigaAM нет. GigaAM-токены
   — символы и пробел. `word.start` = время первого символа; `word.end` = время последнего символа + `word_tail_ms`
   (40 мс = кадр энкодера), но не позже начала следующего слова; абсолютное время = `chunk.start + round(ts*1000)`;
