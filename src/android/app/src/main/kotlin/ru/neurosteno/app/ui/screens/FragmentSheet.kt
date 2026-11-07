@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import ru.neurosteno.app.FragmentParams
 import ru.neurosteno.app.ui.Format
@@ -63,7 +64,7 @@ data class FragmentOptions(val language: FragmentLanguage, val recomputeSpeakers
  * Лист «Обработать заново»: язык, «Заново определить говорящих» (выкл. по умолчанию) и, если выделено больше одной реплики и
  * пересчёт говорящих включён, — число говорящих (авто / 1–4).
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 fun FragmentOptionsSheet(
     rangeLabel: String,
@@ -80,7 +81,8 @@ fun FragmentOptionsSheet(
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
         Column(
-            Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 16.dp),
+            Modifier.semantics { testTagsAsResourceId = true } // окно листа отдельное: resource-id тегов нужны скриптам автоматизации
+                .verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text("Обработать заново", style = MaterialTheme.typography.titleLarge)

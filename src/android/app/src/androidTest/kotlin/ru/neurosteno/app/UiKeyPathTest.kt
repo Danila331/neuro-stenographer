@@ -14,7 +14,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.longClick
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
@@ -178,7 +177,7 @@ class UiKeyPathTest {
 
         // долгое нажатие -> режим выделения, одна реплика
         rule.onNodeWithText("добрый день коллеги").performTouchInput { longClick() }
-        rule.onNodeWithText("Выбрано: 1 реплика").assertIsDisplayed()
+        rule.onNodeWithText("Выбрано: 1").assertIsDisplayed()
         rule.onNodeWithTag("btn_fragment_reprocess").performClick()
 
         // лист: язык, выкл. по умолчанию «заново определить говорящих»; для одной реплики числа говорящих нет
@@ -190,7 +189,7 @@ class UiKeyPathTest {
 
         // расширяем выделение на соседнюю реплику: теперь число говорящих показывается
         rule.onNodeWithText("здравствуйте начнём совещание").performClick()
-        rule.onNodeWithText("Выбрано: 2 реплики").assertIsDisplayed()
+        rule.onNodeWithText("Выбрано: 2").assertIsDisplayed()
         rule.onNodeWithTag("btn_fragment_reprocess").performClick()
         rule.onNodeWithTag("fragment_lang_en").performClick()
         rule.onNodeWithTag("fragment_recompute").performClick()

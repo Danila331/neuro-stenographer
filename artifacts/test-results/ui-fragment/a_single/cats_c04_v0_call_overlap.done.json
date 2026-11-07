@@ -1,0 +1,46 @@
+{
+  "status": "done",
+  "source": "cats_c04_v0_call_overlap.wav",
+  "finished_at_ms": 1794014767625,
+  "audio_duration_ms": 30015,
+  "processing_ms": 10033,
+  "rtf": 0.334,
+  "language": "ru",
+  "utterances": 9,
+  "tier": "medium",
+  "model_set": "medium",
+  "stage_ms": {
+    "decode": 143,
+    "vad": 676,
+    "lid": 1168,
+    "asr": 6446,
+    "diarization": 7992,
+    "align": 1,
+    "punctuation": 0,
+    "export": 3,
+    "total": 10033
+  },
+  "peak_pss_mb": 1288,
+  "threads": 4,
+  "device_model": "Google sdk_gphone64_arm64",
+  "android_sdk": 35,
+  "total_ram_mb": 3920,
+  "app_version": "0.1.0-medium",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.medium/files/results",
+  "files": [
+    "cats_c04_v0_call_overlap.json",
+    "cats_c04_v0_call_overlap.full.json"
+  ],
+  "problems": [],
+  "warnings": [],
+  "fragment": {
+    "start_ms": 5884,
+    "end_ms": 7084,
+    "outcome": "REPLACED",
+    "language": "ru",
+    "recompute_speakers": false,
+    "processing_ms": 1207,
+    "removed": 1,
+    "added": 1
+  }
+}

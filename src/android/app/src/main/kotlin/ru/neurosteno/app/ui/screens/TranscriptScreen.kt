@@ -179,33 +179,39 @@ fun TranscriptScreen(
         snapshotFlow { listState.isScrollInProgress }.collect { scrolling -> if (scrolling && !programmatic && player.playing) follow = false }
     }
 
-    // результат пересчёта фрагмента (сервис уже сохранил его на диск): перечитываем, подсвечиваем, предлагаем «Отменить»
-    LaunchedEffect(fragmentState) {
-        val fs = fragmentState
-        when {
-            fs is FragmentUi.Finished && fs.entryId == session.entryId -> {
-                FragmentState.consume()
-                selRaw = -1L
-                if (fs.changed) {
-                    session.reloadAfterFragment(fs.added)
-                    val first = fs.added.firstOrNull()
-                    session.doc.value?.transcript?.utterances?.indexOfFirst { first != null && it.startMs == first.startMs }?.takeIf { it >= 0 }
-                        ?.let { listState.animateScrollToItem(it + HEADER_ITEMS) }
-                    snackbar.currentSnackbarData?.dismiss()
-                    val msg = "${fs.label} обработан заново: " + Format.plural(fs.added.size, "новая реплика", "новые реплики", "новых реплик")
-                    val r = snackbar.showSnackbar(msg, actionLabel = "Отменить", duration = SnackbarDuration.Long)
-                    if (r == SnackbarResult.ActionPerformed) {
-                        if (session.undoFragment()) snackbar.showSnackbar("Возвращено как было")
+    // Результат пересчёта фрагмента (сервис уже сохранил его на диск): перечитываем, подсвечиваем, предлагаем «Отменить».
+    // Подписка на поток, а не LaunchedEffect(state): consume() меняет состояние и отменил бы собственный эффект на полпути.
+    LaunchedEffect(session.entryId) {
+        FragmentState.state.collect { fs ->
+            when {
+                fs is FragmentUi.Finished && fs.entryId == session.entryId -> {
+                    FragmentState.consume()
+                    selRaw = -1L
+                    if (fs.changed) {
+                        session.reloadAfterFragment(fs.added)
+                        val first = fs.added.firstOrNull()
+                        session.doc.value?.transcript?.utterances?.indexOfFirst { first != null && it.startMs == first.startMs }?.takeIf { it >= 0 }
+                            ?.let { listState.animateScrollToItem(it + HEADER_ITEMS) }
+                        scope.launch {
+                            snackbar.currentSnackbarData?.dismiss()
+                            val msg = "${fs.label} обработан заново: " + Format.plural(fs.added.size, "новая реплика", "новые реплики", "новых реплик")
+                            val r = snackbar.showSnackbar(msg, actionLabel = "Отменить", duration = SnackbarDuration.Long)
+                            if (r == SnackbarResult.ActionPerformed && session.undoFragment()) snackbar.showSnackbar("Возвращено как было")
+                        }
+                    } else {
+                        scope.launch {
+                            snackbar.currentSnackbarData?.dismiss()
+                            snackbar.showSnackbar(fs.message, duration = SnackbarDuration.Long)
+                        }
                     }
-                } else {
-                    snackbar.currentSnackbarData?.dismiss()
-                    snackbar.showSnackbar(fs.message, duration = SnackbarDuration.Long)
                 }
-            }
-            fs is FragmentUi.Failed && fs.entryId == session.entryId -> {
-                FragmentState.consume()
-                snackbar.currentSnackbarData?.dismiss()
-                snackbar.showSnackbar(fs.message, duration = SnackbarDuration.Long)
+                fs is FragmentUi.Failed && fs.entryId == session.entryId -> {
+                    FragmentState.consume()
+                    scope.launch {
+                        snackbar.currentSnackbarData?.dismiss()
+                        snackbar.showSnackbar(fs.message, duration = SnackbarDuration.Long)
+                    }
+                }
             }
         }
     }
@@ -223,7 +229,7 @@ fun TranscriptScreen(
         topBar = {
           if (selection != null) {
             NeuroTopBar(
-                title = "Выбрано: ${Format.plural(selection.size, "реплика", "реплики", "реплик")}",
+                title = "Выбрано: ${selection.size}",
                 onBack = { selRaw = -1L },
                 actions = {
                     androidx.compose.material3.TextButton(onClick = { showFragmentSheet = true }, modifier = Modifier.testTag("btn_fragment_reprocess")) {

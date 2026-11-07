@@ -2,6 +2,7 @@
 """Минимальная автоматизация интерфейса через adb + uiautomator (для смоука и скриншотов).
 
     uia.py tap  <text|id:resource-id|desc:content-desc>   # тап по центру найденного элемента (подстрока, без регистра)
+    uia.py longtap <селектор>                             # долгое нажатие (900 мс)
     uia.py wait <селектор> [секунд]                       # ждать появления элемента
     uia.py has  <селектор>                                # код 0, если элемент есть
     uia.py text <селектор>                                # текст элемента
@@ -85,6 +86,11 @@ def main():
             print(f[2])
         else:
             adb("shell", "input", "tap", str(f[0]), str(f[1]))
+    elif cmd == "longtap":
+        f = find(args[0])
+        if not f:
+            raise SystemExit(f"элемент не найден: {args[0]}")
+        adb("shell", "input", "swipe", str(f[0]), str(f[1]), str(f[0]), str(f[1]), "900")
     elif cmd == "wait":
         end = time.time() + float(args[1] if len(args) > 1 else 30)
         while time.time() < end:
