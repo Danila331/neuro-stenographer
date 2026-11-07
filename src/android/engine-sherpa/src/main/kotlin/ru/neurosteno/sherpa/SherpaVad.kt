@@ -67,7 +67,7 @@ class SherpaVad(
         while (!vad.empty()) {
             val seg = vad.front()
             vad.pop()
-            out += SampleSpan(seg.start, seg.start + seg.samples.size)
+            out += SampleSpan(seg.start.toInt(), seg.start.toInt() + seg.samples.size)
         }
     }
 
