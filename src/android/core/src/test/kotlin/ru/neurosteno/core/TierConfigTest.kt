@@ -220,7 +220,7 @@ class TierConfigTest {
             val c = TierConfig.parse(load(tier))
             assertTrue(c.live.enabled, tier)
             assertEquals("asr/streaming-zipformer-small-ru-int8", c.live.modelDir, tier)
-            assertEquals(listOf("asr/streaming-zipformer-small-ru-int8"), c.optionalModelPaths(), tier)
+            assertTrue("asr/streaming-zipformer-small-ru-int8" in c.optionalModelPaths(), tier)
             // превью необязательно: его модель не входит ни в обязательные, ни в requiredModelPaths (наборы без неё остаются полными)
             assertFalse("asr/streaming-zipformer-small-ru-int8" in c.requiredModelPaths(), tier)
             assertFalse("asr/streaming-zipformer-small-ru-int8" in c.essentialModelPaths(), tier)
@@ -233,5 +233,46 @@ class TierConfigTest {
         val c = TierConfig.parse("{\"tier\":\"x\"}")
         assertFalse(c.live.enabled)
         assertTrue(c.optionalModelPaths().isEmpty())
+    }
+
+    @Test
+    fun `shipped tier configs carry the search block of the spec`() {
+        for (tier in listOf("lite", "medium", "hard")) {
+            val s = TierConfig.parse(load(tier)).search
+            val lite = tier == "lite"
+            assertTrue(s.enabled, tier)
+            assertEquals(if (lite) "embed/rubert-tiny-turbo/model.int8.onnx" else "embed/user2-small/model.int8.onnx", s.embedder.model, tier)
+            assertEquals(if (lite) "embed/rubert-tiny-turbo/tokenizer.json" else "embed/user2-small/tokenizer.json", s.embedder.tokenizer, tier)
+            assertEquals(if (lite) 312 else 384, s.embedder.dim, tier)
+            assertEquals(if (lite) "cls" else "mean", s.embedder.pooling, tier)
+            assertEquals(if (lite) "" else "search_query: ", s.embedder.queryPrefix, tier)
+            assertEquals(if (lite) "" else "search_document: ", s.embedder.docPrefix, tier)
+            assertEquals("win3s1", s.chunk, tier)
+            assertEquals(1.2, s.bm25.k1, 0.0, tier)
+            assertEquals(0.75, s.bm25.b, 0.0, tier)
+            assertEquals("snow5", s.bm25.stemmer, tier)
+            assertEquals("rrf", s.fusion.method, tier)
+            assertEquals(60, s.fusion.k, tier)
+            assertEquals(0.5, s.fusion.denseWeight, 0.0, tier)
+            assertEquals("soft", s.speakerFilter, tier)
+            assertEquals(5, s.topK, tier)
+            assertEquals(if (lite) "bruteforce" else "objectbox", s.store.kind, tier)
+            assertEquals("bruteforce", s.store.fallback, tier)
+            assertEquals(!lite, s.answer.enabled, tier)
+            assertEquals(3, s.answer.topChunks, tier)
+            assertEquals(3200, s.answer.maxContextChars, tier)
+            assertEquals(160, s.answer.maxNewTokens, tier)
+            val c = TierConfig.parse(load(tier))
+            assertTrue(s.embedder.model!! in c.optionalModelPaths() && s.embedder.tokenizer!! in c.optionalModelPaths(), tier)
+            assertFalse(s.embedder.model!! in c.requiredModelPaths(), tier) // поиск необязателен: набор без модели эмбеддингов остаётся полным
+        }
+    }
+
+    @Test
+    fun `search block defaults when absent`() {
+        val c = TierConfig.parse("{}")
+        assertEquals("win3s1", c.search.chunk)
+        assertEquals("bruteforce", c.search.store.kind)
+        assertFalse(c.search.answer.enabled)
     }
 }
