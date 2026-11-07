@@ -54,3 +54,4 @@ artifacts/demo/*.mov
 artifacts/demo/*.mkv
 artifacts/demo/*.wav
 artifacts/apk/*.apk
+*.egg-info/
