@@ -9,7 +9,7 @@ from .text import terms
 
 
 class BM25:
-    def __init__(self, docs: list[str], k1: float = 1.2, b: float = 0.75, mode: str = "snow"):
+    def __init__(self, docs: list[str], k1: float = 1.2, b: float = 0.75, mode: str = "snow5"):
         self.k1, self.b, self.mode = k1, b, mode
         self.tf = [Counter(terms(d, mode=mode)) for d in docs]
         self.dl = np.array([sum(c.values()) for c in self.tf], dtype=np.float32)

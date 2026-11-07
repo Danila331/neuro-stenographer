@@ -105,7 +105,7 @@ def main():
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--flags", default=None, help="llama-server extra flags; default = phone flags (-nr, KV q8_0, fa)")
     a = ap.parse_args()
-    docs = [d for d in all_docs("asr") if not a.docs or d.id in a.docs]
+    docs = [d for d in all_docs("asr", long=True) if (d.id in a.docs if a.docs else d.id != "L16")]
     vecs = {d.id: None for d in docs}
     if a.seg_model != "none":
         from .embed import make

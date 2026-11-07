@@ -19,7 +19,7 @@ class Hit:
 
 
 class Index:
-    def __init__(self, chunks: list[Chunk], recs: dict[str, Record], vectors: np.ndarray | None = None, stem_mode: str = "snow"):
+    def __init__(self, chunks: list[Chunk], recs: dict[str, Record], vectors: np.ndarray | None = None, stem_mode: str = "snow5"):
         self.chunks, self.recs = chunks, recs
         self.vecs = vectors
         self.bm25 = BM25([c.text for c in chunks], mode=stem_mode)

@@ -30,6 +30,7 @@ def main():
     ap.add_argument("--models", nargs="+", default=["1.7b"])
     ap.add_argument("--corpus", default="asr")
     ap.add_argument("--tag", default="a")
+    ap.add_argument("--prompt", default="search_answer_system.txt")
     ap.add_argument("--n-ctx", type=int, default=4096)
     a = ap.parse_args()
     corpus, qs = build_questions(a.corpus)
@@ -50,7 +51,7 @@ def main():
         with server(m, n_ctx=a.n_ctx) as srv:
             for qid, rec, text, q in items:
                 hits = ret[qid]
-                r = A.answer(srv, hits, corpus, text)
+                r = A.answer(srv, hits, corpus, text, prompt_file=a.prompt)
                 ans: A.Answer = r["answer"]
                 low = norm(ans.text)
                 row = {"id": qid, "neg": q is None, "answer": ans.text, "refused": "в найденных фрагментах этого нет" in low, "cites_ok": len(ans.valid_cites), "cites_bad": ans.bad_cites,
@@ -67,7 +68,7 @@ def main():
         ok_ret = [r for r in pos if r["retrieved"]]
         summ = {
             "model": m, "n_pos": len(pos), "answer_correct": round(np.mean([r["correct"] for r in pos]), 3),
-            "correct_when_retrieved": round(np.mean([r["correct"] for r in ok_ret]), 3), "retrieved": round(np.mean([r["retrieved"] for r in pos]), 3),
+            "strict_ok": round(np.mean([r["correct"] and r["cited_gold"] and not r["refused"] for r in pos]), 3), "correct_when_retrieved": round(np.mean([r["correct"] for r in ok_ret]), 3), "retrieved": round(np.mean([r["retrieved"] for r in pos]), 3),
             "has_cite": round(np.mean([r["cites_ok"] + r["cites_bad"] > 0 for r in pos]), 3),
             "cite_valid": round(sum(r["cites_ok"] for r in pos + neg) / max(1, sum(r["cites_ok"] + r["cites_bad"] for r in pos + neg)), 3),
             "cites_gold": round(np.mean([r["cited_gold"] for r in pos]), 3), "neg_refused": f"{sum(r['refused'] for r in neg)}/{len(neg)}",

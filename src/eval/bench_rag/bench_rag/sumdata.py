@@ -19,6 +19,7 @@ COMPOSITES = {
     "M7": ["c28", "c29", "c31", "c34", "c37"],
     "M8": ["c07", "c08", "c10", "c16", "c38"],
 }
+LONG = {"L16": [f"c{i:02d}" for i in (1, 2, 3, 4, 5, 6, 9, 13, 14, 18, 20, 21, 23, 24, 30, 36)]}    # ~16 topics, a long meeting (map-reduce)
 # (kind, any-of substrings of the item text, who alternatives or None, substring of the reference utterance of the assignee/author or None)
 FACTS: dict[str, list[tuple]] = {
     "c02": [("decision", ["багир", "дежурн"], None, None), ("task", ["дежур", "смен"], ["багир"], None)],
@@ -92,9 +93,10 @@ def keywords() -> dict[str, list[str]]:
 
 def composite(name: str, kind: str = "asr", gap_ms: int = 5000) -> Doc:
     titles, kws = cats_titles(), keywords()
+    ids = COMPOSITES.get(name) or LONG[name]
     utts, topics, facts = [], [], []
     off = 0
-    for cid in COMPOSITES[name]:
+    for cid in ids:
         asr = load_record(cid, kind)
         ref = load_record(cid, "ref")
         a = len(utts)
@@ -147,5 +149,6 @@ def dialog(name: str) -> Doc:
     return Doc(name, rec, topics, facts, DIALOG_CLAIMS[name])
 
 
-def all_docs(kind: str = "asr") -> list[Doc]:
-    return [composite(n, kind) for n in COMPOSITES] + [dialog(n) for n in DIALOG_TOPICS]
+def all_docs(kind: str = "asr", long: bool = False) -> list[Doc]:
+    docs = [composite(n, kind) for n in COMPOSITES] + [dialog(n) for n in DIALOG_TOPICS]
+    return docs + ([composite(n, kind) for n in LONG] if long else [])

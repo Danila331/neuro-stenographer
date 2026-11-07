@@ -39,7 +39,7 @@ def evaluate(corpus, qs, chunks, emb, *, tag, scope_all=False, **kw) -> dict:
     t_doc = 0.0
     if emb is not None:
         vecs, t_doc = cached_embed(emb, [c.embed_text for c in chunks], "doc", tag)
-    idx = Index(chunks, corpus, vecs, stem_mode=kw.pop("stem_mode", "snow"))
+    idx = Index(chunks, corpus, vecs, stem_mode=kw.pop("stem_mode", "snow5"))
     qcache: dict[str, np.ndarray] = {}
 
     def qvec(q):
@@ -74,7 +74,7 @@ def main():
     ap.add_argument("--fusion", default="rrf")
     ap.add_argument("--alpha", type=float, default=0.5)
     ap.add_argument("--speaker", default="hard")
-    ap.add_argument("--stem", default="snow")
+    ap.add_argument("--stem", default="snow5")
     ap.add_argument("--scope-all", action="store_true")
     ap.add_argument("--bm25-only", action="store_true")
     ap.add_argument("--out", default="")

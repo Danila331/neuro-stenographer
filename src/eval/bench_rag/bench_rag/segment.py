@@ -52,3 +52,20 @@ def _split_long(s, chars, a, b, max_chars):
     lo, hi = a + 1, b - 2
     g = min(range(lo, hi + 1), key=lambda g: s[g - 1] if g - 1 < len(s) else 1.0) if hi >= lo else (a + b) // 2
     return _split_long(s, chars, a, g, max_chars) + [g] + _split_long(s, chars, g, b, max_chars)
+
+
+def lexical_vectors(texts: list[str]) -> np.ndarray:
+    """TF-IDF over stems of one record (no model): a zero-cost alternative to utterance embeddings for the valley search."""
+    import math
+    from collections import Counter
+
+    from .text import terms
+    docs = [Counter(terms(t, mode="snow5")) for t in texts]
+    df = Counter(w for d in docs for w in d)
+    vocab = {w: i for i, w in enumerate(df)}
+    n = len(texts)
+    m = np.zeros((n, max(1, len(vocab))), dtype=np.float32)
+    for i, d in enumerate(docs):
+        for w, f in d.items():
+            m[i, vocab[w]] = (1 + math.log(f)) * math.log(1 + n / df[w])
+    return m

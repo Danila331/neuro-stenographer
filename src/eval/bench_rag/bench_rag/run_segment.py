@@ -29,8 +29,13 @@ def main():
     a = ap.parse_args()
     docs = all_docs("asr")
     for m in a.models:
-        emb = make(m)
-        vecs = {d.id: emb.embed([f"{u.text}" for u in d.rec.utts], "doc") for d in docs}
+        if m == 'lexical':
+            from .segment import lexical_vectors
+            vecs = {d.id: lexical_vectors([u.text for u in d.rec.utts]) for d in docs}
+            emb = None
+        else:
+            emb = make(m)
+            vecs = {d.id: emb.embed([f"{u.text}" for u in d.rec.utts], "doc") for d in docs}
         for k in a.k:
             for al, mc, mu in [(x, y, z) for x in a.alpha for y in a.min_chars for z in a.min_utts]:
                 P = R = F = n = 0
@@ -41,7 +46,8 @@ def main():
                     p, r, f = f1(pred, gold, a.tol)
                     P += p; R += r; F += f; n += 1; ng += len(gold); npred += len(pred)
                 print(json.dumps({"model": m, "k": k, "alpha": al, "mc": mc, "mu": mu, "P": round(P / n, 3), "R": round(R / n, 3), "F1": round(F / n, 3), "gold": ng, "pred": npred}), flush=True)
-        emb.close()
+        if emb:
+            emb.close()
 
 
 if __name__ == "__main__":

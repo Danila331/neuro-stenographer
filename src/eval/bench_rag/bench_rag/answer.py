@@ -14,8 +14,8 @@ CITE = re.compile(r"\[(\d{1,3}):(\d{2}),\s*Говорящий\s*(\d+)\]")
 NOANS = "В найденных фрагментах этого нет."
 
 
-def system() -> str:
-    return (PROMPTS / "search_answer_system.txt").read_text(encoding="utf-8").strip("\n")
+def system(name: str = "search_answer_system.txt") -> str:
+    return (PROMPTS / name).read_text(encoding="utf-8").strip("\n")
 
 
 def context(hits: list[Hit], recs: dict[str, Record], max_chars: int = 3200) -> tuple[str, list[tuple[str, int, str]]]:
@@ -70,9 +70,9 @@ def verify(text: str, cites: list[tuple[str, int, str]]) -> Answer:
     return Answer(clean, ok, bad, NOANS[:20].lower() in text.lower())
 
 
-def answer(srv, hits: list[Hit], recs: dict[str, Record], question: str, max_new: int = 160) -> dict:
+def answer(srv, hits: list[Hit], recs: dict[str, Record], question: str, max_new: int = 160, prompt_file: str = "search_answer_system.txt") -> dict:
     ctx, cites = context(hits, recs)
-    prompt = chatml(system(), f"Фрагменты:\n{ctx}\n\nВопрос: {question}")
+    prompt = chatml(system(prompt_file), f"Фрагменты:\n{ctx}\n\nВопрос: {question}")
     r = srv.complete(prompt, n_predict=max_new, cache_prompt=True)
     return {"answer": verify(r["text"], cites), "raw": r["text"], "prompt_n": r["prompt_n"], "cache_n": r["cache_n"], "prompt_ms": r["prompt_ms"],
             "predicted_n": r["predicted_n"], "predicted_ms": r["predicted_ms"], "n_cites_ctx": len(cites)}

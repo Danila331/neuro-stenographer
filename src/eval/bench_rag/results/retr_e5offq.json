@@ -1,0 +1,190 @@
+[
+ {
+  "model": "e5-small-offq",
+  "mode": "hybrid",
+  "corpus": "asr",
+  "chunk": "turn",
+  "all": {
+   "hit1": 0.446,
+   "hit5": 0.839,
+   "recall5": 0.821,
+   "mrr": 0.608
+  },
+  "speaker": {
+   "hit1": 0.471,
+   "hit5": 0.882,
+   "recall5": 0.882,
+   "mrr": 0.667
+  },
+  "name": {
+   "hit1": 0.25,
+   "hit5": 0.5,
+   "recall5": 0.5,
+   "mrr": 0.406
+  },
+  "topic": {
+   "hit1": 0.2,
+   "hit5": 0.867,
+   "recall5": 0.867,
+   "mrr": 0.449
+  },
+  "history": {
+   "hit1": 0.65,
+   "hit5": 0.85,
+   "recall5": 0.8,
+   "mrr": 0.718
+  },
+  "n": 56,
+  "chunks": 455,
+  "t_doc_s": 0.6,
+  "miss": [
+   "s02",
+   "s06",
+   "n02",
+   "n04",
+   "t07",
+   "t12",
+   "h01",
+   "h04",
+   "h20"
+  ]
+ },
+ {
+  "model": "e5-small-offq",
+  "mode": "dense",
+  "corpus": "asr",
+  "chunk": "turn",
+  "all": {
+   "hit1": 0.464,
+   "hit5": 0.821,
+   "recall5": 0.795,
+   "mrr": 0.611
+  },
+  "speaker": {
+   "hit1": 0.529,
+   "hit5": 0.882,
+   "recall5": 0.882,
+   "mrr": 0.696
+  },
+  "name": {
+   "hit1": 0.25,
+   "hit5": 0.5,
+   "recall5": 0.5,
+   "mrr": 0.406
+  },
+  "topic": {
+   "hit1": 0.333,
+   "hit5": 0.867,
+   "recall5": 0.867,
+   "mrr": 0.514
+  },
+  "history": {
+   "hit1": 0.55,
+   "hit5": 0.8,
+   "recall5": 0.725,
+   "mrr": 0.652
+  },
+  "n": 56,
+  "chunks": 455,
+  "t_doc_s": 0.0,
+  "miss": [
+   "s02",
+   "s06",
+   "n02",
+   "n04",
+   "t07",
+   "t12",
+   "h01",
+   "h04",
+   "h05",
+   "h20"
+  ]
+ },
+ {
+  "model": "e5-small-offq",
+  "mode": "hybrid",
+  "corpus": "asr",
+  "chunk": "win3",
+  "all": {
+   "hit1": 0.732,
+   "hit5": 0.964,
+   "recall5": 0.955,
+   "mrr": 0.832
+  },
+  "speaker": {
+   "hit1": 0.765,
+   "hit5": 1.0,
+   "recall5": 1.0,
+   "mrr": 0.882
+  },
+  "name": {
+   "hit1": 0.5,
+   "hit5": 1.0,
+   "recall5": 1.0,
+   "mrr": 0.75
+  },
+  "topic": {
+   "hit1": 0.8,
+   "hit5": 1.0,
+   "recall5": 1.0,
+   "mrr": 0.889
+  },
+  "history": {
+   "hit1": 0.7,
+   "hit5": 0.9,
+   "recall5": 0.875,
+   "mrr": 0.764
+  },
+  "n": 56,
+  "chunks": 385,
+  "t_doc_s": 1.2,
+  "miss": [
+   "h04",
+   "h05"
+  ]
+ },
+ {
+  "model": "e5-small-offq",
+  "mode": "dense",
+  "corpus": "asr",
+  "chunk": "win3",
+  "all": {
+   "hit1": 0.714,
+   "hit5": 0.946,
+   "recall5": 0.938,
+   "mrr": 0.802
+  },
+  "speaker": {
+   "hit1": 0.824,
+   "hit5": 1.0,
+   "recall5": 1.0,
+   "mrr": 0.882
+  },
+  "name": {
+   "hit1": 0.25,
+   "hit5": 1.0,
+   "recall5": 1.0,
+   "mrr": 0.5
+  },
+  "topic": {
+   "hit1": 0.8,
+   "hit5": 1.0,
+   "recall5": 1.0,
+   "mrr": 0.889
+  },
+  "history": {
+   "hit1": 0.65,
+   "hit5": 0.85,
+   "recall5": 0.825,
+   "mrr": 0.729
+  },
+  "n": 56,
+  "chunks": 385,
+  "t_doc_s": 0.0,
+  "miss": [
+   "h04",
+   "h05",
+   "h11"
+  ]
+ }
+]

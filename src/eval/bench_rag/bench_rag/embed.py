@@ -31,6 +31,7 @@ class Spec:
 
 SPECS: dict[str, Spec] = {s.name: s for s in [
     Spec("e5-small", "mean", "query: ", "passage: ", dir="e5-small", onnx="onnx/model.int8.onnx", tok="onnx/tokenizer.json", license="MIT", repo="intfloat/multilingual-e5-small"),
+    Spec("e5-small-offq", "mean", "query: ", "passage: ", dir="e5-small", onnx="onnx/model_qint8_avx512_vnni.onnx", tok="onnx/tokenizer.json", license="MIT", repo="intfloat/multilingual-e5-small"),
     Spec("e5-base", "mean", "query: ", "passage: ", dir="e5-base", onnx="onnx/model.int8.onnx", tok="onnx/tokenizer.json", license="MIT", repo="intfloat/multilingual-e5-base"),
     Spec("user-base", "mean", "search_query: ", "search_document: ", dir="user-base", license="Apache-2.0", repo="deepvk/USER-base"),
     Spec("user2-small", "mean", "search_query: ", "search_document: ", dir="user2-small", license="Apache-2.0", repo="deepvk/USER2-small"),
