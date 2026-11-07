@@ -25,6 +25,7 @@ import ru.neurosteno.app.ProcessingUi
 import ru.neurosteno.app.data.ResultsAutosave
 import ru.neurosteno.app.edit.EditableTranscript
 import ru.neurosteno.llm.LlamaAssistant
+import ru.neurosteno.llm.toLlamaOptions
 
 /** Можно ли сейчас пользоваться LLM; [Unavailable.reason] показывается пользователю как есть. */
 sealed interface LlmAvailability {
@@ -45,6 +46,8 @@ data class LlmUi(
     val error: String? = null,
     val startedAtMs: Long = 0,
     val tokens: Int = 0,
+    /** `llm.quality = draft` (упрощённая модель, lite): интерфейс помечает протокол как черновой. */
+    val draft: Boolean = false,
 )
 
 /**
@@ -68,7 +71,7 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         if (boundEntry == entryId) return
         stop()
         boundEntry = entryId
-        _ui.value = LlmUi(protocol = savedProtocol.orEmpty(), protocolDone = !savedProtocol.isNullOrBlank())
+        _ui.value = LlmUi(protocol = savedProtocol.orEmpty(), protocolDone = !savedProtocol.isNullOrBlank(), draft = graph.activeConfig()?.first?.llm?.isDraft == true)
     }
 
     // ---- доступность ----
@@ -111,43 +114,29 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
             var promptTokens = 0
             var generatedTokens = 0
             var status = "error"
+            var options = ""
             try {
                 val cfg = graph.activeConfig()?.first ?: throw IllegalStateException("нет конфигурации")
                 val modelPath = cfg.llm.model ?: throw IllegalStateException("в наборе нет LLM")
                 model = modelName(modelPath)
                 val llm = ensureAssistant(cfg)
+                options = llm.appliedOptions
                 val lines = PromptBuilder.transcriptLines(t)
                 if (lines.isEmpty()) throw IllegalStateException("В расшифровке нет реплик")
-                val system = prompts.protocolSystem
-                val maxNew = PROTOCOL_MAX_TOKENS
-                val budget = PromptBuilder.contentBudgetChars(cfg.llm.nCtx, maxNew, system.length)
-                var chunks = PromptBuilder.chunk(lines, budget)
-                var material = chunks.joinToString("\n")
-                if (chunks.size > 1) {
-                    // длинная запись: сначала конспект каждого фрагмента, потом протокол по конспектам
-                    val notesBudget = PromptBuilder.contentBudgetChars(cfg.llm.nCtx, NOTES_MAX_TOKENS, prompts.notesSystem.length)
-                    val frag = PromptBuilder.chunk(lines, notesBudget)
-                    val notes = ArrayList<String>()
-                    frag.forEachIndexed { i, part ->
-                        _ui.update { it.copy(status = "Конспект части ${i + 1} из ${frag.size}…") }
-                        val prompt = PromptBuilder.chatml(prompts.notesSystem, "Фрагмент ${i + 1} из ${frag.size}:\n$part")
-                        promptTokens += estimatePromptTokens(prompt)
-                        notes += PromptBuilder.clean(generate(llm, prompt, NOTES_MAX_TOKENS) { generatedTokens++ })
-                    }
-                    val perNote = budget / frag.size.coerceAtLeast(1)
-                    material = notes.mapIndexed { i, n -> "Часть ${i + 1}:\n" + n.take(perNote) }.joinToString("\n\n")
-                    chunks = listOf(material)
+                _ui.update { it.copy(draft = cfg.llm.isDraft) }
+                val flow = ProtocolFlow(cfg.llm.nCtx, cfg.llm.chunkMergeProtocol, cfg.llm.filterQuotes, prompts.protocolSystem, prompts.notesSystem)
+                // весь поток -- в одном runInterruptible: отмена корутины прерывает поток, и llama.cpp останавливается на ближайшем токене
+                val text = runInterruptible(Dispatchers.Default) {
+                    flow.run(
+                        lines = lines,
+                        utteranceTexts = t.utterances.map { it.text },
+                        generate = ProtocolFlow.Generate { prompt, maxTokens, onPiece -> llm.generate(prompt, maxTokens, onPiece) },
+                        status = ProtocolFlow.Status { st -> _ui.update { it.copy(status = st) } },
+                        onPrompt = { promptTokens += estimatePromptTokens(it) },
+                        onPiece = { generatedTokens++; _ui.update { it.copy(tokens = it.tokens + 1) } },
+                        onText = { shown -> _ui.update { it.copy(protocol = shown) } },
+                    )
                 }
-                _ui.update { it.copy(status = "Составление протокола…") }
-                val prompt = PromptBuilder.chatml(system, "Расшифровка:\n$material")
-                promptTokens += estimatePromptTokens(prompt)
-                val sb = StringBuilder()
-                generate(llm, prompt, maxNew) { piece ->
-                    generatedTokens++
-                    sb.append(piece)
-                    _ui.update { it.copy(protocol = PromptBuilder.clean(sb.toString()), tokens = it.tokens + 1) }
-                }
-                val text = PromptBuilder.clean(sb.toString())
                 _ui.update { it.copy(running = false, protocol = text, protocolDone = true, status = "") }
                 if (entryId != null && text.isNotBlank()) graph.history.writeProtocol(entryId, text)
                 status = "ok"
@@ -158,7 +147,7 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
                 status = "error"
                 _ui.update { it.copy(running = false, status = "", error = "Не удалось составить протокол: ${e.message ?: e.javaClass.simpleName}") }
             } finally {
-                finishDiagnostics(entryId, "protocol", model, promptTokens, generatedTokens, startedAt, peakPss, status, sampler)
+                finishDiagnostics(entryId, "protocol", model, promptTokens, generatedTokens, startedAt, peakPss, status, sampler, options)
             }
         }
     }
@@ -177,15 +166,16 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
             var promptTokens = 0
             var generatedTokens = 0
             var status = "error"
+            var options = ""
             try {
                 val cfg = graph.activeConfig()?.first ?: throw IllegalStateException("нет конфигурации")
                 val modelPath = cfg.llm.model ?: throw IllegalStateException("в наборе нет LLM")
                 model = modelName(modelPath)
                 val llm = ensureAssistant(cfg)
+                options = llm.appliedOptions
                 val system = prompts.qaSystem
                 val budget = PromptBuilder.contentBudgetChars(cfg.llm.nCtx, QA_MAX_TOKENS, system.length + q.length)
-                val chunks = PromptBuilder.chunk(PromptBuilder.transcriptLines(t), budget)
-                val material = PromptBuilder.selectRelevant(chunks, q, budget).joinToString("\n...\n")
+                val material = PromptBuilder.qaMaterial(PromptBuilder.transcriptLines(t), q, budget, cfg.llm.qaChunkBudgetRatio).joinToString("\n...\n")
                 _ui.update { it.copy(status = "Поиск ответа…") }
                 val prompt = PromptBuilder.chatml(system, "Расшифровка:\n$material\n\nВопрос: $q")
                 promptTokens += estimatePromptTokens(prompt)
@@ -224,7 +214,7 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
                         qa = s.qa.mapIndexed { i, item -> if (i == index) item.copy(done = true) else item })
                 }
             } finally {
-                finishDiagnostics(entryId, "qa", model, promptTokens, generatedTokens, startedAt, peakPss, status, sampler)
+                finishDiagnostics(entryId, "qa", model, promptTokens, generatedTokens, startedAt, peakPss, status, sampler, options)
             }
         }
     }
@@ -260,7 +250,7 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
         val threads = minOf(cfg.llm.nThreads, Runtime.getRuntime().availableProcessors()).coerceAtLeast(1)
         val created = runInterruptible(Dispatchers.IO) {
             // GPU не используем (BACKLOG B11): CPU по умолчанию
-            LlamaAssistant(file, cfg.llm.nCtx, threads, gpuLayers = 0)
+            LlamaAssistant(file, cfg.llm.nCtx, threads, gpuLayers = 0, options = cfg.llm.toLlamaOptions())
         }
         synchronized(this) { assistant = created }
         return created
@@ -275,7 +265,7 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
 
     private fun finishDiagnostics(
         entryId: String?, kind: String, model: String, promptTokens: Int, generatedTokens: Int,
-        startedAt: Long, peakPss: AtomicInteger, status: String, sampler: Job,
+        startedAt: Long, peakPss: AtomicInteger, status: String, sampler: Job, options: String,
     ) {
         sampler.cancel()
         peakPss.updateAndGet { previous -> maxOf(previous, currentPssMb()) }
@@ -289,6 +279,7 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
             durationMs = durationMs,
             peakPssMb = peakPss.get(),
             status = status,
+            options = options,
         )
         android.util.Log.i("Neurosteno", LlmDiagnostics.doneLine(run))
         val sourceName = entryId?.let { graph.history.get(it)?.sourceName }
@@ -314,8 +305,6 @@ class LlmController(private val context: Context, private val graph: AppGraph) {
 
     private companion object {
         const val MIN_TOTAL_MB = 3_000L
-        const val PROTOCOL_MAX_TOKENS = 700
-        const val NOTES_MAX_TOKENS = 320
         const val QA_MAX_TOKENS = 400
         const val PSS_SAMPLE_INTERVAL_MS = 100L
     }

@@ -52,6 +52,9 @@ import ru.neurosteno.app.ui.components.AppIcons
 import ru.neurosteno.app.ui.components.MessageCard
 import ru.neurosteno.app.ui.components.NeuroTopBar
 
+/** Подпись для `llm.quality = draft`. */
+const val DRAFT_NOTICE = "Черновой протокол — упрощённая модель"
+
 private val SUGGESTIONS = listOf("О чём разговор?", "Какие решения приняты?", "Кому какие задачи поставлены?")
 
 /**
@@ -117,6 +120,10 @@ private fun ProtocolTab(
             }
         }
         ui.error?.let { MessageCard(it, isError = it != "Остановлено") }
+        // lite: Qwen3-0.6B слаб для протокола -- честно помечаем результат (llm.quality = draft)
+        if (ui.draft && (ui.protocol.isNotBlank() || ui.running)) {
+            MessageCard(DRAFT_NOTICE, modifier = Modifier.testTag("draft_notice"))
+        }
         if (ui.protocol.isNotBlank()) {
             Card(
                 Modifier.weight(1f, fill = false).fillMaxWidth(),
@@ -165,6 +172,7 @@ private fun QaTab(llm: LlmController, transcript: EditableTranscript, available:
             if (ui.qa.isEmpty()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (ui.draft) MessageCard("Ответы даёт упрощённая модель — проверяйте их по расшифровке.", modifier = Modifier.testTag("draft_notice_qa"))
                         Text(
                             "Задайте вопрос по расшифровке — модель ответит только по её тексту, на устройстве и без интернета.",
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,

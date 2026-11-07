@@ -35,6 +35,18 @@ object PromptBuilder {
         return out
     }
 
+    /**
+     * Материал для вопроса (B48, `qa_chunk_budget_ratio`). Помещается весь -- берётся целиком. Иначе расшифровка режется на фрагменты по
+     * [ratio] от [budgetChars] (0.25 -- около 1000 токенов на запрос вместо ~3000: 2–3 крупных куска, из которых раньше выбирался один),
+     * и выбираются самые подходящие вопросу, суммарно не больше размера одного фрагмента.
+     */
+    fun qaMaterial(lines: List<String>, question: String, budgetChars: Int, ratio: Double): List<String> {
+        val whole = chunk(lines, budgetChars)
+        if (whole.sumOf { it.length } <= budgetChars) return whole
+        val fragBudget = (budgetChars * ratio.coerceIn(0.05, 1.0)).toInt().coerceAtLeast(200)
+        return selectRelevant(chunk(lines, fragBudget), question, fragBudget)
+    }
+
     fun chatml(system: String, user: String): String = buildString {
         append("<|im_start|>system\n").append(system.trim()).append("<|im_end|>\n")
         append("<|im_start|>user\n").append(user.trim()).append("<|im_end|>\n")

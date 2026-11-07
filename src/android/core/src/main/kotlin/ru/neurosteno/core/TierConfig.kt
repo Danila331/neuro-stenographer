@@ -267,7 +267,26 @@ data class LlmConfig(
     @SerialName("speaker_fix") val speakerFix: Boolean = false,
     val summary: Boolean = true,
     @SerialName("time_budget_rtf") val timeBudgetRtf: Double = 0.15,
-)
+    // ---- память и скорость llama.cpp (BACKLOG B48; значения по умолчанию = прежнее поведение) ----
+    /** true -- не перепаковывать веса в отдельный буфер (`llama_model_params.use_extra_bufts = false`): -1 ГБ RSS у 1.7B, prefill медленнее. */
+    @SerialName("no_repack") val noRepack: Boolean = false,
+    @SerialName("flash_attn") val flashAttn: Boolean = false,
+    /** Тип KV-кэша: `f16` | `q8_0` (квантованный V требует flash attention). */
+    @SerialName("kv_cache_type") val kvCacheType: String = "f16",
+    @SerialName("use_mmap") val useMmap: Boolean = true,
+    // ---- протокол и вопросы ----
+    /** `chunk_merge` -- протокол по фрагментам и слияние разделов в коде; иное -- прежнее «конспект -> протокол». */
+    @SerialName("protocol_mode") val protocolMode: String = "notes",
+    /** Выбросить из протокола цитаты («...»), которых нет в расшифровке дословно. */
+    @SerialName("filter_quotes") val filterQuotes: Boolean = false,
+    /** Размер фрагмента расшифровки для вопросов -- доля бюджета контекста (0.25 -- ~1000 токенов на запрос). */
+    @SerialName("qa_chunk_budget_ratio") val qaChunkBudgetRatio: Double = 1.0,
+    /** `full` | `draft` (упрощённая модель: интерфейс помечает протокол как черновой). */
+    val quality: String = "full",
+) {
+    val isDraft: Boolean get() = quality.equals("draft", ignoreCase = true)
+    val chunkMergeProtocol: Boolean get() = protocolMode.equals("chunk_merge", ignoreCase = true)
+}
 
 @Serializable
 data class NormalizationConfig(
