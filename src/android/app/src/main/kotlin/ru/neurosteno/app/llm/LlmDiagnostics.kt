@@ -16,6 +16,8 @@ data class LlmRunMetrics(
     val durationMs: Long,
     val peakPssMb: Int,
     val status: String,
+    /** Фактически применённые параметры llama.cpp (`no_repack=1 mmap=1 flash_attn=enabled kv=q8_0 ...`), B48. */
+    val options: String = "",
 )
 
 /** Форматирование строки logcat и маркера `<source>.llm.json` (B43). */
@@ -23,7 +25,8 @@ object LlmDiagnostics {
     fun doneLine(run: LlmRunMetrics): String =
         "llm_done kind=${run.kind} model=${run.model} prompt_tokens=${run.promptTokens} " +
             "gen_tokens=${run.generatedTokens} tok_per_s=${String.format(Locale.ROOT, "%.2f", run.tokPerSecond)} " +
-            "ms=${run.durationMs} peak_pss_mb=${run.peakPssMb} status=${run.status}"
+            "ms=${run.durationMs} peak_pss_mb=${run.peakPssMb} status=${run.status}" +
+            if (run.options.isBlank()) "" else " llama_opts=\"${run.options}\""
 
     fun writeMarker(dir: File, sourceName: String, run: LlmRunMetrics, finishedAtMs: Long = System.currentTimeMillis()): Result<File> = runCatching {
         dir.mkdirs()
@@ -39,6 +42,7 @@ object LlmDiagnostics {
             put("ms", run.durationMs)
             put("peak_pss_mb", run.peakPssMb)
             put("status", run.status)
+            if (run.options.isNotBlank()) put("llama_options", run.options)
         }
         val target = File(dir, "${ResultsAutosave.baseName(sourceName)}.llm.json")
         val tmp = File(dir, target.name + ".tmp")

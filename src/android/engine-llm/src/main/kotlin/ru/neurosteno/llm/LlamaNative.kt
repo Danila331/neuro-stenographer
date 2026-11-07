@@ -12,7 +12,13 @@ internal object LlamaNative {
     }
 
     /** handle или 0 при ошибке (текст -- [lastError]). */
-    @JvmStatic external fun load(path: String, nCtx: Int, nThreads: Int, nGpuLayers: Int): Long
+    @JvmStatic external fun load(
+        path: String, nCtx: Int, nThreads: Int, nGpuLayers: Int,
+        noRepack: Boolean, flashAttn: Boolean, kvCacheType: String, useMmap: Boolean,
+    ): Long
+
+    /** Фактически применённые параметры загрузки (`no_repack=1 mmap=1 flash_attn=enabled kv=q8_0 ...`). */
+    @JvmStatic external fun options(handle: Long): String
 
     @JvmStatic external fun free(handle: Long)
 

@@ -178,4 +178,28 @@ class TierConfigTest {
         assertEquals("ru", c.language.effectiveMode)
         assertFalse(c.requiredModelPaths().contains("lid/m.onnx"))
     }
+
+    @Test
+    fun `llm runtime and protocol options default to the previous behaviour`() {
+        val c = TierConfig.parse("""{"llm":{"model":"llm/x.gguf"}}""").llm
+        assertFalse(c.noRepack)
+        assertFalse(c.flashAttn)
+        assertEquals("f16", c.kvCacheType)
+        assertTrue(c.useMmap)
+        assertFalse(c.chunkMergeProtocol)
+        assertFalse(c.filterQuotes)
+        assertEquals(1.0, c.qaChunkBudgetRatio, 0.0)
+        assertFalse(c.isDraft)
+    }
+
+    @Test
+    fun `shipped tier configs carry the B48 llm options`() {
+        for (tier in listOf("lite", "medium", "hard")) {
+            val c = TierConfig.parse(java.io.File(TestPaths.repoRoot, "config/tiers/$tier.json").readText()).llm
+            assertTrue(c.noRepack && c.flashAttn && c.useMmap && c.filterQuotes && c.chunkMergeProtocol, tier)
+            assertEquals("q8_0", c.kvCacheType, tier)
+            assertEquals(0.25, c.qaChunkBudgetRatio, 0.0, tier)
+            assertEquals(tier == "lite", c.isDraft, tier)
+        }
+    }
 }

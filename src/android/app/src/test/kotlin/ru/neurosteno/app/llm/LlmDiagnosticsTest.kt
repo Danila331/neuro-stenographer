@@ -46,4 +46,12 @@ class LlmDiagnosticsTest {
         assertEquals("ok", json["status"]!!.jsonPrimitive.content)
         assertFalse(java.io.File(dir, "встреча.llm.json.tmp").exists())
     }
+
+    @Test
+    fun logsAndMarksAppliedLlamaOptionsWhenKnown() {
+        val withOpts = run.copy(options = "no_repack=1 mmap=1 flash_attn=enabled kv=q8_0 n_ctx=4096 threads=4")
+        assertTrue(LlmDiagnostics.doneLine(withOpts).endsWith(" llama_opts=\"no_repack=1 mmap=1 flash_attn=enabled kv=q8_0 n_ctx=4096 threads=4\""))
+        val marker = LlmDiagnostics.writeMarker(dir, "a.wav", withOpts, finishedAtMs = 1).getOrThrow()
+        assertEquals("no_repack=1 mmap=1 flash_attn=enabled kv=q8_0 n_ctx=4096 threads=4", Json.parseToJsonElement(marker.readText()).jsonObject["llama_options"]!!.jsonPrimitive.content)
+    }
 }
