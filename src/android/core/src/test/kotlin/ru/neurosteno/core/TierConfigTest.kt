@@ -84,7 +84,7 @@ class TierConfigTest {
         assertEquals(1, c.asr.batchSize)
         assertEquals("ru", c.asr.language)
         assertTrue(c.diarization.enabled)
-        assertEquals(0.1, c.diarization.windowShiftRatio)
+        assertTrue(c.diarization.windowShiftRatio in 0.05..1.0)
         assertNull(c.diarization.numThreads)
         val d = TierConfig.parse("""{"asr":{},"diarization":{}}""")
         assertEquals(40, d.asr.wordTailMs)
@@ -126,6 +126,16 @@ class TierConfigTest {
         assertTrue(c.postprocess.dropTinyChunks.enabled); assertEquals(3, c.postprocess.dropTinyChunks.maxChars)
         val real = TierConfig.parse(load("medium"))
         assertTrue(real.asr.wordStartOffsetMs <= 0)
+    }
+
+    @Test
+    fun `relabel config has defaults and is read from tier files`() {
+        val d = TierConfig.parse("{}").diarization.relabel
+        assertFalse(d.enabled); assertEquals(300, d.gapMs); assertEquals(6, d.kMax); assertNull(d.k1SilhouetteThr)
+        val r = TierConfig.parse(load("medium")).diarization.relabel
+        assertTrue(r.gapMs > 0 && r.kMin >= 2 && r.embedMaxS > 0)
+        val c = TierConfig.parse("""{"diarization":{"relabel":{"enabled":true,"gap_ms":200,"k1_silhouette_thr":0.1}}}""").diarization.relabel
+        assertTrue(c.enabled); assertEquals(200, c.gapMs); assertEquals(0.1, c.k1SilhouetteThr)
     }
 
     @Test

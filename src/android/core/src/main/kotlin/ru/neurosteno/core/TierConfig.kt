@@ -210,6 +210,29 @@ data class DiarizationConfig(
     @SerialName("window_shift_ratio") val windowShiftRatio: Double = 0.1,
     /** null -> `num_threads` верхнего уровня. */
     @SerialName("num_threads") val numThreads: Int? = null,
+    /** «Говорящие по ASR-фразам» вместо кластеризации sherpa (BACKLOG B46); по умолчанию выключено. */
+    val relabel: RelabelConfig = RelabelConfig(),
+)
+
+@Serializable
+data class RelabelConfig(
+    val enabled: Boolean = false,
+    @SerialName("gap_ms") val gapMs: Int = 300,
+    @SerialName("max_unit_ms") val maxUnitMs: Int = 12_000,
+    @SerialName("split_min_side_ms") val splitMinSideMs: Int = 300,
+    @SerialName("pad_ms") val padMs: Int = 40,
+    @SerialName("embed_max_s") val embedMaxS: Double = 10.0,
+    @SerialName("min_reliable_ms") val minReliableMs: Int = 800,
+    @SerialName("k_min") val kMin: Int = 2,
+    @SerialName("k_max") val kMax: Int = 6,
+    @SerialName("max_cluster_units") val maxClusterUnits: Int = 400,
+    val refine: Int = 1,
+    /** Защита от монологов: если лучший силуэт при k >= 2 ниже порога -- один говорящий; null -- без защиты. */
+    @SerialName("k1_silhouette_thr") val k1SilhouetteThr: Double? = null,
+    /** Защита срабатывает, только если штатная диаризация тоже видит одного говорящего. */
+    @SerialName("k1_require_stock_single") val k1RequireStockSingle: Boolean = false,
+    /** «Видит» = говорящие с долей >= этой от суммарной речи штатной диаризации. */
+    @SerialName("k1_stock_min_share") val k1StockMinShare: Double = 0.10,
 )
 
 @Serializable

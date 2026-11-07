@@ -102,6 +102,12 @@ Engine v2 (B42, 1:1 с `refpipe`): `vad.chunking=pack` (`VadChunking`: `pad_segm
 времена слова (`TokenWords`). Паритетные JSON-кейсы генерируются из refpipe: `src/eval/refpipe/.venv/bin/python src/android/scripts/gen_engine_cases.py`
 → `core/src/test/resources/engine_cases.json` (`EngineCasesTest`, 189 кейсов).
 
+Relabel (B46, `diarization.relabel.enabled`): `SpeakerRelabeler` — порт `bench_diar/spkphrase.py` (юниты из слов, эмбеддинги
+юнитов `SherpaSpeakerEmbedder` по `diarization.embedding`, ward + силуэт, центроиды); запускается после ASR ∥ диаризации и выгрузки
+обеих моделей, до Aligner; turns штатной диаризации используются только как точки смены. Параметр `k1_silhouette_thr` — защита от
+монологов (порог на лучший силуэт). Кейсы паритета из эталона: `src/eval/refpipe/.venv/bin/python src/android/scripts/gen_diar_cases.py`
+→ `core/src/test/resources/diar_cases.json` (`SpeakerRelabelerTest`).
+
 ## Модули
 
 | Модуль | Тип | Содержимое |

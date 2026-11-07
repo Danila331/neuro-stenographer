@@ -35,6 +35,7 @@ DEFAULTS: dict[str, Any] = {
         "window_shift_ratio": 0.1,  # extra: pyannote window hop / window (0.1 = sherpa default; 0.5 = ~5x faster)
         "num_threads": None,      # extra: None -> top-level num_threads
         "enabled": True,          # extra: false -> single speaker, no diarization (ablation)
+        "relabel": {"enabled": False},  # speakers from ASR phrases (relabel.py), see tier files for parameters
     },
     # language: refpipe/Android read it as in ARCHITECTURE (auto | ru | en); without lid_model or asr_en -> ru
     "language": {"mode": "auto", "lid_model": None, "lid_seconds": 10.0, "per_chunk": False,

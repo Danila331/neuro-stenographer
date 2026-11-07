@@ -44,6 +44,8 @@ data class PipelineSettings(
     val vadPadMs: Int = 150,
     val vadRescue: VadRescueConfig = VadRescueConfig(),
     val packChunking: Boolean = false,
+    /** `diarization.relabel` (B46): говорящие по ASR-фразам вместо turns кластеризации. */
+    val relabel: RelabelConfig = RelabelConfig(),
     /** `postprocess.strip_dashes`: off | after_terminal | all. */
     val stripDashes: String = "off",
     /** `postprocess.numbers = words`. */
@@ -79,6 +81,7 @@ data class PipelineSettings(
             vadRescue = cfg.vad.rescue,
             packChunking = cfg.vad.packChunking,
             stripDashes = cfg.postprocess.stripDashes,
+            relabel = cfg.diarization.relabel,
             spellNumbers = cfg.postprocess.spellNumbers,
         )
     }
@@ -98,6 +101,8 @@ class EngineProviders(
     val punctuator: ((audioDurationMs: Long) -> Punctuator)? = null,
     val denoiser: (() -> Denoiser)? = null,
     val languageId: (() -> LanguageId)? = null,
+    /** Эмбеддинги говорящих для relabel (создаётся ПОСЛЕ выгрузки ASR и диаризации, закрывается сразу после). */
+    val speakerEmbedder: (() -> SpeakerEmbedder)? = null,
 )
 
 fun interface PipelineProgressListener {
@@ -231,9 +236,29 @@ class PipelineOrchestrator(
         val numbered = if (settings.spellNumbers) ru.neurosteno.core.postprocess.Postprocess.spellNumbers(rawWords) else rawWords
         val words = ru.neurosteno.core.postprocess.Postprocess.stripDashes(numbered, settings.stripDashes)
 
+        // ---- relabel: говорящие по ASR-фразам (после выгрузки ASR и диаризации -- память свободна под модель эмбеддингов) ----
+        var finalTurns = turns
+        val embedderFactory = engines.speakerEmbedder
+        if (settings.relabel.enabled && settings.diarizationEnabled && embedderFactory != null && words.isNotEmpty()) {
+            val r0 = nanoTime()
+            val k = settings.numSpeakers?.takeIf { it >= 2 }
+            val params = if (k != null) settings.relabel.copy(kMin = k, kMax = k) else settings.relabel
+            val relabelled = soft<List<SpeakerTurn>?>(Stage.DIARIZATION, warnings, null) {
+                blocking(tracker, Stage.DIARIZATION) { l ->
+                    embedderFactory().use { emb ->
+                        ru.neurosteno.core.diar.SpeakerRelabeler.phraseTurns(words, turns, processed.samples, emb, params) { f ->
+                            l.onProgress(Stage.DIARIZATION, f)
+                        }
+                    }
+                }
+            }
+            if (relabelled != null) finalTurns = relabelled
+            stageMs[Stage.DIARIZATION.key] = (stageMs[Stage.DIARIZATION.key] ?: 0L) + (nanoTime() - r0) / 1_000_000
+        }
+
         // ---- align ----
         coroutineContext.ensureActive()
-        val aligned = timed(Stage.ALIGN) { aligner.align(words, turns) }
+        val aligned = timed(Stage.ALIGN) { aligner.align(words, finalTurns) }
 
         // ---- punctuation ----
         val punctuated = timed(Stage.PUNCTUATION) {

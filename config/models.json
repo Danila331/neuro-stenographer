@@ -442,6 +442,45 @@
       "note": ""
     },
     {
+      "path": "diar/emb-campplus-zh-cn/model.onnx",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx",
+      "sha256": "f682b514c05d947ee3fa91cd6ec6c5c7543479a128373fa29b1faedccd21fd11",
+      "sha256_source": "official",
+      "size": 28281138,
+      "license": "Apache-2.0 (modelscope/3D-Speaker; the release notes defer to the model repository)",
+      "tiers": [
+        "lite"
+      ],
+      "kind": "diar-emb",
+      "note": "CAM++ (lite)"
+    },
+    {
+      "path": "diar/emb-eres2net-base-200k/model.onnx",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx",
+      "sha256": "e2d2048292e055f7b61cdec3db010503f35369b245bf0b3bbad021c9a91e4053",
+      "sha256_source": "official",
+      "size": 39593765,
+      "license": "Apache-2.0 (modelscope/3D-Speaker; the release notes defer to the model repository)",
+      "tiers": [
+        "medium"
+      ],
+      "kind": "diar-emb",
+      "note": "ERes2Net base 200k (medium)"
+    },
+    {
+      "path": "diar/emb-eres2netv2/model.onnx",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx",
+      "sha256": "bf1a75b9930474cf3389ef415e6e5d38ca96fea4a3a00f7e301d080a58ee2239",
+      "sha256_source": "official",
+      "size": 71441526,
+      "license": "Apache-2.0 (modelscope/3D-Speaker; the release notes defer to the model repository)",
+      "tiers": [
+        "hard"
+      ],
+      "kind": "diar-emb",
+      "note": "ERes2Net v2 (hard)"
+    },
+    {
       "path": "diar/embedding/model.onnx",
       "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx",
       "sha256": "aa3cfc16963a10586a9393f5035d6d6b57e98d358b347f80c2a30bf4f00ceba2",
@@ -449,12 +488,10 @@
       "size": 28281164,
       "license": "Apache-2.0 (modelscope/3D-Speaker CAM++ zh_en advanced)",
       "tiers": [
-        "lite",
-        "medium",
-        "hard"
+        "candidate"
       ],
       "kind": "diar-emb",
-      "note": "default embedding; no Russian-trained model exists in sherpa-onnx -- diar-bench decides"
+      "note": "previous default embedding (superseded by diar/emb-* per tier)"
     },
     {
       "path": "diar/pyannote-segmentation-3.0/LICENSE",
