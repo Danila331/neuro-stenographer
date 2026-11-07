@@ -5,6 +5,7 @@ import com.k2fsa.sherpa.onnx.OfflineSpeakerDiarization
 import com.k2fsa.sherpa.onnx.OfflineSpeakerDiarizationConfig
 import com.k2fsa.sherpa.onnx.OfflineSpeakerSegmentationModelConfig
 import com.k2fsa.sherpa.onnx.OfflineSpeakerSegmentationPyannoteModelConfig
+import com.k2fsa.sherpa.onnx.SpeakerEmbeddingExtractor
 import com.k2fsa.sherpa.onnx.SpeakerEmbeddingExtractorConfig
 import ru.neurosteno.core.AudioBuffer
 import ru.neurosteno.core.DiarizationConfig
@@ -113,8 +114,40 @@ class SherpaDiarizer(
         }
     }
 
+    private var extractor: SpeakerEmbeddingExtractor? = null
+
+    /**
+     * Эмбеддинги говорящих (повторная обработка фрагмента, BACKLOG B37): тот же файл модели, что и в диаризации
+     * (`diarization.embedding`), отдельный `SpeakerEmbeddingExtractor` -- создаётся при первом вызове и выгружается в [close].
+     * Клип короче [MIN_EMBEDDING_SAMPLES] (0.5 с) -> `null`.
+     */
+    override fun speakerEmbeddings(clips: List<AudioBuffer>): List<FloatArray?> {
+        if (clips.isEmpty()) return emptyList()
+        val ex = extractor ?: SpeakerEmbeddingExtractor(
+            null,
+            SpeakerEmbeddingExtractorConfig(model = root.file(cfg.embedding).absolutePath, numThreads = numThreads, provider = "cpu"),
+        ).also { extractor = it }
+        return clips.map { clip ->
+            if (clip.samples.size < MIN_EMBEDDING_SAMPLES) return@map null
+            val stream = ex.createStream()
+            try {
+                stream.acceptWaveform(clip.samples, clip.sampleRate)
+                stream.inputFinished()
+                if (ex.isReady(stream)) ex.compute(stream) else null
+            } finally {
+                stream.release()
+            }
+        }
+    }
+
     override fun close() {
         engine?.release()
         engine = null
+        extractor?.release()
+        extractor = null
+    }
+
+    private companion object {
+        const val MIN_EMBEDDING_SAMPLES = 8_000
     }
 }

@@ -37,6 +37,14 @@ fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressLis
 interface Diarizer : AutoCloseable {
     /** numSpeakers == null -> автоопределение. Turns могут пересекаться. */
 fun diarize(audio: AudioBuffer, numSpeakers: Int?, progress: ProgressListener): List<SpeakerTurn>
+
+    /**
+     * Эмбеддинги говорящих: по одному вектору на каждый клип речи ([clips] -- моно 16 кГц, речь одного человека).
+     * `null` в элементе -- клип слишком короткий/не удалось; пустой список (по умолчанию) -- диаризатор не умеет
+     * считать эмбеддинги (тогда [ru.neurosteno.core.fragment.FragmentReprocessor] сопоставляет говорящих по времени).
+     * Нужен для сопоставления говорящих фрагмента с глобальными при повторной обработке.
+     */
+    fun speakerEmbeddings(clips: List<AudioBuffer>): List<FloatArray?> = emptyList()
 }
 
 interface Punctuator : AutoCloseable {
