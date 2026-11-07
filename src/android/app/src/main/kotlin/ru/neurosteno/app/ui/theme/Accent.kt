@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 
 /**
- * Неоновый акцент темы (B52, DESIGN_BRIEF): заливки, выделения, активные состояния; текст на акценте -- всегда чёрный.
+ * Неоновый акцент темы (B52, docs/team/DESIGN_BRIEF.md): заливки, выделения, активные состояния; текст на акценте -- всегда чёрный.
  * Контраст чёрного текста на акценте (WCAG): [GREEN] 17.3:1, [PINK] 6.0:1; акцент как цвет ТЕКСТА на светлом фоне не используется.
  */
 enum class AccentVariant(val color: Color, val label: String) {

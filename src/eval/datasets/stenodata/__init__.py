@@ -1,4 +1,4 @@
-"""stenodata: сборка eval-датасетов для Нейро-стенографиста (формат docs/ARCHITECTURE.md §2)."""
+"""stenodata: сборка eval-датасетов для Нейро-стенографиста (формат docs/team/ARCHITECTURE_TEAM.md §2)."""
 import os
 
 __version__ = "0.1.0"

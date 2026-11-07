@@ -1,4 +1,4 @@
-"""Loading of transcripts in the ТЗ format (ARCHITECTURE.md section 1)."""
+"""Loading of transcripts in the ТЗ format (docs/team/ARCHITECTURE_TEAM.md section 1)."""
 
 from __future__ import annotations
 

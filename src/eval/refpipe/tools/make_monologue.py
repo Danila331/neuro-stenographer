@@ -1,5 +1,5 @@
 """Build the `ru-monologue` dataset (single-speaker recordings made of 5-10 read phrases of one speaker) from `ru-asr-dev`
-(RuLS / VoxForge, speaker id known).  Format = ARCHITECTURE section 2.
+(RuLS / VoxForge, speaker id known).  Format = docs/team/ARCHITECTURE_TEAM.md section 2.
 
     python tools/make_monologue.py --src $ROOT/.cache/data/ru-asr-dev --out $ROOT/.cache/data/ru-monologue
 

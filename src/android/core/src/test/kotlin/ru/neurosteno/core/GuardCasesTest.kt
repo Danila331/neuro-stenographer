@@ -13,7 +13,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 
 /**
- * Кросс-проверка Kotlin <-> Python для `norm` и guard (ARCHITECTURE §6) на `src/eval/refpipe/tests/guard_cases.json`.
+ * Кросс-проверка Kotlin <-> Python для `norm` и guard (docs/team/ARCHITECTURE_TEAM.md §6) на `src/eval/refpipe/tests/guard_cases.json`.
  * Нет файла -- тест пропускается с пояснением.
  */
 class GuardCasesTest {

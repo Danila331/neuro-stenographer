@@ -1,4 +1,4 @@
-"""Punctuator interface + guard of unchanged words (ARCHITECTURE §6).
+"""Punctuator interface + guard of unchanged words (docs/team/ARCHITECTURE_TEAM.md §6).
 
 Modes (`punctuation.source`):
   none        text stays the plain space-joined words (lower-case, no punctuation);

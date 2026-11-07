@@ -1,4 +1,4 @@
-"""Загрузка eval-датасета в формате ARCHITECTURE §2."""
+"""Загрузка eval-датасета в формате docs/team/ARCHITECTURE_TEAM.md §2."""
 from __future__ import annotations
 import csv, json
 from dataclasses import dataclass, field

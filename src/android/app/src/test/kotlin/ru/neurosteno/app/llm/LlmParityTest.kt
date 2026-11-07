@@ -73,7 +73,7 @@ class LlmParityTest {
 
     @Test
     fun normMatchesGuardNormOnQuotes() {
-        // фильтр опирается на norm из ARCHITECTURE §6: регистр, ё/е, знаки и повторные пробелы не мешают совпадению
+        // фильтр опирается на norm из docs/team/ARCHITECTURE_TEAM.md §6: регистр, ё/е, знаки и повторные пробелы не мешают совпадению
         assertEquals("елка стоит во дворе", TextGuard.norm("«Ёлка  стоит, во дворе!»"))
     }
 }

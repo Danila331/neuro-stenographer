@@ -1,4 +1,4 @@
-"""Тесты формата: ref по правилам ARCHITECTURE §1, аудио 16 кГц mono, времена в пределах длительности."""
+"""Тесты формата: ref по правилам docs/team/ARCHITECTURE_TEAM.md §1, аудио 16 кГц mono, времена в пределах длительности."""
 import json
 
 import numpy as np

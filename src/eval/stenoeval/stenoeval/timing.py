@@ -80,7 +80,7 @@ def hyp_words_from_utts(utts: Sequence[Utt], mode: str = ALIGN_MODE) -> list[Hyp
 
 
 def hyp_words_from_full(obj: object, mode: str = ALIGN_MODE) -> list[HypWord] | None:
-    """Real word times from an extended export (`<id>.full.json`, ARCHITECTURE section 1).
+    """Real word times from an extended export (`<id>.full.json`, docs/team/ARCHITECTURE_TEAM.md section 1).
 
     Accepts either ``{"utterances":[...]}`` or the app export
     ``{"transcript":[...]}``, where each item has ``start_ms``, ``end_ms``, ``text`` and

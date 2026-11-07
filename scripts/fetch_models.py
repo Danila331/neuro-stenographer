@@ -6,7 +6,7 @@
     python scripts/fetch_models.py --candidates             # extra models for the benches
     python scripts/fetch_models.py --list                   # print the table, download nothing
 
-Sources (TEAM.md rule 4): github.com/k2-fsa/sherpa-onnx releases, Hugging Face
+Sources (docs/team/TEAM.md rule 4): github.com/k2-fsa/sherpa-onnx releases, Hugging Face
 `csukuangfj/*` (author of sherpa-onnx), `ggml-org/*` (GGUF). No login, no tokens.
 
 Layout: <root>/<dir>/<file>; `dir` is exactly what `config/tiers/*.json` references

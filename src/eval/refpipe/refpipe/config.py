@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-# Defaults for fields missing in a tier file (ARCHITECTURE §3: absent -> default from code).
+# Defaults for fields missing in a tier file (docs/team/ARCHITECTURE_TEAM.md §3: absent -> default from code).
 DEFAULTS: dict[str, Any] = {
     "tier": "custom",
     "num_threads": 4,

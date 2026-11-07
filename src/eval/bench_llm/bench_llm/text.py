@@ -1,4 +1,4 @@
-"""Text utilities: guard (ARCHITECTURE.md §6), parsing of punctuated Russian text, F1 metrics."""
+"""Text utilities: guard (docs/team/ARCHITECTURE_TEAM.md §6), parsing of punctuated Russian text, F1 metrics."""
 from __future__ import annotations
 
 import re
@@ -11,7 +11,7 @@ _ALNUM = re.compile(r"[0-9A-Za-zА-Яа-яЁё]")
 
 
 def norm(s: str) -> str:
-    """ARCHITECTURE.md §6: lower -> ё→е -> keep letters/digits/spaces -> collapse spaces."""
+    """docs/team/ARCHITECTURE_TEAM.md §6: lower -> ё→е -> keep letters/digits/spaces -> collapse spaces."""
     s = s.lower().replace("ё", "е")
     s = "".join(ch if (ch.isalnum() or ch.isspace()) else "" for ch in s)
     return " ".join(s.split())

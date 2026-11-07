@@ -1,4 +1,4 @@
-"""Eval dataset (ARCHITECTURE.md section 2) and run directory readers."""
+"""Eval dataset (docs/team/ARCHITECTURE_TEAM.md section 2) and run directory readers."""
 
 from __future__ import annotations
 

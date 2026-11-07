@@ -1,4 +1,4 @@
-"""Strict validation of the output JSON (ARCHITECTURE.md section 1 + config/transcript.schema.json)."""
+"""Strict validation of the output JSON (docs/team/ARCHITECTURE_TEAM.md section 1 + config/transcript.schema.json)."""
 
 from __future__ import annotations
 
