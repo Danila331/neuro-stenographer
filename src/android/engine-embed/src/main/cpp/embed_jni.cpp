@@ -42,9 +42,84 @@ void free_str(OrtAllocator* alloc, void* p) {
   if (OrtStatus* s = g_api->AllocatorFree(alloc, p)) g_api->ReleaseStatus(s);
 }
 
+// ---- строки: Java (UTF-16) <-> стандартный UTF-8 (то же, что в llm_jni.cpp; GetStringUTFChars отдаёт modified UTF-8) ----
+void append_utf8(std::string& out, uint32_t cp) {
+  if (cp < 0x80) out.push_back(static_cast<char>(cp));
+  else if (cp < 0x800) { out.push_back(static_cast<char>(0xC0 | (cp >> 6))); out.push_back(static_cast<char>(0x80 | (cp & 0x3F))); }
+  else if (cp < 0x10000) {
+    out.push_back(static_cast<char>(0xE0 | (cp >> 12))); out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+  } else {
+    out.push_back(static_cast<char>(0xF0 | (cp >> 18))); out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
+    out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F))); out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+  }
+}
+
+std::string utf16_to_utf8(const jchar* u, size_t n) {
+  std::string out;
+  out.reserve(n * 3);
+  for (size_t i = 0; i < n; i++) {
+    uint32_t c = u[i];
+    if (c >= 0xD800 && c <= 0xDBFF && i + 1 < n && u[i + 1] >= 0xDC00 && u[i + 1] <= 0xDFFF) {
+      c = 0x10000 + ((c - 0xD800) << 10) + (u[i + 1] - 0xDC00);
+      i++;
+    } else if (c >= 0xD800 && c <= 0xDFFF) {
+      c = 0xFFFD;
+    }
+    append_utf8(out, c);
+  }
+  return out;
+}
+
+std::u16string utf8_to_utf16(const std::string& s) {
+  std::u16string out;
+  out.reserve(s.size());
+  size_t i = 0, n = s.size();
+  while (i < n) {
+    unsigned char c = static_cast<unsigned char>(s[i]);
+    uint32_t cp = 0xFFFD;
+    size_t len = 1;
+    if (c < 0x80) { cp = c; }
+    else if (c >= 0xC2 && c <= 0xDF && i + 1 < n && (s[i + 1] & 0xC0) == 0x80) { cp = ((c & 0x1F) << 6) | (s[i + 1] & 0x3F); len = 2; }
+    else if (c >= 0xE0 && c <= 0xEF && i + 2 < n && (s[i + 1] & 0xC0) == 0x80 && (s[i + 2] & 0xC0) == 0x80) {
+      uint32_t v = ((c & 0x0F) << 12) | ((s[i + 1] & 0x3F) << 6) | (s[i + 2] & 0x3F);
+      if (v >= 0x800 && !(v >= 0xD800 && v <= 0xDFFF)) { cp = v; len = 3; }
+    } else if (c >= 0xF0 && c <= 0xF4 && i + 3 < n && (s[i + 1] & 0xC0) == 0x80 && (s[i + 2] & 0xC0) == 0x80 && (s[i + 3] & 0xC0) == 0x80) {
+      uint32_t v = ((c & 0x07) << 18) | ((s[i + 1] & 0x3F) << 12) | ((s[i + 2] & 0x3F) << 6) | (s[i + 3] & 0x3F);
+      if (v >= 0x10000 && v <= 0x10FFFF) { cp = v; len = 4; }
+    }
+    if (cp >= 0x10000) { cp -= 0x10000; out.push_back(static_cast<char16_t>(0xD800 + (cp >> 10))); out.push_back(static_cast<char16_t>(0xDC00 + (cp & 0x3FF))); }
+    else out.push_back(static_cast<char16_t>(cp));
+    i += len;
+  }
+  return out;
+}
+
+// false -- не хватило памяти (OutOfMemoryError уже ожидает в JVM); null-строка даёт пустую.
+bool to_utf8(JNIEnv* env, jstring s, std::string& out) {
+  out.clear();
+  if (!s) return true;
+  jsize n = env->GetStringLength(s);
+  const jchar* u = env->GetStringChars(s, nullptr);
+  if (!u) return false;
+  out = utf16_to_utf8(u, static_cast<size_t>(n));
+  env->ReleaseStringChars(s, u);
+  return true;
+}
+
+// Исключение с текстом в UTF-16 (в сообщении может быть путь с emoji: ThrowNew ждёт modified UTF-8).
 void throw_java(JNIEnv* env, const char* cls, const std::string& msg) {
+  if (env->ExceptionCheck()) return; // уже есть исключение (например, OutOfMemoryError) -- не затираем
   jclass c = env->FindClass(cls);
-  if (c != nullptr) env->ThrowNew(c, msg.c_str());
+  if (c == nullptr) return;
+  jmethodID ctor = env->GetMethodID(c, "<init>", "(Ljava/lang/String;)V");
+  std::u16string u = utf8_to_utf16(msg);
+  jstring js = ctor ? env->NewString(reinterpret_cast<const jchar *>(u.data()), static_cast<jsize>(u.size())) : nullptr;
+  if (ctor && js) {
+    jobject ex = env->NewObject(c, ctor, js);
+    if (ex) env->Throw(static_cast<jthrowable>(ex));
+  }
+  env->DeleteLocalRef(c);
 }
 
 // true -> ошибка (исключение Java уже брошено); статус освобождается
@@ -95,15 +170,16 @@ bool init_api(JNIEnv* env) {
 extern "C" {
 
 JNIEXPORT void JNICALL Java_ru_neurosteno_embed_OrtNative_setLibraryPath(JNIEnv* env, jclass, jstring path) {
-  const char* p = env->GetStringUTFChars(path, nullptr);
+  std::string p;
+  if (!to_utf8(env, path, p)) return;
   std::lock_guard<std::mutex> lock(g_mu);
   g_lib_path = p;
-  env->ReleaseStringUTFChars(path, p);
 }
 
 JNIEXPORT jstring JNICALL Java_ru_neurosteno_embed_OrtNative_version(JNIEnv* env, jclass) {
   if (!init_api(env)) return nullptr;
-  return env->NewStringUTF(g_version.c_str());
+  std::u16string u = utf8_to_utf16(g_version);
+  return env->NewString(reinterpret_cast<const jchar *>(u.data()), static_cast<jsize>(u.size()));
 }
 
 JNIEXPORT jlong JNICALL Java_ru_neurosteno_embed_OrtNative_create(JNIEnv* env, jclass, jstring model, jint threads) {
@@ -116,10 +192,11 @@ JNIEXPORT jlong JNICALL Java_ru_neurosteno_embed_OrtNative_create(JNIEnv* env, j
              // динамические длины батчей: без арены и шаблона памяти пик памяти не растёт от разнородных форм
              check(env, g_api->DisableCpuMemArena(opts)) || check(env, g_api->DisableMemPattern(opts));
   if (bad) { g_api->ReleaseSessionOptions(opts); return 0; }
-  const char* path = env->GetStringUTFChars(model, nullptr);
+  std::string path;
+  if (model == nullptr) { g_api->ReleaseSessionOptions(opts); throw_java(env, "java/lang/IllegalArgumentException", "путь к модели не задан"); return 0; }
+  if (!to_utf8(env, model, path)) { g_api->ReleaseSessionOptions(opts); return 0; }
   OrtSession* session = nullptr;
-  OrtStatus* st = g_api->CreateSession(g_env, path, opts, &session);
-  env->ReleaseStringUTFChars(model, path);
+  OrtStatus* st = g_api->CreateSession(g_env, path.c_str(), opts, &session);
   g_api->ReleaseSessionOptions(opts);
   if (check(env, st)) return 0;
 
@@ -150,8 +227,17 @@ JNIEXPORT jlong JNICALL Java_ru_neurosteno_embed_OrtNative_create(JNIEnv* env, j
 JNIEXPORT jobjectArray JNICALL Java_ru_neurosteno_embed_OrtNative_inputNames(JNIEnv* env, jclass, jlong handle) {
   auto* h = reinterpret_cast<Handle*>(handle);
   jclass sc = env->FindClass("java/lang/String");
+  if (!sc) return nullptr;
   jobjectArray arr = env->NewObjectArray(static_cast<jsize>(h->input_names.size()), sc, nullptr);
-  for (size_t i = 0; i < h->input_names.size(); i++) env->SetObjectArrayElement(arr, static_cast<jsize>(i), env->NewStringUTF(h->input_names[i].c_str()));
+  env->DeleteLocalRef(sc);
+  if (!arr) return nullptr;
+  for (size_t i = 0; i < h->input_names.size(); i++) {
+    std::u16string u = utf8_to_utf16(h->input_names[i]);
+    jstring js = env->NewString(reinterpret_cast<const jchar *>(u.data()), static_cast<jsize>(u.size()));
+    if (!js) return nullptr; // OutOfMemoryError ожидает в JVM
+    env->SetObjectArrayElement(arr, static_cast<jsize>(i), js);
+    env->DeleteLocalRef(js);
+  }
   return arr;
 }
 
@@ -162,12 +248,14 @@ JNIEXPORT jint JNICALL Java_ru_neurosteno_embed_OrtNative_run(JNIEnv* env, jclas
   auto* h = reinterpret_cast<Handle*>(handle);
   const size_t count = static_cast<size_t>(batch) * static_cast<size_t>(seq);
   std::vector<int64_t> v_ids(count), v_mask(count), v_types;
+  if (h == nullptr || ids == nullptr || mask == nullptr || out == nullptr) { throw_java(env, "java/lang/NullPointerException", "нулевой аргумент"); return -1; }
   env->GetLongArrayRegion(ids, 0, static_cast<jsize>(count), reinterpret_cast<jlong*>(v_ids.data()));
   env->GetLongArrayRegion(mask, 0, static_cast<jsize>(count), reinterpret_cast<jlong*>(v_mask.data()));
   if (types != nullptr) {
     v_types.resize(count);
     env->GetLongArrayRegion(types, 0, static_cast<jsize>(count), reinterpret_cast<jlong*>(v_types.data()));
   }
+  if (env->ExceptionCheck()) return -1; // выход за границы массива -- исключение уже ожидает
   OrtMemoryInfo* mem = nullptr;
   if (check(env, g_api->CreateCpuMemoryInfo(OrtArenaAllocator, OrtMemTypeDefault, &mem))) return -1;
   int64_t shape[2] = {batch, seq};

@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <mutex>
@@ -60,25 +61,122 @@ const char *kv_name(ggml_type t) {
 
 bool abort_cb(void *data) { return static_cast<Handle *>(data)->abort.load(); }
 
+// Ссылки на java.lang.Thread: ОДИН раз и потокобезопасно (std::call_once). Раньше ленивая проверка `if (!thread_cls)` у двух экземпляров LLM
+// в разных потоках могла увидеть уже заполненный thread_cls, но ещё не заполненные current/is_interrupted -> вызов JNI с нулевым methodID.
+struct ThreadRefs {
+    jclass cls = nullptr;
+    jmethodID current = nullptr;
+    jmethodID is_interrupted = nullptr;
+    bool ok = false;
+};
+ThreadRefs g_thread;
+std::once_flag g_thread_once;
+
+void init_thread_refs(JNIEnv *env) {
+    jclass local = env->FindClass("java/lang/Thread");
+    if (!local) { env->ExceptionClear(); NS_LOG("нет java/lang/Thread: прерывание из Java отключено"); return; }
+    jclass global = static_cast<jclass>(env->NewGlobalRef(local));
+    env->DeleteLocalRef(local);
+    if (!global) { env->ExceptionClear(); return; }
+    jmethodID current = env->GetStaticMethodID(global, "currentThread", "()Ljava/lang/Thread;");
+    jmethodID interrupted = env->GetMethodID(global, "isInterrupted", "()Z");
+    if (!current || !interrupted) { env->ExceptionClear(); env->DeleteGlobalRef(global); NS_LOG("нет методов Thread: прерывание из Java отключено"); return; }
+    g_thread.cls = global;
+    g_thread.current = current;
+    g_thread.is_interrupted = interrupted;
+    g_thread.ok = true; // последним: после call_once все поля видны всем потокам
+}
+
 // Thread.currentThread().isInterrupted() -- отмена из корутин (runInterruptible) доходит до нативного цикла.
 bool java_interrupted(JNIEnv *env) {
-    static jclass thread_cls = nullptr;
-    static jmethodID current = nullptr;
-    static jmethodID is_interrupted = nullptr;
-    if (!thread_cls) {
-        jclass local = env->FindClass("java/lang/Thread");
-        if (!local) { env->ExceptionClear(); return false; }
-        thread_cls = static_cast<jclass>(env->NewGlobalRef(local));
-        current = env->GetStaticMethodID(thread_cls, "currentThread", "()Ljava/lang/Thread;");
-        is_interrupted = env->GetMethodID(thread_cls, "isInterrupted", "()Z");
-    }
-    jobject t = env->CallStaticObjectMethod(thread_cls, current);
+    std::call_once(g_thread_once, init_thread_refs, env);
+    if (!g_thread.ok) return false;
+    jobject t = env->CallStaticObjectMethod(g_thread.cls, g_thread.current);
+    if (env->ExceptionCheck()) { env->ExceptionClear(); return false; }
     if (!t) return false;
-    jboolean r = env->CallBooleanMethod(t, is_interrupted);
+    jboolean r = env->CallBooleanMethod(t, g_thread.is_interrupted);
+    if (env->ExceptionCheck()) { env->ExceptionClear(); r = JNI_FALSE; }
     env->DeleteLocalRef(t);
     return r == JNI_TRUE;
 }
 
+// ---- строки: Java (UTF-16) <-> стандартный UTF-8 ----
+// GetStringUTFChars отдаёт «модифицированный UTF-8» (символы вне BMP -- как две суррогатные трёхбайтовые последовательности, U+0000 -- как C0 80),
+// а токенизатор llama ждёт обычный UTF-8: emoji в расшифровке превращались в мусор. Конвертируем сами.
+void append_utf8(std::string &out, uint32_t cp) {
+    if (cp < 0x80) out.push_back(static_cast<char>(cp));
+    else if (cp < 0x800) { out.push_back(static_cast<char>(0xC0 | (cp >> 6))); out.push_back(static_cast<char>(0x80 | (cp & 0x3F))); }
+    else if (cp < 0x10000) {
+        out.push_back(static_cast<char>(0xE0 | (cp >> 12))); out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+        out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    } else {
+        out.push_back(static_cast<char>(0xF0 | (cp >> 18))); out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
+        out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F))); out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    }
+}
+
+// UTF-16 -> UTF-8: пары суррогатов -> 4 байта; одиночный суррогат -> U+FFFD. Чистая функция (тестируется без JVM-вызовов).
+std::string utf16_to_utf8(const jchar *u, size_t n) {
+    std::string out;
+    out.reserve(n * 3);
+    for (size_t i = 0; i < n; i++) {
+        uint32_t c = u[i];
+        if (c >= 0xD800 && c <= 0xDBFF && i + 1 < n && u[i + 1] >= 0xDC00 && u[i + 1] <= 0xDFFF) {
+            c = 0x10000 + ((c - 0xD800) << 10) + (u[i + 1] - 0xDC00);
+            i++;
+        } else if (c >= 0xD800 && c <= 0xDFFF) {
+            c = 0xFFFD;
+        }
+        append_utf8(out, c);
+    }
+    return out;
+}
+
+// UTF-8 -> UTF-16; неверные последовательности -> U+FFFD.
+std::u16string utf8_to_utf16(const std::string &s) {
+    std::u16string out;
+    out.reserve(s.size());
+    size_t i = 0, n = s.size();
+    while (i < n) {
+        unsigned char c = static_cast<unsigned char>(s[i]);
+        uint32_t cp = 0xFFFD;
+        size_t len = 1;
+        if (c < 0x80) { cp = c; }
+        else if (c >= 0xC2 && c <= 0xDF && i + 1 < n && (s[i + 1] & 0xC0) == 0x80) { cp = ((c & 0x1F) << 6) | (s[i + 1] & 0x3F); len = 2; }
+        else if (c >= 0xE0 && c <= 0xEF && i + 2 < n && (s[i + 1] & 0xC0) == 0x80 && (s[i + 2] & 0xC0) == 0x80) {
+            uint32_t v = ((c & 0x0F) << 12) | ((s[i + 1] & 0x3F) << 6) | (s[i + 2] & 0x3F);
+            if (v >= 0x800 && !(v >= 0xD800 && v <= 0xDFFF)) { cp = v; len = 3; }
+        } else if (c >= 0xF0 && c <= 0xF4 && i + 3 < n && (s[i + 1] & 0xC0) == 0x80 && (s[i + 2] & 0xC0) == 0x80 && (s[i + 3] & 0xC0) == 0x80) {
+            uint32_t v = ((c & 0x07) << 18) | ((s[i + 1] & 0x3F) << 12) | ((s[i + 2] & 0x3F) << 6) | (s[i + 3] & 0x3F);
+            if (v >= 0x10000 && v <= 0x10FFFF) { cp = v; len = 4; }
+        }
+        if (cp >= 0x10000) { cp -= 0x10000; out.push_back(static_cast<char16_t>(0xD800 + (cp >> 10))); out.push_back(static_cast<char16_t>(0xDC00 + (cp & 0x3FF))); }
+        else out.push_back(static_cast<char16_t>(cp));
+        i += len;
+    }
+    return out;
+}
+
+// jstring -> стандартный UTF-8. false -- не хватило памяти (исключение OutOfMemoryError уже ожидает в JVM): вызывающий сразу возвращается.
+// null-строка даёт пустую.
+bool to_utf8(JNIEnv *env, jstring s, std::string &out) {
+    out.clear();
+    if (!s) return true;
+    jsize n = env->GetStringLength(s);
+    const jchar *u = env->GetStringChars(s, nullptr);
+    if (!u) return false;
+    out = utf16_to_utf8(u, static_cast<size_t>(n));
+    env->ReleaseStringChars(s, u);
+    return true;
+}
+
+// UTF-8 -> jstring (null и ожидающее исключение при нехватке памяти).
+jstring from_utf8(JNIEnv *env, const std::string &s) {
+    std::u16string u = utf8_to_utf16(s);
+    return env->NewString(reinterpret_cast<const jchar *>(u.data()), static_cast<jsize>(u.size()));
+}
+
+// nullptr при нехватке памяти (исключение OutOfMemoryError ожидает в JVM).
 jbyteArray to_bytes(JNIEnv *env, const std::string &s) {
     jbyteArray arr = env->NewByteArray(static_cast<jsize>(s.size()));
     if (arr && !s.empty()) env->SetByteArrayRegion(arr, 0, static_cast<jsize>(s.size()), reinterpret_cast<const jbyte *>(s.data()));
@@ -113,8 +211,10 @@ jbyteArray generate_impl(JNIEnv *env, Handle *h, const std::string &prompt, int 
     jmethodID on_token = nullptr;
     if (callback) {
         jclass cb_cls = env->GetObjectClass(callback);
+        if (!cb_cls) { set_error("нет класса колбэка"); return nullptr; }
         on_token = env->GetMethodID(cb_cls, "onToken", "([B)Z");
         env->DeleteLocalRef(cb_cls);
+        if (!on_token) { env->ExceptionClear(); set_error("у колбэка нет метода onToken([B)Z"); return nullptr; }
     }
     auto invalidate = [&] { // любой сбой: кэш и его описание сбрасываем вместе, иначе следующий вызов переиспользует мусор
         llama_memory_clear(llama_get_memory(h->ctx), true);
@@ -197,6 +297,7 @@ jbyteArray generate_impl(JNIEnv *env, Handle *h, const std::string &prompt, int 
             size_t ok = utf8_complete_prefix(pending);
             if (ok > 0) {
                 jbyteArray arr = to_bytes(env, pending.substr(0, ok));
+                if (!arr) { invalidate(); return nullptr; } // OutOfMemoryError уже ожидает в JVM
                 jboolean keep_going = env->CallBooleanMethod(callback, on_token, arr);
                 env->DeleteLocalRef(arr);
                 pending.erase(0, ok);
@@ -210,13 +311,6 @@ jbyteArray generate_impl(JNIEnv *env, Handle *h, const std::string &prompt, int 
         h->kv_tokens.push_back(tok);
     }
     return to_bytes(env, out);
-}
-
-std::string jstr(JNIEnv *env, jstring s) {
-    const char *c = env->GetStringUTFChars(s, nullptr);
-    std::string r(c);
-    env->ReleaseStringUTFChars(s, c);
-    return r;
 }
 
 } // namespace
@@ -237,15 +331,11 @@ JNIEXPORT jlong JNICALL Java_ru_neurosteno_llm_LlamaNative_load(JNIEnv *env, jcl
         llama_log_set(log_cb, nullptr);
         llama_backend_init();
     });
-    const char *path = env->GetStringUTFChars(jpath, nullptr);
-    std::string p(path);
-    env->ReleaseStringUTFChars(jpath, path);
+    if (!jpath) { set_error("путь к модели не задан"); return 0; }
+    std::string p;
+    if (!to_utf8(env, jpath, p)) return 0; // OutOfMemoryError ожидает в JVM
     std::string kv_str = "f16";
-    if (jkv) {
-        const char *kv = env->GetStringUTFChars(jkv, nullptr);
-        kv_str = kv;
-        env->ReleaseStringUTFChars(jkv, kv);
-    }
+    if (jkv && !to_utf8(env, jkv, kv_str)) return 0;
 
     auto *h = new Handle();
     llama_model_params mp = llama_model_default_params();
@@ -324,17 +414,17 @@ JNIEXPORT void JNICALL Java_ru_neurosteno_llm_LlamaNative_cancel(JNIEnv *, jclas
 }
 
 JNIEXPORT jstring JNICALL Java_ru_neurosteno_llm_LlamaNative_lastError(JNIEnv *env, jclass) {
-    return env->NewStringUTF(g_last_error.c_str()); // ASCII-безопасно: сообщения содержат только BMP-текст без суррогатов
+    return from_utf8(env, g_last_error); // в сообщении может быть путь модели с любыми символами
 }
 
 // Фактически применённые параметры загрузки (после обходов), строкой `key=value ...`.
 JNIEXPORT jstring JNICALL Java_ru_neurosteno_llm_LlamaNative_options(JNIEnv *env, jclass, jlong handle) {
     auto *h = reinterpret_cast<Handle *>(handle);
-    return env->NewStringUTF(h ? h->options.c_str() : "");
+    return from_utf8(env, h ? h->options : std::string());
 }
 
 JNIEXPORT jstring JNICALL Java_ru_neurosteno_llm_LlamaNative_systemInfo(JNIEnv *env, jclass) {
-    return env->NewStringUTF(llama_print_system_info());
+    return from_utf8(env, llama_print_system_info());
 }
 
 // Возвращает UTF-8 байты сгенерированного текста или null при ошибке (см. lastError). Колбэк: fun onToken(bytes: ByteArray): Boolean
@@ -343,7 +433,9 @@ JNIEXPORT jbyteArray JNICALL Java_ru_neurosteno_llm_LlamaNative_generate(JNIEnv 
                                                                         jint max_tokens, jobject callback) {
     auto *h = reinterpret_cast<Handle *>(handle);
     if (!h) { set_error("handle == 0"); return nullptr; }
-    return generate_impl(env, h, jstr(env, jprompt), max_tokens, nullptr, false, callback);
+    std::string prompt;
+    if (!to_utf8(env, jprompt, prompt)) return nullptr;
+    return generate_impl(env, h, prompt, max_tokens, nullptr, false, callback);
 }
 
 // Расширенная генерация (B50): jgrammar -- GBNF (корень `root`; null -- без ограничения), reuse -- переиспользовать общий префикс KV-кэша.
@@ -351,12 +443,39 @@ JNIEXPORT jbyteArray JNICALL Java_ru_neurosteno_llm_LlamaNative_generateEx(JNIEn
                                                                           jstring jgrammar, jboolean reuse, jobject callback) {
     auto *h = reinterpret_cast<Handle *>(handle);
     if (!h) { set_error("handle == 0"); return nullptr; }
-    std::string prompt = jstr(env, jprompt);
+    std::string prompt;
+    if (!to_utf8(env, jprompt, prompt)) return nullptr;
     if (jgrammar) {
-        std::string g = jstr(env, jgrammar);
+        std::string g;
+        if (!to_utf8(env, jgrammar, g)) return nullptr;
         return generate_impl(env, h, prompt, max_tokens, &g, reuse == JNI_TRUE, callback);
     }
     return generate_impl(env, h, prompt, max_tokens, nullptr, reuse == JNI_TRUE, callback);
+}
+
+// ---- Только для тестов (B58): преобразование строк, без модели ----
+
+// Стандартный UTF-8 байты строки (как уходят в токенизатор). null -- нехватка памяти.
+JNIEXPORT jbyteArray JNICALL Java_ru_neurosteno_llm_LlamaNative_utf8Bytes(JNIEnv *env, jclass, jstring s) {
+    std::string out;
+    if (!to_utf8(env, s, out)) return nullptr;
+    return to_bytes(env, out);
+}
+
+// Прежнее поведение (GetStringUTFChars = «модифицированный UTF-8», emoji как суррогатные пары по 3 байта) -- для воспроизведения ошибки в тесте.
+JNIEXPORT jbyteArray JNICALL Java_ru_neurosteno_llm_LlamaNative_legacyUtf8Bytes(JNIEnv *env, jclass, jstring s) {
+    const char *c = env->GetStringUTFChars(s, nullptr);
+    if (!c) return nullptr;
+    std::string out(c);
+    env->ReleaseStringUTFChars(s, c);
+    return to_bytes(env, out);
+}
+
+// Круговой обход UTF-16 -> UTF-8 -> UTF-16 (то, что получает Java в lastError/options).
+JNIEXPORT jstring JNICALL Java_ru_neurosteno_llm_LlamaNative_utf8RoundTrip(JNIEnv *env, jclass, jstring s) {
+    std::string out;
+    if (!to_utf8(env, s, out)) return nullptr;
+    return from_utf8(env, out);
 }
 
 } // extern "C"

@@ -59,6 +59,13 @@ class ProcessingService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var job: Job? = null
+
+    /** Запрос обработки файла: [uri] и отображаемое [name]. */
+    private data class Request(val uri: Uri, val name: String)
+
+    /** Единственный слот обработки + очередь: второй запрос во время первого ждёт (VIEW/SEND-автопроверка), а не теряется молча (B58). */
+    private val queue = ru.neurosteno.app.util.ProcessingQueue<Request>()
+    @Volatile private var destroyed = false
     private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -74,14 +81,14 @@ class ProcessingService : Service() {
             ACTION_START -> {
                 val uri = intent.data
                 if (uri == null) {
-                    ProcessingState.setProcessing(ProcessingUi.Failed(null, "Не передан файл для обработки"))
-                    stopSelf(startId)
+                    // идущую обработку не трогаем: ни уведомление, ни состояние, ни stopSelf (он остановил бы и её)
+                    if (!queue.isBusy) {
+                        ProcessingState.setProcessing(ProcessingUi.Failed(null, "Не передан файл для обработки"))
+                        stopSelf(startId)
+                    }
                     return START_NOT_STICKY
                 }
-                val name = intent.getStringExtra(EXTRA_NAME) ?: uri.lastPathSegment ?: "audio"
-                // на Android 12+ запуск foreground из фона может быть запрещён -- тогда обрабатываем как обычный сервис
-                runCatching { startForegroundCompat(buildNotification(name, null, 0f)) }
-                start(uri, name)
+                submit(Request(uri, intent.getStringExtra(EXTRA_NAME) ?: uri.lastPathSegment ?: "audio"))
             }
             ACTION_REPROCESS -> {
                 val p = FragmentParams(
@@ -91,28 +98,69 @@ class ProcessingService : Service() {
                     numSpeakers = intent.getIntExtra(EXTRA_SPEAKERS, 0).takeIf { it > 0 },
                     recomputeSpeakers = intent.getBooleanExtra(EXTRA_RECOMPUTE, false),
                 )
-                runCatching { startForegroundCompat(buildNotification(fragmentLabel(p), null, 0f)) }
                 startFragment(p)
             }
             ACTION_SUMMARY -> {
                 val id = intent.getStringExtra(EXTRA_ENTRY) ?: ""
-                runCatching { startForegroundCompat(buildTextNotification("Выжимка", "Подготовка…", null)) }
                 startSummary(id)
             }
-            else -> stopSelf(startId)
+            else -> if (!queue.isBusy) stopSelf(startId)
         }
         return START_NOT_STICKY
     }
 
-    private fun start(uri: Uri, name: String) {
-        if (job?.isActive == true) return // уже идёт обработка
+    /**
+     * Принять запрос: слот свободен -- начать сразу; занят -- встать в очередь (результаты и маркеры прошлого запуска с этим именем
+     * убираются сразу: скрипт, ждущий свой маркер, не должен принять старый); очередь переполнена -- явный отказ маркером `error`.
+     * Уведомление и состояние текущей обработки до принятия запроса не меняются.
+     */
+    private fun submit(req: Request) {
+        val resultsDir = ResultsAutosave.resultsDir(getExternalFilesDir(null), filesDir, android.os.Process.myUid())
+        when (val r = queue.submit(req)) {
+            is ru.neurosteno.app.util.ProcessingQueue.Submit.Start -> {
+                // на Android 12+ запуск foreground из фона может быть запрещён -- тогда обрабатываем как обычный сервис
+                runCatching { startForegroundCompat(buildNotification(req.name, null, 0f)) }
+                start(req)
+            }
+            is ru.neurosteno.app.util.ProcessingQueue.Submit.Queued -> {
+                ResultsAutosave.clearStale(resultsDir, req.name)
+                ProcessingState.setQueued(queue.snapshot().map { it.name })
+                android.util.Log.i("Neurosteno", "queued ${req.name}: position ${r.position}")
+            }
+            is ru.neurosteno.app.util.ProcessingQueue.Submit.Full -> {
+                val msg = "Очередь обработки переполнена (${ru.neurosteno.app.util.ProcessingQueue.DEFAULT_CAPACITY} файлов): запрос отклонён, повторите позже."
+                ResultsAutosave.clearStale(resultsDir, req.name)
+                ResultsAutosave.writeErrorMarker(resultsDir, req.name, msg)
+                android.util.Log.w("Neurosteno", "rejected ${req.name}: $msg")
+            }
+        }
+    }
+
+    /** Задание закончилось: следующий запрос из очереди либо остановка сервиса. */
+    private fun onJobFinished() {
+        val next = if (destroyed) null else queue.release()
+        ProcessingState.setQueued(queue.snapshot().map { it.name })
+        if (next != null) {
+            runCatching { startForegroundCompat(buildNotification(next.name, null, 0f)) }
+            start(next)
+            return
+        }
+        releaseWakeLock()
+        ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    private fun start(req: Request) {
+        val uri = req.uri
+        val name = req.name
         acquireWakeLock()
         val graph = (application as NeuroApp).graph
         val startedAt = System.currentTimeMillis()
         val fractions = EnumMap<Stage, Float>(Stage::class.java)
         val resultsDir = ResultsAutosave.resultsDir(getExternalFilesDir(null), filesDir, android.os.Process.myUid())
-        // маркер прошлого запуска с тем же именем не должен «залёживаться»: скрипты ждут именно свежий маркер
-        ResultsAutosave.clearMarkers(resultsDir, name)
+        // маркер и результат прошлого запуска с тем же именем не должны «залёживаться»: скрипты ждут именно свежий маркер,
+        // а старый JSON не должен выдаваться за новый, если запись нового не удастся
+        ResultsAutosave.clearStale(resultsDir, name)
         ProcessingState.setProcessing(ProcessingUi.Running(sourceName = name, startedAtMs = startedAt))
         job = scope.launch {
             var peakPssMb = 0
@@ -164,17 +212,17 @@ class ProcessingService : Service() {
                 val modelSet = graph.modelStore.activeSetId
                 // 1) результаты, 2) строка logcat (всегда, даже если запись файлов не удалась), 3) маркер -- последним
                 val editable = EditableTranscript.of(result.transcript)
-                val written = ResultsAutosave.write(resultsDir, name, editable, result.transcript, info)
-                android.util.Log.i("Neurosteno", ResultsAutosave.doneLine(name, result.transcript, info, result.warnings, written.problems, resultsDir))
-                ResultsAutosave.writeDoneMarker(resultsDir, name, result.transcript, editable.utterances.size, info, modelSet, result.warnings, written)
-                    .onFailure { android.util.Log.e("Neurosteno", "done marker for $name not written", it) }
+                val published = ResultsAutosave.publish(resultsDir, name, editable, result.transcript, info, modelSet, result.warnings)
+                android.util.Log.i("Neurosteno", ResultsAutosave.doneLine(name, result.transcript, info, result.warnings, published.outcome.problems, resultsDir))
+                (published as? ResultsAutosave.Published.Failed)?.let { android.util.Log.e("Neurosteno", "results for $name not published: ${it.message}") }
                 val entry = runCatching {
                     graph.history.add(
                         sourceName = name, transcript = result.transcript, warnings = result.warnings, run = info, modelSetId = modelSet,
                         audio = { contentResolver.openInputStream(uri) ?: throw java.io.IOException("нет доступа к файлу") },
                     )
                 }.onFailure { android.util.Log.e("Neurosteno", "history not saved for $name", it) }.getOrNull()
-                removeOwnRecording(uri)
+                // исходник с микрофона удаляется только когда копия аудио сохранена в истории; иначе остаётся на месте
+                removeOwnRecording(uri, entry)
                 if (entry != null) ProcessingState.setProcessing(ProcessingUi.Done(entry.id, name))
                 else ProcessingState.setProcessing(ProcessingUi.Failed(name, "Расшифровка готова и сохранена в папку results, но не добавлена в историю (нет места?)."))
                 if (entry != null && graph.activeConfig()?.first?.summary?.auto == true) autoSummary(graph, entry.id, name)
@@ -192,9 +240,7 @@ class ProcessingService : Service() {
                 fail("Не удалось обработать запись: ${e.message ?: e.javaClass.simpleName}")
             } finally {
                 sampler.cancel()
-                releaseWakeLock()
-                ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
-                stopSelf()
+                onJobFinished()
             }
         }
     }
@@ -212,10 +258,8 @@ class ProcessingService : Service() {
 
     /** Выжимка по кнопке (B50): foreground-сервис, прогресс в уведомлении, состояние -- `AppGraph.summary.ui`. */
     private fun startSummary(entryId: String) {
-        if (job?.isActive == true || (application as NeuroApp).graph.summary.isRunning) {
-            stopSelf()
-            return
-        }
+        if ((application as NeuroApp).graph.summary.isRunning || !queue.tryAcquire()) return // занято: текущая работа продолжается
+        runCatching { startForegroundCompat(buildTextNotification("Выжимка", "Подготовка…", null)) }
         acquireWakeLock()
         val graph = (application as NeuroApp).graph
         job = scope.launch {
@@ -227,9 +271,7 @@ class ProcessingService : Service() {
             } catch (e: Throwable) {
                 android.util.Log.e("Neurosteno", "summary failed", e)
             } finally {
-                releaseWakeLock()
-                ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
-                stopSelf()
+                onJobFinished()
             }
         }
     }
@@ -243,11 +285,11 @@ class ProcessingService : Service() {
      */
     private fun startFragment(p: FragmentParams) {
         val label = fragmentLabel(p)
-        if (job?.isActive == true) {
+        if (!queue.tryAcquire()) {
             FragmentState.set(FragmentUi.Failed(p.entryId, "Уже идёт другая обработка. Дождитесь её окончания."))
-            stopSelf()
             return
         }
+        runCatching { startForegroundCompat(buildNotification(label, null, 0f)) }
         acquireWakeLock()
         val graph = (application as NeuroApp).graph
         val startedAt = System.currentTimeMillis()
@@ -295,9 +337,7 @@ class ProcessingService : Service() {
                 android.util.Log.e("Neurosteno", "fragment failed", e)
                 FragmentState.set(FragmentUi.Failed(p.entryId, "Не удалось обработать фрагмент: ${e.message ?: e.javaClass.simpleName}"))
             } finally {
-                releaseWakeLock()
-                ServiceCompat.stopForeground(this@ProcessingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
-                stopSelf()
+                onJobFinished()
             }
         }
     }
@@ -308,7 +348,6 @@ class ProcessingService : Service() {
         val tr = stored.toTranscript()
         val editable = EditableTranscript.of(tr, stored.speakerNames)
         val info = entry.runInfo().let { if (threads > 0) it.copy(threads = threads) else it }
-        val written = ResultsAutosave.write(dir, entry.sourceName, editable, tr, info)
         val fragment = buildJsonObject {
             put("start_ms", r.range?.startMs ?: p.startMs)
             put("end_ms", r.range?.endMs ?: p.endMs)
@@ -319,9 +358,9 @@ class ProcessingService : Service() {
             put("removed", r.removed.size)
             put("added", r.added.size)
         }
-        ResultsAutosave.writeDoneMarker(dir, entry.sourceName, tr, editable.utterances.size, info, entry.modelSetId, entry.warnings, written, extras = mapOf("fragment" to fragment))
-            .onFailure { android.util.Log.e("Neurosteno", "done marker after fragment not written", it) }
-        written.problems.forEach { android.util.Log.e("Neurosteno", "fragment results write problem: $it") }
+        val published = ResultsAutosave.publish(dir, entry.sourceName, editable, tr, info, entry.modelSetId, entry.warnings, extras = mapOf("fragment" to fragment))
+        published.outcome.problems.forEach { android.util.Log.e("Neurosteno", "fragment results write problem: $it") }
+        (published as? ResultsAutosave.Published.Failed)?.let { android.util.Log.e("Neurosteno", "fragment results not published: ${it.message}") }
     }
 
     private fun deviceName(): String =
@@ -337,7 +376,15 @@ class ProcessingService : Service() {
     override fun onTimeout(startId: Int, fgsType: Int) {
         android.util.Log.w("Neurosteno", "foreground service timeout (type $fgsType): processing cancelled")
         job?.cancel()
+        // очередь не переживёт остановку: каждому ожидающему -- явный маркер ошибки, а не тишина
+        failQueued("Обработка остановлена системой (лимит foreground-сервиса). Повторите запуск.")
         stopSelf(startId)
+    }
+
+    private fun failQueued(message: String) {
+        val resultsDir = ResultsAutosave.resultsDir(getExternalFilesDir(null), filesDir, android.os.Process.myUid())
+        for (r in queue.drain()) runCatching { ResultsAutosave.writeErrorMarker(resultsDir, r.name, message) }
+        ProcessingState.setQueued(emptyList())
     }
 
     /** Длительность записи для оценки оставшегося времени; null, если платформа её не сообщает. */
@@ -359,13 +406,18 @@ class ProcessingService : Service() {
     }
 
     /** Запись с микрофона лежит в приватной папке: после сохранения копии в истории оригинал не нужен. */
-    private fun removeOwnRecording(uri: Uri) {
+    private fun removeOwnRecording(uri: Uri, entry: HistoryEntry?) {
         if (uri.scheme != "file") return
         val f = File(uri.path ?: return)
-        if (f.parentFile == File(filesDir, RECORDINGS_DIR)) f.delete()
+        val dir = File(filesDir, RECORDINGS_DIR)
+        if (!ru.neurosteno.app.util.OwnRecordings.deleteIfSaved(f, dir, entry) && f.parentFile == dir) {
+            android.util.Log.w("Neurosteno", "recording kept (copy in history is not confirmed): ${f.absolutePath}")
+        }
     }
 
     override fun onDestroy() {
+        destroyed = true
+        failQueued("Обработка прервана: служба остановлена до начала этого файла. Повторите запуск.")
         scope.cancel()
         releaseWakeLock()
         super.onDestroy()

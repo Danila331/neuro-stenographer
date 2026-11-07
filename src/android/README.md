@@ -326,3 +326,14 @@ cd src/android && ./gradlew :core:test :engine-embed:testDebugUnitTest :store-ob
 Отладка на устройстве (debug-сборка): `adb shell am broadcast -a ru.neurosteno.app.DEBUG_SEARCH -n <пакет>/ru.neurosteno.app.DebugSearchReceiver
 --es q_b64 <base64 utf-8> [--es record <id>] [--ez answer true]` или `--es cmd status|release`; результат — строки `search_debug …`,
 `search_index …`, `search_query …`, `search_answer …` в logcat (тег Neurosteno).
+
+## Правки по независимому ревью (B58)
+
+Подтверждены и исправлены: маркер `done` пишется только после атомарной записи обязательного `<имя>.json` (`ResultsAutosave.publish`, иначе
+`error`; результаты и маркеры прошлого запуска с тем же именем удаляются до записи); запросы обработки во время другой работы встают в
+очередь (`ProcessingQueue`, ёмкость 32, переполнение — маркер `error`); декодер копит PCM без растущего массива (`PcmAccumulator`: до
+5 минут в блоках, дальше во временном файле в `cacheDir`, итог — один массив точного размера; WAV читается в один массив);
+JNI llama и эмбеддера передаёт строки стандартным UTF-8 (не modified UTF-8), проверяет результаты JNI-вызовов, ссылки на `java.lang.Thread`
+создаются через `std::call_once`; микрофонная запись удаляется только после подтверждённой копии аудио в истории.
+Отладка памяти декодера: `adb shell am broadcast -a ru.neurosteno.app.DEBUG_DECODE -n <пакет>/ru.neurosteno.app.DebugDecodeReceiver --es path <файл> --es mode new|legacy`.
+Тесты нативных строк на хосте: `LLM_HOST_BUILD=<каталог> scripts/build_host_jni.sh`, затем `:engine-llm:testDebugUnitTest`.
