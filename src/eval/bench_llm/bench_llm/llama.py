@@ -20,6 +20,12 @@ PROMPTS = HERE / "prompts"
 
 # name -> (gguf path relative to MODELS, chat family)
 CATALOG: dict[str, tuple[str, str]] = {
+    # official GGUF used by the app (shared cache $ROOT/.cache/models/llm/)
+    "app-qwen3-0.6b-q4_0": ("llm/qwen3-0.6b-q4_0.gguf", "qwen3"),
+    "app-qwen3-1.7b-q4_k_m": ("llm/qwen3-1.7b-q4_k_m.gguf", "qwen3"),
+    "qwen3-1.7b-q4_0": ("llm-qwen3-1.7b-q4_0/qwen3-1.7b-q4_0.gguf", "qwen3"),
+    "qwen3-1.7b-q8_0-local": ("llm-qwen3-1.7b-q8_0/Qwen3-1.7B-Q8_0.gguf", "qwen3"),
+    "app-qwen3-4b-q4_k_m": ("llm/qwen3-4b-q4_k_m.gguf", "qwen3"),
     "qwen3-0.6b-q8_0": ("llm-qwen3-0.6b-q8_0/Qwen3-0.6B-Q8_0.gguf", "qwen3"),
     "qwen3-0.6b-q4_k_m": ("llm-qwen3-0.6b-q4_k_m/Qwen3-0.6B-Q4_K_M.gguf", "qwen3"),
     "qwen3-1.7b-q8_0": ("llm-qwen3-1.7b-q8_0/Qwen3-1.7B-Q8_0.gguf", "qwen3"),

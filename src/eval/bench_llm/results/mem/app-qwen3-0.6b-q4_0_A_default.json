@@ -1,0 +1,20 @@
+{
+ "flags": "",
+ "model": "app-qwen3-0.6b-q4_0",
+ "size_mb": 428.97008,
+ "kv": "f16",
+ "ctx": {
+  "2048": {
+   "idle_rss_mb": 924,
+   "peak_rss_mb": 953,
+   "peak_footprint_mb": 608,
+   "prompt_tokens": 1719
+  },
+  "4096": {
+   "idle_rss_mb": 1149,
+   "peak_rss_mb": 1181,
+   "peak_footprint_mb": 833,
+   "prompt_tokens": 2575
+  }
+ }
+}

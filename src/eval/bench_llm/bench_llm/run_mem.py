@@ -20,6 +20,18 @@ def rss_mb(pid: int) -> float:
         return 0.0
 
 
+def footprint_mb(pid: int) -> float:
+    """macOS dirty footprint (anonymous + dirty pages; excludes clean mmap'd model pages) -- closest analogue of Android anon/PSS."""
+    try:
+        out = subprocess.run(["footprint", "-p", str(pid)], capture_output=True, text=True).stdout
+        import re
+        m = re.search(r"Footprint:\s+([\d.]+)\s*(KB|MB|GB)", out)
+        v = float(m.group(1))
+        return v * {"KB": 1 / 1024, "MB": 1, "GB": 1024}[m.group(2)]
+    except Exception:
+        return 0.0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", nargs="+", default=list(CATALOG))
@@ -43,12 +55,14 @@ def main():
                 pid = srv.proc.pid
                 idle = rss_mb(pid)
                 peak = [idle]
+                fp = [footprint_mb(pid)]
                 stop = threading.Event()
 
                 def poll():
                     while not stop.is_set():
                         peak[0] = max(peak[0], rss_mb(pid))
-                        time.sleep(0.15)
+                        fp[0] = max(fp[0], footprint_mb(pid))
+                        time.sleep(0.5)
                 th = threading.Thread(target=poll, daemon=True)
                 th.start()
                 # fill ~85% of the context with a real prompt, then generate 24 tokens
@@ -58,7 +72,7 @@ def main():
                 r = srv.complete(prompt, n_predict=24)
                 stop.set()
                 th.join()
-                res["ctx"][n_ctx] = {"idle_rss_mb": round(idle), "peak_rss_mb": round(peak[0]), "prompt_tokens": r["prompt_n"]}
+                res["ctx"][n_ctx] = {"idle_rss_mb": round(idle), "peak_rss_mb": round(peak[0]), "peak_footprint_mb": round(fp[0]), "prompt_tokens": r["prompt_n"]}
                 print(m, n_ctx, res["ctx"][n_ctx], flush=True)
         p.write_text(json.dumps(res, indent=1))
 
