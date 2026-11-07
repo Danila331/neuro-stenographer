@@ -2,6 +2,12 @@
 
 Локальный аудит 07.11.2026, без сети. Назначение лицензии в конфигурации не заменяет проверки прав на конкретные веса и конвертацию.
 
+**В приложении:** Настройки → «Лицензии и модели» (модели, библиотеки, шрифты; тап -- полный текст лицензии офлайн). Реестр -- `src/android/app/src/main/assets/third_party_notices.json`
+(генерируется `src/android/tools/gen_notices.py` из `libs.versions.toml` и `config/models.json`; в него входят только поставляемые компоненты -- модели tiers lite/medium/hard,
+библиотеки и шрифты APK; кандидаты и тестовые зависимости не входят), тексты -- `src/android/app/src/main/assets/licenses/`. Тест `NoticesTest`: у каждого пункта есть лицензия
+и существующий файл текста, версии совпадают с каталогом Gradle, все поставляемые модели `models.json` перечислены. Полного юридического текста нет у двух пунктов
+(в реестре `text_complete = false`, вложена справка со ссылкой): CC BY 4.0 (Parakeet) и бинарная лицензия ObjectBox -- нужен текст с официальных сайтов.
+
 ## Модели
 
 | Модель | Источник | Заявлено / локальная проверка | Обязательства при подтверждении |
@@ -16,6 +22,9 @@
 | `asr/gigaam-v3-ctc-punct-int8` | [файл](https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-punct-giga-am-v3-russian-2025-12-16/resolve/main/model.int8.onnx) | MIT (salute-developers/GigaAM); не подтверждено локальным текстом | сохранить copyright и текст, без гарантий |
 | `asr/zipformer-ru-int8` | [файл](https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ru-int8-2025-04-20/resolve/main/encoder.int8.onnx) | Apache-2.0 (alphacep/vosk zipformer-ru); не подтверждено локальным текстом | лицензия, copyright, NOTICE при наличии, отметить изменения, без гарантий |
 | `asr/whisper-tiny-int8` | [файл](https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-encoder.int8.onnx) | MIT (openai/whisper tiny, multilingual); не подтверждено локальным текстом | сохранить copyright и текст, без гарантий |
+| `asr/streaming-zipformer-small-ru-int8` | [файл](https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16/resolve/main/encoder.int8.onnx) | Apache-2.0 (alphacep vosk-model-small-streaming-ru, потоковая модель живой расшифровки, B13); sha256 файлов совпали с официальным HF-репозиторием | лицензия, copyright, NOTICE при наличии, отметить изменения, без гарантий |
+| `embed/user2-small` | [источник](https://huggingface.co/deepvk/USER2-small) | Apache-2.0 (deepvk/USER2-small); наш ONNX int8-экспорт (`bench_rag.export_onnx`), AI-поиск medium/hard | лицензия, copyright, отметить изменения (экспорт и квантизация), без гарантий |
+| `embed/rubert-tiny-turbo` | [источник](https://huggingface.co/sergeyzh/rubert-tiny-turbo) | MIT (sergeyzh/rubert-tiny-turbo); наш ONNX int8-экспорт, AI-поиск lite | сохранить copyright и текст, отметить изменения, без гарантий |
 | `asr/parakeet-tdt-110m-en-int8` | [файл](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet_tdt_transducer_110m-en-36000-int8.tar.bz2) | CC-BY-4.0 (NVIDIA parakeet-tdt_ctc-110m); не подтверждено локальным текстом | атрибуция, ссылка на лицензию, отметить изменения |
 | `asr/parakeet-tdt-0.6b-v3-int8` | [файл](https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/encoder.int8.onnx) | CC-BY-4.0 (NVIDIA Parakeet-TDT-0.6B-v3, 25 European languages incl. ru+en); не подтверждено локальным текстом | атрибуция, ссылка на лицензию, отметить изменения |
 | `diar/pyannote-segmentation-3.0` | [файл](https://huggingface.co/csukuangfj/sherpa-onnx-pyannote-segmentation-3-0/resolve/main/model.int8.onnx) | MIT (pyannote/segmentation-3.0, ONNX export by k2-fsa); LICENSE: MIT | сохранить copyright и текст, без гарантий |
@@ -40,8 +49,12 @@
 | Компонент | Версия | Локальное свидетельство / лицензия |
 |---|---|---|
 | llama.cpp | v0.9.0 | LICENSE в `.cache/android-deps/llama.cpp-v0.9.0/llama.cpp-v0.9.0.tar.gz`: MIT; каталог версий отдельно указывает `b9000`, необходимо согласовать |
-| sherpa-onnx AAR | 2.0.1 | LICENSE/NOTICE внутри AAR не найден; не подтверждено |
-| ONNX Runtime в AAR | не установлена | `jni/*/libonnxruntime.so` внутри AAR; текст лицензии не найден, не подтверждено |
+| sherpa-onnx AAR | 2.0.1 | Apache-2.0 (k2-fsa/sherpa-onnx, по репозиторию); LICENSE/NOTICE внутри AAR не найден |
+| ObjectBox (Java/Kotlin API) | 5.4.2 | Apache-2.0; генератор кода `objectbox-processor` -- только при сборке, в приложение не входит |
+| ObjectBox нативная библиотека `libobjectbox-jni.so` | 5.4.2 | закрытая, бинарная лицензия ObjectBox GmbH; запасной путь -- хранилище в памяти (`search.store.fallback`) |
+| Kotlin (stdlib) | 2.4.21 | Apache-2.0 (JetBrains/kotlin) |
+| ONNX Runtime (`libonnxruntime.so` из AAR sherpa-onnx) | 1.28.x | MIT (microsoft/onnxruntime; общая библиотека для sherpa-onnx и эмбеддера поиска); текст MIT вложен в приложение |
+| ONNX Runtime C API (заголовки, только сборка `engine-embed`) | 1.28.x | MIT (microsoft/onnxruntime) |
 | org.jetbrains.kotlinx:kotlinx-coroutines-core | 1.11.0 | каталог Gradle; лицензия локально не подтверждена |
 | org.jetbrains.kotlinx:kotlinx-coroutines-android | 1.11.0 | каталог Gradle; лицензия локально не подтверждена |
 | org.jetbrains.kotlinx:kotlinx-coroutines-test | 1.11.0 | каталог Gradle; лицензия локально не подтверждена |
@@ -68,6 +81,16 @@
 | androidx.compose.ui:ui-tooling-preview | не зафиксирована | каталог Gradle; лицензия локально не подтверждена |
 | androidx.compose.material3:material3 | не зафиксирована | каталог Gradle; лицензия локально не подтверждена |
 | androidx.compose.foundation:foundation | не зафиксирована | каталог Gradle; лицензия локально не подтверждена |
+
+Все AndroidX, Compose, WorkManager, kotlinx и commons-compress из таблицы выше распространяются по Apache-2.0 (по документации проектов); тестовые зависимости (JUnit, androidx.test, ui-test) в приложение не входят.
+
+## Шрифты (вшиты в APK, `res/font`)
+
+| Шрифт | Лицензия | Текст |
+|---|---|---|
+| Unbounded (вариативный) | SIL OFL 1.1, Copyright 2022 The Unbounded Project Authors | `assets/licenses/OFL-unbounded.txt` |
+| Golos Text (вариативный) | SIL OFL 1.1, Copyright 2019 The Golos Text Project Authors | `assets/licenses/OFL-golostext.txt` |
+| JetBrains Mono (вариативный) | SIL OFL 1.1, Copyright 2020 The JetBrains Mono Project Authors | `assets/licenses/OFL-jetbrainsmono.txt` |
 
 Python: прямые зависимости и диапазоны — `src/eval/*/pyproject.toml`; `.venv` в рабочей копии отсутствуют. Зафиксированные версии stenoeval — `src/eval/stenoeval/uv.lock`; лицензии локально не подтверждены. Транзитивные зависимости требуют отдельной инвентаризации.
 
@@ -99,6 +122,6 @@ Python: прямые зависимости и диапазоны — `src/eval/
 ## Риски перед выпуском
 
 - LICENSE у GigaAM v2 в кэше — HTML, а не лицензионный текст; права на веса и конверсию проверить. Для GigaAM v3 и pyannote локальный MIT-файл найден, но применимость к весам необходимо подтвердить.
-- Лицензии большинства весов и Android/Python-зависимостей пока не подтверждены; JSON — черновой реестр, не замена полным текстам лицензий.
+- Лицензии большинства весов и Android/Python-зависимостей по-прежнему не подтверждены локальным текстом; реестр в приложении (`third_party_notices.json`) собран по источникам, полные тексты вложены (MIT, Apache-2.0, OFL), для CC BY 4.0 и ObjectBox -- только справка со ссылкой.
 - ESC-50 содержит NC-условия, VoxForge — GPL; смешанные данные и эталоны требуют проверки происхождения. Лицензия кода проекта не выбрана.
 - Указать LICENSE/NOTICE и атрибуции в дистрибутиве после проверки; не принимать лицензии автоматически.

@@ -1,344 +1,444 @@
 [
   {
-    "name": "silero-vad",
-    "version": "не указана",
-    "license": "MIT (snakers4/silero-vad v5); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx"
+    "id": "asr/gigaam-v3-rnnt-punct-int8",
+    "kind": "model",
+    "name": "GigaAM v3 RNNT (с пунктуацией, int8)",
+    "version": "2025-12-16",
+    "purpose": "Распознавание русской речи, знаки и регистр",
+    "license": "MIT",
+    "license_file": "MIT-GigaAM.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16",
+    "note": "salute-developers/GigaAM; ONNX int8 -- k2-fsa",
+    "tiers": [
+      "lite",
+      "medium",
+      "hard"
+    ]
   },
   {
-    "name": "asr/gigaam-v3-rnnt-int8",
-    "version": "не указана",
-    "license": "MIT (salute-developers/GigaAM); LICENSE: MIT",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-giga-am-v3-russian-2025-12-16/resolve/main/encoder.int8.onnx"
+    "id": "asr/parakeet-tdt-110m-en-int8",
+    "kind": "model",
+    "name": "NVIDIA Parakeet-TDT 110M (English, int8)",
+    "version": "36000 steps",
+    "purpose": "Распознавание английской речи",
+    "license": "CC-BY-4.0",
+    "license_file": "CC-BY-4.0.txt",
+    "text_complete": false,
+    "source": "https://huggingface.co/nvidia/parakeet_tdt_ctc_110m",
+    "note": "Атрибуция: NVIDIA; изменения: квантизация int8 и экспорт ONNX (k2-fsa). Вложена справка со ссылкой, не полный юридический текст.",
+    "tiers": [
+      "lite",
+      "medium",
+      "hard"
+    ]
   },
   {
-    "name": "asr/gigaam-v2-ctc-int8",
-    "version": "не указана",
-    "license": "MIT (salute-developers/GigaAM); LICENSE — HTML, не текст лицензии",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/resolve/main/model.int8.onnx"
+    "id": "asr/streaming-zipformer-small-ru-int8",
+    "kind": "model",
+    "name": "vosk-model-small-streaming-ru (zipformer, int8)",
+    "version": "2025-08-16",
+    "purpose": "Живая расшифровка во время записи (превью)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/alphacep/vosk-model-small-streaming-ru",
+    "note": "alphacep/vosk; ONNX int8 -- csukuangfj (sherpa-onnx)",
+    "tiers": [
+      "lite",
+      "medium",
+      "hard"
+    ]
   },
   {
-    "name": "asr/whisper-large-v3-turbo-int8",
-    "version": "не указана",
-    "license": "MIT (openai/whisper large-v3-turbo); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-turbo/resolve/main/turbo-encoder.int8.onnx"
+    "id": "asr/whisper-tiny-int8",
+    "kind": "model",
+    "name": "Whisper tiny, multilingual (int8)",
+    "version": "tiny",
+    "purpose": "Определение языка речи (русский/английский)",
+    "license": "MIT",
+    "license_file": "MIT.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/openai/whisper-tiny",
+    "note": "OpenAI Whisper; ONNX int8 -- csukuangfj (sherpa-onnx)",
+    "tiers": [
+      "lite",
+      "medium",
+      "hard"
+    ]
   },
   {
-    "name": "asr/gigaam-v3-ctc-int8",
-    "version": "не указана",
-    "license": "MIT (salute-developers/GigaAM); LICENSE: MIT",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16/resolve/main/model.int8.onnx"
+    "id": "silero-vad/silero_vad.onnx",
+    "kind": "model",
+    "name": "Silero VAD",
+    "version": "v5",
+    "purpose": "Поиск речи в записи (VAD)",
+    "license": "MIT",
+    "license_file": "MIT.txt",
+    "text_complete": true,
+    "source": "https://github.com/snakers4/silero-vad",
+    "note": "snakers4/silero-vad",
+    "tiers": [
+      "lite",
+      "medium",
+      "hard"
+    ]
   },
   {
-    "name": "asr/gigaam-v2-rnnt-int8",
-    "version": "не указана",
-    "license": "MIT (salute-developers/GigaAM); LICENSE — HTML, не текст лицензии",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/resolve/main/encoder.int8.onnx"
+    "id": "diar/pyannote-segmentation-3.0",
+    "kind": "model",
+    "name": "pyannote segmentation 3.0 (int8)",
+    "version": "3.0",
+    "purpose": "Разделение говорящих: сегментация",
+    "license": "MIT",
+    "license_file": "MIT-pyannote.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/pyannote/segmentation-3.0",
+    "note": "ONNX-экспорт k2-fsa (sherpa-onnx)",
+    "tiers": [
+      "lite",
+      "medium",
+      "hard"
+    ]
   },
   {
-    "name": "asr/gigaam-v3-rnnt-punct-int8",
-    "version": "не указана",
-    "license": "MIT (salute-developers/GigaAM); LICENSE: MIT",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/encoder.int8.onnx"
+    "id": "diar/emb-campplus-zh-cn",
+    "kind": "model",
+    "name": "3D-Speaker CAM++ (голосовые отпечатки)",
+    "version": "16k",
+    "purpose": "Голосовые отпечатки говорящих (lite)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/modelscope/3D-Speaker",
+    "note": "modelscope/3D-Speaker; релиз sherpa-onnx",
+    "tiers": [
+      "lite"
+    ]
   },
   {
-    "name": "asr/gigaam-v3-ctc-punct-int8",
-    "version": "не указана",
-    "license": "MIT (salute-developers/GigaAM); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-punct-giga-am-v3-russian-2025-12-16/resolve/main/model.int8.onnx"
+    "id": "diar/emb-eres2net-base-200k",
+    "kind": "model",
+    "name": "3D-Speaker ERes2Net base 200k (голосовые отпечатки)",
+    "version": "16k",
+    "purpose": "Голосовые отпечатки говорящих (medium)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/modelscope/3D-Speaker",
+    "note": "modelscope/3D-Speaker; релиз sherpa-onnx",
+    "tiers": [
+      "medium"
+    ]
   },
   {
-    "name": "asr/zipformer-ru-int8",
-    "version": "не указана",
-    "license": "Apache-2.0 (alphacep/vosk zipformer-ru); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ru-int8-2025-04-20/resolve/main/encoder.int8.onnx"
+    "id": "diar/emb-eres2netv2",
+    "kind": "model",
+    "name": "3D-Speaker ERes2Net v2 (голосовые отпечатки)",
+    "version": "16k",
+    "purpose": "Голосовые отпечатки говорящих (hard)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/modelscope/3D-Speaker",
+    "note": "modelscope/3D-Speaker; релиз sherpa-onnx",
+    "tiers": [
+      "hard"
+    ]
   },
   {
-    "name": "asr/whisper-tiny-int8",
-    "version": "не указана",
-    "license": "MIT (openai/whisper tiny, multilingual); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-encoder.int8.onnx"
+    "id": "denoise/gtcrn_simple.onnx",
+    "kind": "model",
+    "name": "GTCRN (шумоподавление)",
+    "version": "simple",
+    "purpose": "Шумоподавление на тихих и шумных записях (hard)",
+    "license": "MIT",
+    "license_file": "MIT.txt",
+    "text_complete": true,
+    "source": "https://github.com/Xiaobin-Rong/gtcrn",
+    "note": "Xiaobin-Rong/gtcrn; релиз sherpa-onnx",
+    "tiers": [
+      "hard"
+    ]
   },
   {
-    "name": "asr/parakeet-tdt-110m-en-int8",
-    "version": "не указана",
-    "license": "CC-BY-4.0 (NVIDIA parakeet-tdt_ctc-110m); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet_tdt_transducer_110m-en-36000-int8.tar.bz2"
+    "id": "embed/user2-small",
+    "kind": "model",
+    "name": "USER2-small (эмбеддер поиска, int8)",
+    "version": "small",
+    "purpose": "AI-поиск: смысловые векторы фрагментов (medium, hard)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/deepvk/USER2-small",
+    "note": "deepvk/USER2-small; ONNX int8 -- наш экспорт (bench_rag.export_onnx)",
+    "tiers": [
+      "medium",
+      "hard"
+    ]
   },
   {
-    "name": "asr/parakeet-tdt-0.6b-v3-int8",
-    "version": "не указана",
-    "license": "CC-BY-4.0 (NVIDIA Parakeet-TDT-0.6B-v3, 25 European languages incl. ru+en); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/encoder.int8.onnx"
+    "id": "embed/rubert-tiny-turbo",
+    "kind": "model",
+    "name": "rubert-tiny-turbo (эмбеддер поиска, int8)",
+    "version": "turbo",
+    "purpose": "AI-поиск: смысловые векторы фрагментов (lite)",
+    "license": "MIT",
+    "license_file": "MIT.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/sergeyzh/rubert-tiny-turbo",
+    "note": "sergeyzh/rubert-tiny-turbo; ONNX int8 -- наш экспорт (bench_rag.export_onnx)",
+    "tiers": [
+      "lite"
+    ]
   },
   {
-    "name": "diar/pyannote-segmentation-3.0",
-    "version": "не указана",
-    "license": "MIT (pyannote/segmentation-3.0, ONNX export by k2-fsa); LICENSE: MIT",
-    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-pyannote-segmentation-3-0/resolve/main/model.int8.onnx"
+    "id": "llm/qwen3-0.6b-q4_0.gguf",
+    "kind": "model",
+    "name": "Qwen3 0.6B (Q4_0)",
+    "version": "0.6B",
+    "purpose": "Протокол, вопросы, выжимка, ответы поиска (lite)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF",
+    "note": "Qwen (Alibaba Cloud); GGUF -- ggml-org",
+    "tiers": [
+      "lite"
+    ]
   },
   {
-    "name": "diar/emb-campplus-zh-cn",
-    "version": "не указана",
-    "license": "Apache-2.0 (modelscope/3D-Speaker; the release notes defer to the model repository); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx"
+    "id": "llm/qwen3-1.7b-q4_k_m.gguf",
+    "kind": "model",
+    "name": "Qwen3 1.7B (Q4_K_M)",
+    "version": "1.7B",
+    "purpose": "Протокол, вопросы, выжимка, ответы поиска (medium)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/ggml-org/Qwen3-1.7B-GGUF",
+    "note": "Qwen (Alibaba Cloud); GGUF -- ggml-org",
+    "tiers": [
+      "medium"
+    ]
   },
   {
-    "name": "diar/emb-eres2net-base-200k",
-    "version": "не указана",
-    "license": "Apache-2.0 (modelscope/3D-Speaker; the release notes defer to the model repository); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx"
+    "id": "llm/qwen3-4b-q4_k_m.gguf",
+    "kind": "model",
+    "name": "Qwen3 4B (Q4_K_M)",
+    "version": "4B",
+    "purpose": "Протокол, вопросы, выжимка, ответы поиска (hard)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://huggingface.co/Qwen/Qwen3-4B-GGUF",
+    "note": "Qwen (Alibaba Cloud)",
+    "tiers": [
+      "hard"
+    ]
   },
   {
-    "name": "diar/emb-eres2netv2",
-    "version": "не указана",
-    "license": "Apache-2.0 (modelscope/3D-Speaker; the release notes defer to the model repository); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx"
-  },
-  {
-    "name": "diar/embedding",
-    "version": "не указана",
-    "license": "Apache-2.0 (modelscope/3D-Speaker CAM++ zh_en advanced); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx"
-  },
-  {
-    "name": "diar/embedding-eres2net-base",
-    "version": "не указана",
-    "license": "Apache-2.0 (3D-Speaker); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx"
-  },
-  {
-    "name": "diar/embedding-eres2netv2",
-    "version": "не указана",
-    "license": "Apache-2.0 (3D-Speaker); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx"
-  },
-  {
-    "name": "diar/embedding-campplus-voxceleb-en",
-    "version": "не указана",
-    "license": "Apache-2.0 (3D-Speaker); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_en_voxceleb_16k.onnx"
-  },
-  {
-    "name": "diar/embedding-wespeaker-resnet34",
-    "version": "не указана",
-    "license": "Apache-2.0 (wenet-e2e/wespeaker); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/wespeaker_en_voxceleb_resnet34.onnx"
-  },
-  {
-    "name": "diar/embedding-wespeaker-campplus",
-    "version": "не указана",
-    "license": "Apache-2.0 (wenet-e2e/wespeaker); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/wespeaker_en_voxceleb_CAM++.onnx"
-  },
-  {
-    "name": "diar/embedding-titanet-small",
-    "version": "не указана",
-    "license": "CC-BY-4.0 (NVIDIA NeMo TitaNet); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/nemo_en_titanet_small.onnx"
-  },
-  {
-    "name": "diar/embedding-titanet-large",
-    "version": "не указана",
-    "license": "CC-BY-4.0 (NVIDIA NeMo TitaNet); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/nemo_en_titanet_large.onnx"
-  },
-  {
-    "name": "denoise",
-    "version": "не указана",
-    "license": "MIT (Xiaobin-Rong/gtcrn); не подтверждено локальным текстом",
-    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx"
-  },
-  {
-    "name": "qwen3-0.6b-q4_0.gguf",
-    "version": "не указана",
-    "license": "Apache-2.0 (Qwen3); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q4_0.gguf"
-  },
-  {
-    "name": "qwen3-1.7b-q4_k_m.gguf",
-    "version": "не указана",
-    "license": "Apache-2.0 (Qwen3); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/ggml-org/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf"
-  },
-  {
-    "name": "qwen3-4b-q4_k_m.gguf",
-    "version": "не указана",
-    "license": "Apache-2.0 (Qwen3); не подтверждено локальным текстом",
-    "url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf"
-  },
-  {
-    "name": "llama.cpp",
-    "version": "v0.9.0",
-    "license": "MIT (локальный LICENSE в архиве)",
-    "url": "https://github.com/ggml-org/llama.cpp"
-  },
-  {
-    "name": "sherpa-onnx",
+    "id": "sherpa-onnx",
+    "kind": "library",
+    "name": "sherpa-onnx (AAR)",
     "version": "2.0.1",
-    "license": "не подтверждено локально",
-    "url": "https://github.com/k2-fsa/sherpa-onnx"
+    "purpose": "Движок распознавания речи, VAD, диаризации и голосовых отпечатков",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/k2-fsa/sherpa-onnx"
   },
   {
-    "name": "ONNX Runtime",
-    "version": "не установлена",
-    "license": "не подтверждено локально",
-    "url": "https://github.com/microsoft/onnxruntime"
+    "id": "onnxruntime-lib",
+    "kind": "library",
+    "name": "ONNX Runtime (libonnxruntime.so из sherpa-onnx)",
+    "version": "1.28.x",
+    "purpose": "Выполнение ONNX-моделей; общая библиотека для sherpa-onnx и эмбеддера поиска",
+    "license": "MIT",
+    "license_file": "MIT-onnxruntime.txt",
+    "text_complete": true,
+    "source": "https://github.com/microsoft/onnxruntime"
   },
   {
-    "name": "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+    "id": "onnxruntime-headers",
+    "kind": "library",
+    "name": "ONNX Runtime C API (заголовки)",
+    "version": "1.28.x",
+    "purpose": "Заголовки для нативного эмбеддера поиска (engine-embed); только при сборке",
+    "license": "MIT",
+    "license_file": "MIT-onnxruntime.txt",
+    "text_complete": true,
+    "source": "https://github.com/microsoft/onnxruntime"
+  },
+  {
+    "id": "llama.cpp",
+    "kind": "library",
+    "name": "llama.cpp",
+    "version": "b9000 (архив v0.9.0)",
+    "purpose": "Языковая модель на устройстве: протокол, вопросы, выжимка, ответы поиска",
+    "license": "MIT",
+    "license_file": "MIT-llama.cpp.txt",
+    "text_complete": true,
+    "source": "https://github.com/ggml-org/llama.cpp"
+  },
+  {
+    "id": "objectbox-api",
+    "kind": "library",
+    "name": "ObjectBox (Java/Kotlin API)",
+    "version": "5.4.2",
+    "purpose": "Хранилище и векторный индекс HNSW для AI-поиска",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/objectbox/objectbox-java",
+    "note": "Генератор кода (objectbox-processor) используется только при сборке и в приложение не входит."
+  },
+  {
+    "id": "objectbox-native",
+    "kind": "library",
+    "name": "ObjectBox (нативная библиотека libobjectbox-jni.so)",
+    "version": "5.4.2",
+    "purpose": "Нативная часть хранилища ObjectBox",
+    "license": "ObjectBox (бинарная лицензия)",
+    "license_file": "ObjectBox-binary.txt",
+    "text_complete": false,
+    "source": "https://objectbox.io/faq/",
+    "note": "Закрытая библиотека ObjectBox GmbH; при отказе от неё поиск работает на встроенном хранилище в памяти. Вложена справка, не полный текст."
+  },
+  {
+    "id": "kotlin-stdlib",
+    "kind": "library",
+    "name": "Kotlin (стандартная библиотека)",
+    "version": "2.4.21",
+    "purpose": "Язык и библиотека приложения",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/JetBrains/kotlin"
+  },
+  {
+    "id": "kotlinx-coroutines",
+    "kind": "library",
+    "name": "kotlinx.coroutines (core, android)",
     "version": "1.11.0",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
+    "purpose": "Асинхронная работа и потоки данных",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/Kotlin/kotlinx.coroutines"
   },
   {
-    "name": "org.jetbrains.kotlinx:kotlinx-coroutines-android",
-    "version": "1.11.0",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
-  },
-  {
-    "name": "org.jetbrains.kotlinx:kotlinx-coroutines-test",
-    "version": "1.11.0",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
-  },
-  {
-    "name": "org.jetbrains.kotlinx:kotlinx-serialization-json",
+    "id": "kotlinx-serialization-json",
+    "kind": "library",
+    "name": "kotlinx.serialization (JSON)",
     "version": "1.12.0",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
+    "purpose": "Чтение и запись JSON (результаты, конфигурация)",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://github.com/Kotlin/kotlinx.serialization"
   },
   {
-    "name": "org.junit.jupiter:junit-jupiter",
-    "version": "6.1.3",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
-  },
-  {
-    "name": "org.junit.platform:junit-platform-launcher",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
-  },
-  {
-    "name": "junit:junit",
-    "version": "4.13.2",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
-  },
-  {
-    "name": "androidx.core:core-ktx",
+    "id": "androidx-core-ktx",
+    "kind": "library",
+    "name": "AndroidX Core KTX",
     "version": "1.18.0",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
+    "purpose": "Базовые расширения Android",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://developer.android.com/jetpack/androidx/releases/core"
   },
   {
-    "name": "androidx.activity:activity-compose",
+    "id": "androidx-activity-compose",
+    "kind": "library",
+    "name": "AndroidX Activity Compose",
     "version": "1.13.0",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
+    "purpose": "Окно приложения и результаты системных диалогов",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://developer.android.com/jetpack/androidx/releases/activity"
   },
   {
-    "name": "androidx.lifecycle:lifecycle-runtime-ktx",
+    "id": "androidx-lifecycle",
+    "kind": "library",
+    "name": "AndroidX Lifecycle (runtime, ViewModel, service)",
     "version": "2.9.4",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
+    "purpose": "Жизненный цикл экранов, состояние и фоновая служба",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://developer.android.com/jetpack/androidx/releases/lifecycle"
   },
   {
-    "name": "androidx.lifecycle:lifecycle-runtime-compose",
-    "version": "2.9.4",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.lifecycle:lifecycle-viewmodel-compose",
-    "version": "2.9.4",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.lifecycle:lifecycle-service",
-    "version": "2.9.4",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.work:work-runtime",
+    "id": "androidx-work",
+    "kind": "library",
+    "name": "AndroidX WorkManager",
     "version": "2.11.0",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
+    "purpose": "Фоновая загрузка наборов моделей и индексация поиска",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://developer.android.com/jetpack/androidx/releases/work"
   },
   {
-    "name": "org.apache.commons:commons-compress",
+    "id": "compose",
+    "kind": "library",
+    "name": "Jetpack Compose (UI, Foundation, Material 3, иконки)",
+    "version": "2025.12.01 (BOM)",
+    "purpose": "Интерфейс приложения",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://developer.android.com/jetpack/androidx/releases/compose"
+  },
+  {
+    "id": "commons-compress",
+    "kind": "library",
+    "name": "Apache Commons Compress",
     "version": "1.28.0",
-    "license": "не подтверждено локально",
-    "url": "https://repo.maven.apache.org/maven2/"
+    "purpose": "Распаковка архивов наборов моделей при загрузке",
+    "license": "Apache-2.0",
+    "license_file": "Apache-2.0.txt",
+    "text_complete": true,
+    "source": "https://commons.apache.org/proper/commons-compress/",
+    "note": "Входит в модуль загрузки моделей."
   },
   {
-    "name": "androidx.compose.material:material-icons-core",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
+    "id": "font/unbounded",
+    "kind": "font",
+    "name": "Unbounded",
+    "version": "variable (wght 200-900)",
+    "purpose": "Заголовки интерфейса",
+    "license": "OFL-1.1",
+    "license_file": "OFL-unbounded.txt",
+    "text_complete": true,
+    "source": "https://github.com/googlefonts/unbounded",
+    "note": "Copyright 2022 The Unbounded Project Authors"
   },
   {
-    "name": "androidx.compose.ui:ui-test-junit4",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
+    "id": "font/golos-text",
+    "kind": "font",
+    "name": "Golos Text",
+    "version": "variable (wght 400-900)",
+    "purpose": "Основной текст интерфейса",
+    "license": "OFL-1.1",
+    "license_file": "OFL-golostext.txt",
+    "text_complete": true,
+    "source": "https://github.com/googlefonts/golos-text",
+    "note": "Copyright 2019 The Golos Text Project Authors"
   },
   {
-    "name": "androidx.compose.ui:ui-test-manifest",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.test:runner",
-    "version": "1.7.0",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.test.ext:junit",
-    "version": "1.3.0",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.compose:compose-bom",
-    "version": "2025.12.01",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.compose.ui:ui",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.compose.ui:ui-tooling",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.compose.ui:ui-tooling-preview",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.compose.material3:material3",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
-  },
-  {
-    "name": "androidx.compose.foundation:foundation",
-    "version": "не зафиксирована",
-    "license": "не подтверждено локально",
-    "url": "https://maven.google.com/"
+    "id": "font/jetbrains-mono",
+    "kind": "font",
+    "name": "JetBrains Mono",
+    "version": "variable (wght 100-800)",
+    "purpose": "Таймкоды и числа",
+    "license": "OFL-1.1",
+    "license_file": "OFL-jetbrainsmono.txt",
+    "text_complete": true,
+    "source": "https://github.com/JetBrains/JetBrainsMono",
+    "note": "Copyright 2020 The JetBrains Mono Project Authors"
   }
 ]
