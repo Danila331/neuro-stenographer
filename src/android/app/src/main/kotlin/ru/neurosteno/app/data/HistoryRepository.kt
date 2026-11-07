@@ -135,6 +135,17 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
         if (dir(id).isDirectory) File(dir(id), PROTOCOL).writeText(text, Charsets.UTF_8)
     }
 
+    /** Расшифровка до пересчёта фрагмента -- для «Отменить» (один уровень). */
+    fun writeUndo(id: String, stored: StoredTranscript) = synchronized(lock) {
+        if (dir(id).isDirectory) File(dir(id), UNDO).writeText(stored.encode(), Charsets.UTF_8)
+    }
+
+    fun readUndo(id: String): StoredTranscript? = synchronized(lock) {
+        runCatching { StoredTranscript.decode(File(dir(id), UNDO).readText(Charsets.UTF_8)) }.getOrNull()
+    }
+
+    fun clearUndo(id: String) = synchronized(lock) { runCatching { File(dir(id), UNDO).delete() }; Unit }
+
     fun delete(id: String) {
         synchronized(lock) { dir(id).deleteRecursively() }
         _entries.value = _entries.value.filterNot { it.id == id }
@@ -188,6 +199,7 @@ class HistoryRepository(private val root: File, private val clock: () -> Long = 
         private const val ENTRY = "entry.json"
         private const val TRANSCRIPT = "transcript.json"
         private const val PROTOCOL = "protocol.txt"
+        private const val UNDO = "transcript.undo.json"
         private const val PREVIEW_CHARS = 140
         private val JSON = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     }

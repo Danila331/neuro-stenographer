@@ -95,6 +95,8 @@ object ResultsAutosave {
         warnings: List<String>,
         outcome: Outcome,
         finishedAtMs: Long = System.currentTimeMillis(),
+        /** Дополнительные поля маркера (например, `fragment` -- сведения о пересчёте фрагмента). */
+        extras: Map<String, kotlinx.serialization.json.JsonElement> = emptyMap(),
     ): Result<File> = runCatching {
         val m = source.meta
         val json = buildJsonObject {
@@ -119,6 +121,7 @@ object ResultsAutosave {
             put("files", JsonArray(outcome.files.map { JsonPrimitive(it) }))
             put("problems", JsonArray(outcome.problems.map { JsonPrimitive(it) }))
             put("warnings", JsonArray(warnings.map { JsonPrimitive(it) }))
+            extras.forEach { (k, v) -> put(k, v) }
         }
         val file = File(dir, "${baseName(sourceName)}.done.json")
         writeAtomic(file, pretty.encodeToString(JsonObject.serializer(), json))

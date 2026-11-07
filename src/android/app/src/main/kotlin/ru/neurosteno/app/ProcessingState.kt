@@ -52,3 +52,55 @@ object ProcessingState {
         (_processing.value as? ProcessingUi.Running)?.let { _processing.value = it.copy(cancelling = true) }
     }
 }
+
+/** Повторная обработка фрагмента: выполняется тем же сервисом, но интерфейс остаётся на экране расшифровки (поверх -- индикатор). */
+sealed interface FragmentUi {
+    data object Idle : FragmentUi
+
+    data class Running(
+        val entryId: String,
+        /** «Фрагмент 00:12–00:20». */
+        val label: String,
+        val stage: Stage = Stage.DECODE,
+        val overall: Float = 0f,
+        val startedAtMs: Long = System.currentTimeMillis(),
+        val cancelling: Boolean = false,
+    ) : FragmentUi
+
+    /** Сервис закончил; [changed] -- расшифровка заменена (сохранена на диск, можно отменить). */
+    data class Finished(
+        val entryId: String,
+        val outcome: ru.neurosteno.core.fragment.FragmentOutcome,
+        val message: String,
+        val changed: Boolean,
+        val added: List<ru.neurosteno.core.TimeSpan>,
+        val label: String,
+        val warnings: List<String>,
+        val processingMs: Long,
+    ) : FragmentUi
+
+    data class Failed(val entryId: String, val message: String) : FragmentUi
+}
+
+object FragmentState {
+    private val _state = MutableStateFlow<FragmentUi>(FragmentUi.Idle)
+    val state: StateFlow<FragmentUi> = _state.asStateFlow()
+
+    fun set(s: FragmentUi) { _state.value = s }
+    fun consume() { _state.value = FragmentUi.Idle }
+    val running: Boolean get() = _state.value is FragmentUi.Running
+
+    fun markCancelling() {
+        (_state.value as? FragmentUi.Running)?.let { _state.value = it.copy(cancelling = true) }
+    }
+}
+
+/** Параметры запроса «Обработать заново» (передаются сервису). [language]: `auto` | `ru` | `en`. */
+data class FragmentParams(
+    val entryId: String,
+    val startMs: Long,
+    val endMs: Long,
+    val language: String,
+    val numSpeakers: Int?,
+    val recomputeSpeakers: Boolean,
+)

@@ -1,6 +1,7 @@
 package ru.neurosteno.app.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -66,6 +67,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -92,7 +94,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import ru.neurosteno.app.FragmentParams
+import ru.neurosteno.app.FragmentState
+import ru.neurosteno.app.FragmentUi
 import ru.neurosteno.app.edit.EditableTranscript
+import ru.neurosteno.app.edit.FragmentSelection
 import ru.neurosteno.app.edit.SearchUtil
 import ru.neurosteno.app.edit.TranscriptEditor
 import ru.neurosteno.app.export.ExportFormat
@@ -118,8 +124,13 @@ fun TranscriptScreen(
     onExport: (ExportFormat) -> Unit,
     onShare: () -> Unit,
     onProtocol: () -> Unit,
+    onStartFragment: (FragmentParams) -> Unit = {},
+    onCancelFragment: () -> Unit = {},
 ) {
     val doc by session.doc.collectAsState()
+    val highlight by session.highlight.collectAsState()
+    val canUndoFragment by session.canUndoFragment.collectAsState()
+    val fragmentState by FragmentState.state.collectAsState()
     val entry by session.entry.collectAsState()
     val player by session.player.state.collectAsState()
     val query by session.query.collectAsState()
@@ -135,6 +146,11 @@ fun TranscriptScreen(
     var editIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     var speakerIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     var menuIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+    // выделение соседних реплик для «Обработать заново» (кодируется одним числом, -1 -- нет выделения)
+    var selRaw by rememberSaveable { mutableLongStateOf(-1L) }
+    var showFragmentSheet by rememberSaveable { mutableStateOf(false) }
+    val fragmentRunning = fragmentState as? FragmentUi.Running
+    val myFragmentRunning = fragmentRunning?.takeIf { it.entryId == session.entryId }
 
     // «Назад» при открытом поиске сначала закрывает поиск (а не выходит с экрана)
     androidx.activity.compose.BackHandler(enabled = searching) { searching = false; session.setQuery("") }
@@ -145,6 +161,8 @@ fun TranscriptScreen(
 
     val transcript = doc?.transcript
     val utterances = transcript?.utterances.orEmpty()
+    val selection = FragmentSelection.clamp(if (selRaw < 0) null else FragmentSelection.decode(selRaw), utterances.size)
+    androidx.activity.compose.BackHandler(enabled = selection != null) { selRaw = -1L; showFragmentSheet = false }
     val currentIndex by remember(utterances) {
         derivedStateOf { if (player.playing || player.positionMs > 0) TranscriptEditor.indexAt(utterances, player.positionMs) else -1 }
     }
@@ -161,6 +179,43 @@ fun TranscriptScreen(
         snapshotFlow { listState.isScrollInProgress }.collect { scrolling -> if (scrolling && !programmatic && player.playing) follow = false }
     }
 
+    // Результат пересчёта фрагмента (сервис уже сохранил его на диск): перечитываем, подсвечиваем, предлагаем «Отменить».
+    // Подписка на поток, а не LaunchedEffect(state): consume() меняет состояние и отменил бы собственный эффект на полпути.
+    LaunchedEffect(session.entryId) {
+        FragmentState.state.collect { fs ->
+            when {
+                fs is FragmentUi.Finished && fs.entryId == session.entryId -> {
+                    FragmentState.consume()
+                    selRaw = -1L
+                    if (fs.changed) {
+                        session.reloadAfterFragment(fs.added)
+                        val first = fs.added.firstOrNull()
+                        session.doc.value?.transcript?.utterances?.indexOfFirst { first != null && it.startMs == first.startMs }?.takeIf { it >= 0 }
+                            ?.let { listState.animateScrollToItem(it + HEADER_ITEMS) }
+                        scope.launch {
+                            snackbar.currentSnackbarData?.dismiss()
+                            val msg = "${fs.label} обработан заново: " + Format.plural(fs.added.size, "новая реплика", "новые реплики", "новых реплик")
+                            val r = snackbar.showSnackbar(msg, actionLabel = "Отменить", duration = SnackbarDuration.Long)
+                            if (r == SnackbarResult.ActionPerformed && session.undoFragment()) snackbar.showSnackbar("Возвращено как было")
+                        }
+                    } else {
+                        scope.launch {
+                            snackbar.currentSnackbarData?.dismiss()
+                            snackbar.showSnackbar(fs.message, duration = SnackbarDuration.Long)
+                        }
+                    }
+                }
+                fs is FragmentUi.Failed && fs.entryId == session.entryId -> {
+                    FragmentState.consume()
+                    scope.launch {
+                        snackbar.currentSnackbarData?.dismiss()
+                        snackbar.showSnackbar(fs.message, duration = SnackbarDuration.Long)
+                    }
+                }
+            }
+        }
+    }
+
     fun undoable(message: String) {
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
@@ -169,8 +224,20 @@ fun TranscriptScreen(
         }
     }
 
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
+          if (selection != null) {
+            NeuroTopBar(
+                title = "Выбрано: ${selection.size}",
+                onBack = { selRaw = -1L },
+                actions = {
+                    androidx.compose.material3.TextButton(onClick = { showFragmentSheet = true }, modifier = Modifier.testTag("btn_fragment_reprocess")) {
+                        Text("Обработать заново")
+                    }
+                },
+            )
+          } else
             NeuroTopBar(
                 title = entry?.title ?: "Расшифровка",
                 onBack = onBack,
@@ -221,11 +288,16 @@ fun TranscriptScreen(
                         UtteranceCard(
                             u = u, name = transcript.displayName(u.speakerId), current = i == currentIndex,
                             matched = query.isNotBlank() && i in matches, query = query,
+                            selected = selection != null && i in selection, selectionMode = selection != null,
+                            highlighted = (u.startMs to u.endMs) in highlight,
                             canMerge = i < utterances.lastIndex, menuOpen = menuIndex == i,
                             onClick = {
-                                if (player.available) { follow = true; session.player.playFrom(u.startMs) }
+                                if (selection != null) selRaw = selection.toggle(i)?.encode() ?: -1L
+                                else if (player.available) { follow = true; session.player.playFrom(u.startMs) }
                                 else scope.launch { snackbar.showSnackbar("Запись недоступна для воспроизведения") }
                             },
+                            onLongClick = { menuIndex = null; selRaw = (selection?.toggle(i) ?: FragmentSelection(i, i)).encode() },
+                            onReprocess = { menuIndex = null; selRaw = FragmentSelection(i, i).encode(); showFragmentSheet = true },
                             onMenu = { menuIndex = i }, onMenuDismiss = { menuIndex = null },
                             onEdit = { menuIndex = null; editIndex = i },
                             onSpeaker = { menuIndex = null; speakerIndex = i },
@@ -243,6 +315,42 @@ fun TranscriptScreen(
                 AssistChip(onClick = { follow = true }, label = { Text("К текущей реплике") }, modifier = Modifier.padding(12.dp))
             }
         }
+    }
+
+        // идёт пересчёт фрагмента: индикатор с «Отменить» поверх расшифровки (экран можно покинуть -- сервис доработает)
+        if (myFragmentRunning != null) {
+            Box(
+                Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.45f))
+                    .clickable(enabled = true, indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) {},
+                contentAlignment = Alignment.Center,
+            ) {
+                FragmentProgressCard(myFragmentRunning.label, Format.stageTitle(myFragmentRunning.stage), myFragmentRunning.overall, myFragmentRunning.cancelling, onCancelFragment)
+            }
+        }
+    }
+
+    if (showFragmentSheet && selection != null && utterances.isNotEmpty()) {
+        val from = utterances[selection.first]
+        val to = utterances[selection.last]
+        FragmentOptionsSheet(
+            rangeLabel = "${Format.clock(from.startMs)}–${Format.clock(to.endMs)}",
+            utteranceCount = selection.size,
+            recordingLanguage = entry?.language ?: "ru",
+            blockedReason = when {
+                fragmentRunning != null -> "Уже идёт пересчёт фрагмента."
+                entry?.audioFile == null -> "Копия аудио недоступна: пересчитать фрагмент нельзя. Обработайте файл заново."
+                else -> null
+            },
+            onStart = { opts ->
+                showFragmentSheet = false
+                val params = opts.toParams(session.entryId, from.startMs, to.endMs, entry?.language ?: "ru", selection.size)
+                scope.launch {
+                    session.flush() // сервис читает расшифровку с диска: несохранённые правки должны быть там
+                    onStartFragment(params)
+                }
+            },
+            onDismiss = { showFragmentSheet = false },
+        )
     }
 
     // ---- диалоги ----
@@ -350,9 +458,14 @@ private fun UtteranceCard(
     current: Boolean,
     matched: Boolean,
     query: String,
+    selected: Boolean,
+    selectionMode: Boolean,
+    highlighted: Boolean,
     canMerge: Boolean,
     menuOpen: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onReprocess: () -> Unit,
     onMenu: () -> Unit,
     onMenuDismiss: () -> Unit,
     onEdit: () -> Unit,
@@ -362,6 +475,8 @@ private fun UtteranceCard(
 ) {
     val color = speakerColor(u.speakerId)
     val container = when {
+        selected -> MaterialTheme.colorScheme.secondaryContainer
+        highlighted -> MaterialTheme.colorScheme.tertiaryContainer
         current -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surfaceContainerLow
     }
@@ -370,9 +485,13 @@ private fun UtteranceCard(
         modifier = Modifier.fillMaxWidth()
             .then(if (matched) Modifier.border(2.dp, MaterialTheme.colorScheme.tertiary, MaterialTheme.shapes.medium) else Modifier)
             .semantics(mergeDescendants = true) {
-                contentDescription = "$name, $time. ${u.text}" + if (current) ". Сейчас звучит" else ""
+                contentDescription = "$name, $time. ${u.text}" + (if (current) ". Сейчас звучит" else "") +
+                    (if (selected) ". Выбрана" else "") + (if (highlighted) ". Обработана заново" else "")
             }
-            .combinedClickable(onClickLabel = "Воспроизвести с этого места", onClick = onClick, onLongClickLabel = "Действия с репликой", onLongClick = onMenu),
+            .combinedClickable(
+                onClickLabel = if (selectionMode) (if (selected) "Снять выбор" else "Выбрать реплику") else "Воспроизвести с этого места",
+                onClick = onClick, onLongClickLabel = "Выбрать для повторной обработки", onLongClick = onLongClick,
+            ),
         colors = CardDefaults.cardColors(containerColor = container),
     ) {
         Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = 0.dp), verticalAlignment = Alignment.Top) {
@@ -387,6 +506,8 @@ private fun UtteranceCard(
             Box {
                 IconButton(onClick = onMenu) { Icon(Icons.Default.MoreVert, contentDescription = "Действия с репликой: $name, $time") }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = onMenuDismiss) {
+                    DropdownMenuItem(text = { Text("Обработать заново") }, leadingIcon = { Icon(Icons.Default.Refresh, null) }, onClick = onReprocess,
+                        modifier = Modifier.testTag("menu_reprocess"))
                     DropdownMenuItem(text = { Text("Править текст") }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = onEdit)
                     DropdownMenuItem(text = { Text("Сменить говорящего") }, leadingIcon = { Icon(Icons.Default.Person, null) }, onClick = onSpeaker)
                     if (canMerge) DropdownMenuItem(text = { Text("Объединить со следующей") }, leadingIcon = { Icon(AppIcons.Merge, null) }, onClick = onMerge)

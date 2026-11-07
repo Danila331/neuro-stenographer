@@ -66,6 +66,14 @@ class TranscriptSession(
     /** Есть несохранённые правки. */
     @Volatile private var dirty = false
 
+    /** Реплики, добавленные последним пересчётом фрагмента (подсвечиваются до первой правки или ухода с экрана): пары (start, end). */
+    private val _highlight = MutableStateFlow<Set<Pair<Long, Long>>>(emptySet())
+    val highlight: StateFlow<Set<Pair<Long, Long>>> = _highlight.asStateFlow()
+
+    /** Есть версия «до пересчёта фрагмента», к которой можно вернуться. */
+    private val _canUndoFragment = MutableStateFlow(false)
+    val canUndoFragment: StateFlow<Boolean> = _canUndoFragment.asStateFlow()
+
     init {
         scope.launch {
             val stored = withContext(Dispatchers.IO) { graph.history.loadTranscript(entryId) }
@@ -96,6 +104,44 @@ class TranscriptSession(
         return m[next]
     }
 
+    // ---- пересчёт фрагмента (B37) ----
+
+    /** Перечитывает расшифровку с диска после пересчёта фрагмента сервисом и подсвечивает [added]. Отмена правок сбрасывается. */
+    suspend fun reloadAfterFragment(added: List<ru.neurosteno.core.TimeSpan>) {
+        val stored = withContext(Dispatchers.IO) { graph.history.loadTranscript(entryId) } ?: return
+        val tr = stored.toTranscript()
+        undoStack.clear()
+        _canUndo.value = false
+        dirty = false
+        _doc.value = Doc(EditableTranscript.of(tr, stored.speakerNames), tr)
+        _highlight.value = added.map { it.startMs to it.endMs }.toSet()
+        _canUndoFragment.value = withContext(Dispatchers.IO) { graph.history.readUndo(entryId) != null }
+    }
+
+    /** «Отменить» пересчёт: возвращает расшифровку, какой она была до него (реплики `removed`, имена говорящих), и перезаписывает results. */
+    suspend fun undoFragment(): Boolean {
+        val prev = withContext(Dispatchers.IO) { graph.history.readUndo(entryId) } ?: return false
+        withContext(Dispatchers.IO) {
+            graph.history.saveTranscript(entryId, prev)
+            graph.history.clearUndo(entryId)
+            graph.history.get(entryId)?.let { e ->
+                val dir = ResultsAutosave.resultsDir(graph.externalFilesDir(), graph.filesDir(), android.os.Process.myUid())
+                val tr = prev.toTranscript()
+                ResultsAutosave.write(dir, e.sourceName, EditableTranscript.of(tr, prev.speakerNames), tr, e.runInfo())
+            }
+        }
+        val tr = prev.toTranscript()
+        undoStack.clear()
+        _canUndo.value = false
+        dirty = false
+        _doc.value = Doc(EditableTranscript.of(tr, prev.speakerNames), tr)
+        _highlight.value = emptySet()
+        _canUndoFragment.value = false
+        return true
+    }
+
+    fun clearHighlight() { _highlight.value = emptySet() }
+
     // ---- правки ----
 
     fun setText(index: Int, text: String) = edit { TranscriptEditor.setText(it, index, text) }
@@ -118,6 +164,8 @@ class TranscriptSession(
         val d = _doc.value ?: return
         val next = change(d.transcript)
         if (next == d.transcript) return
+        _highlight.value = emptySet()
+        _canUndoFragment.value = false // после других правок возврат к версии до пересчёта потерял бы их
         undoStack.addLast(d.transcript)
         if (undoStack.size > 50) undoStack.removeFirst()
         _canUndo.value = true

@@ -18,6 +18,11 @@ import ru.neurosteno.core.PipelineProgressListener
 import ru.neurosteno.core.PipelineResult
 import ru.neurosteno.core.PipelineSettings
 import ru.neurosteno.core.ResourcePlanner
+import ru.neurosteno.core.Transcript
+import ru.neurosteno.core.fragment.AudioSource
+import ru.neurosteno.core.fragment.FragmentReprocessor
+import ru.neurosteno.core.fragment.FragmentRequest
+import ru.neurosteno.core.fragment.FragmentResult
 import ru.neurosteno.core.llm.LlmPunctuator
 import ru.neurosteno.llm.LlamaAssistant
 import ru.neurosteno.sherpa.ModelRoot
@@ -30,14 +35,24 @@ import ru.neurosteno.sherpa.SherpaVad
 /** Модели/конфиг не готовы -- сообщение показывается пользователю как есть. */
 class ModelsNotReadyException(message: String) : Exception(message)
 
+/** Результат повторной обработки фрагмента и число потоков. */
+class FragmentRun(val result: FragmentResult, val threads: Int)
+
 /** Результат прогона и параметры, с которыми он выполнен (для статистики и меты результата, B33). */
 class RunOutcome(val result: PipelineResult, val threads: Int)
 
-/** Собирает [PipelineOrchestrator] из конфига варианта и активного набора моделей. */
+/** Собранные движки и настройки: общие для полной обработки ([PipelineRunner.run]) и пересчёта фрагмента ([PipelineRunner.reprocessFragment]). */
+class PipelineAssembly(val providers: EngineProviders, val settings: PipelineSettings, val threads: Int)
+
+/** Собирает [PipelineOrchestrator] и [FragmentReprocessor] из конфига варианта и активного набора моделей. */
 class PipelineRunner(private val context: Context, private val graph: AppGraph) {
 
-    /** [userSettings] -- язык и число говорящих из экрана «Настройки» (переопределяют значения конфига уровня). */
-    suspend fun run(uri: Uri, displayName: String, userSettings: AppSettings, listener: PipelineProgressListener): RunOutcome {
+    /**
+     * Общая сборка [EngineProviders] и [PipelineSettings] из конфига активного набора. [userSettings] -- язык, число говорящих
+     * и числа из экрана «Настройки». [forFragment]: язык и диаризацию для фрагмента выбирает сам запрос, поэтому режим языка --
+     * «авто» (если есть LID и английская модель), а глобальное «число говорящих = 1» диаризацию не отключает.
+     */
+    fun assemble(userSettings: AppSettings, forFragment: Boolean = false): PipelineAssembly {
         val cfg = graph.activeConfig()?.first ?: throw ModelsNotReadyException("Не удалось прочитать конфигурацию варианта: ${graph.configError}")
         val dir = graph.modelStore.activeDir()
             ?: throw ModelsNotReadyException("Модели не найдены. Вариант «${BuildConfig.TIER}» без встроенных моделей: скачайте набор на экране «Модели».")
@@ -52,11 +67,14 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
         val hasLid = cfg.language.lidModel != null && cfg.language.lidModel!! !in optionalMissing
         val hasDenoise = cfg.audio.denoise.model != null && cfg.audio.denoise.model!! !in optionalMissing
 
-        val languageMode = when (userSettings.language) {
-            LanguageChoice.RU -> LanguageConfig.RU
-            LanguageChoice.EN -> LanguageConfig.EN
-            // «Авто» -- определять по речи, если для этого есть модели (LID и английская ASR); иначе -- как в конфиге
-            LanguageChoice.AUTO -> if (hasEn && hasLid) LanguageConfig.AUTO else cfg.language.effectiveMode
+        val languageMode = when {
+            forFragment -> if (hasEn && hasLid) LanguageConfig.AUTO else cfg.language.effectiveMode
+            else -> when (userSettings.language) {
+                LanguageChoice.RU -> LanguageConfig.RU
+                LanguageChoice.EN -> LanguageConfig.EN
+                // «Авто» -- определять по речи, если для этого есть модели (LID и английская ASR); иначе -- как в конфиге
+                LanguageChoice.AUTO -> if (hasEn && hasLid) LanguageConfig.AUTO else cfg.language.effectiveMode
+            }
         }
         val plan = ResourcePlanner.plan(memorySnapshot(), cfg, Runtime.getRuntime().availableProcessors())
         val threads = plan.numThreads
@@ -88,28 +106,44 @@ class PipelineRunner(private val context: Context, private val graph: AppGraph) 
                 { SherpaLanguageId(cfg.language.lidModel!!, root, 1, cfg.language.lidSeconds) }
             } else null,
         )
-        val orchestrator = PipelineOrchestrator(
-            decoder = MediaCodecAudioDecoder(context),
-            engines = providers,
-            settings = PipelineSettings.from(cfg, BuildConfig.VERSION_NAME, plan).let { s ->
-                val langs = if (hasEn) s.supportedLanguages else setOf(LanguageConfig.RU)
-                s.copy(
-                    supportedLanguages = langs,
-                    denoiseEnabled = s.denoiseEnabled && hasDenoise,
-                    languageMode = languageMode,
-                    // число говорящих из настроек; ровно один говорящий -- диаризация не нужна вовсе (быстрее)
-                    numSpeakers = if (userSettings.numSpeakers > 0) userSettings.numSpeakers else s.numSpeakers,
-                    diarizationEnabled = s.diarizationEnabled && userSettings.numSpeakers != 1,
-                    // «Числа: цифрами / словами» из настроек; «по умолчанию» -- postprocess.numbers конфига
-                    spellNumbers = when (userSettings.numbers) {
-                        NumbersChoice.WORDS -> true
-                        NumbersChoice.DIGITS -> false
-                        NumbersChoice.CONFIG -> s.spellNumbers
-                    },
-                )
-            },
-        )
-        return RunOutcome(orchestrator.run(UriAudioInput(uri, displayName), listener), threads)
+        val settings = PipelineSettings.from(cfg, BuildConfig.VERSION_NAME, plan).let { s ->
+            val langs = if (hasEn) s.supportedLanguages else setOf(LanguageConfig.RU)
+            s.copy(
+                supportedLanguages = langs,
+                denoiseEnabled = s.denoiseEnabled && hasDenoise,
+                languageMode = languageMode,
+                // число говорящих из настроек; ровно один говорящий -- диаризация не нужна вовсе (быстрее)
+                numSpeakers = if (userSettings.numSpeakers > 0) userSettings.numSpeakers else s.numSpeakers,
+                diarizationEnabled = s.diarizationEnabled && (forFragment || userSettings.numSpeakers != 1),
+                // «Числа: цифрами / словами» из настроек; «по умолчанию» -- postprocess.numbers конфига
+                spellNumbers = when (userSettings.numbers) {
+                    NumbersChoice.WORDS -> true
+                    NumbersChoice.DIGITS -> false
+                    NumbersChoice.CONFIG -> s.spellNumbers
+                },
+            )
+        }
+        return PipelineAssembly(providers, settings, threads)
+    }
+
+    /** [userSettings] -- язык и число говорящих из экрана «Настройки» (переопределяют значения конфига уровня). */
+    suspend fun run(uri: Uri, displayName: String, userSettings: AppSettings, listener: PipelineProgressListener): RunOutcome {
+        val a = assemble(userSettings)
+        val orchestrator = PipelineOrchestrator(decoder = MediaCodecAudioDecoder(context), engines = a.providers, settings = a.settings)
+        return RunOutcome(orchestrator.run(UriAudioInput(uri, displayName), listener), a.threads)
+    }
+
+    /** Повторная обработка фрагмента (B37): то же снаряжение, что у полной обработки, другая оркестрация. */
+    suspend fun reprocessFragment(
+        audio: AudioSource,
+        transcript: Transcript,
+        request: FragmentRequest,
+        userSettings: AppSettings,
+        listener: PipelineProgressListener,
+    ): FragmentRun {
+        val a = assemble(userSettings, forFragment = true)
+        val result = FragmentReprocessor(a.providers, a.settings).reprocess(audio, transcript, request, listener)
+        return FragmentRun(result, a.threads)
     }
 
     private fun memorySnapshot(): MemorySnapshot {
