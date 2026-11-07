@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +32,11 @@ import ru.neurosteno.app.ui.components.ConfirmDialog
 import ru.neurosteno.app.ui.components.InfoRow
 import ru.neurosteno.app.ui.components.NeuroTopBar
 import ru.neurosteno.app.ui.components.SectionCard
+import ru.neurosteno.app.ui.theme.Brutal
+import ru.neurosteno.app.ui.theme.BrutalButton
+import ru.neurosteno.app.ui.theme.BrutalButtonStyle
+import ru.neurosteno.app.ui.theme.BrutalChip
+import ru.neurosteno.app.ui.theme.ButtonLabel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -52,7 +55,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     var confirmClear by remember { mutableStateOf(false) }
-    Scaffold(topBar = { NeuroTopBar("Настройки", onBack = onBack) }) { padding ->
+    Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Настройки", onBack = onBack) }) { padding ->
         Column(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -61,10 +64,10 @@ fun SettingsScreen(
                 Text(
                     "«Авто» определяет язык отдельно для каждого фрагмента речи (русский или английский), поэтому смешанные русско-английские " +
                         "диалоги распознаются корректно. Если язык записи известен, выберите его вручную — это быстрее и надёжнее.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     LanguageChoice.entries.forEach { l ->
-                        FilterChip(selected = settings.language == l, onClick = { onChange { it.copy(language = l) } }, label = { Text(l.label) },
+                        BrutalChip(selected = settings.language == l, onClick = { onChange { it.copy(language = l) } }, label = l.label,
                             modifier = Modifier.testTag("lang_${l.id}"))
                     }
                 }
@@ -78,22 +81,22 @@ fun SettingsScreen(
                 Text(
                     "«Словами» заменяет цифры в тексте на слова («25» → «двадцать пять»), «Цифрами» оставляет их так, как выдала модель. " +
                         "В расшифровке и в JSON по ТЗ будет выбранный вариант.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    FilterChip(selected = !words, onClick = { onChange { it.copy(numbers = NumbersChoice.DIGITS) } }, label = { Text("Цифрами") },
+                    BrutalChip(selected = !words, onClick = { onChange { it.copy(numbers = NumbersChoice.DIGITS) } }, label = "Цифрами",
                         modifier = Modifier.testTag("numbers_digits"))
-                    FilterChip(selected = words, onClick = { onChange { it.copy(numbers = NumbersChoice.WORDS) } }, label = { Text("Словами") },
+                    BrutalChip(selected = words, onClick = { onChange { it.copy(numbers = NumbersChoice.WORDS) } }, label = "Словами",
                         modifier = Modifier.testTag("numbers_words"))
                 }
             }
             SectionCard(title = "Число говорящих") {
-                Text("Если оно известно заранее, диаризация работает точнее. При 1 говорящем она отключается — обработка быстрее.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Если оно известно заранее, диаризация работает точнее. При 1 говорящем она отключается — обработка быстрее.", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     (0..AppSettings.MAX_SPEAKERS).forEach { n ->
-                        FilterChip(
+                        BrutalChip(
                             selected = settings.numSpeakers == n, onClick = { onChange { it.copy(numSpeakers = n) } },
-                            label = { Text(if (n == 0) "Авто" else n.toString()) },
+                            label = if (n == 0) "Авто" else n.toString(),
                             modifier = Modifier.testTag("speakers_$n"),
                         )
                     }
@@ -102,7 +105,7 @@ fun SettingsScreen(
             SectionCard(title = "Тема оформления") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     ThemeChoice.entries.forEach { t ->
-                        FilterChip(selected = settings.theme == t, onClick = { onChange { it.copy(theme = t) } }, label = { Text(t.label) }, modifier = Modifier.testTag("theme_${t.id}"))
+                        BrutalChip(selected = settings.theme == t, onClick = { onChange { it.copy(theme = t) } }, label = t.label, modifier = Modifier.testTag("theme_${t.id}"))
                     }
                 }
             }
@@ -115,21 +118,21 @@ fun SettingsScreen(
                 } else {
                     Text("Нет активного набора моделей.", style = MaterialTheme.typography.bodyMedium)
                 }
-                OutlinedButton(onClick = onModels, modifier = Modifier.fillMaxWidth().testTag("btn_open_models")) { Text("Управление моделями") }
+                BrutalButton(onClick = onModels, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = Modifier.fillMaxWidth().testTag("btn_open_models")) { ButtonLabel("Управление моделями") }
             }
             SectionCard(title = "Диагностика") {
-                OutlinedButton(onClick = onStats, modifier = Modifier.fillMaxWidth().testTag("btn_open_stats")) { Text("Статистика обработки") }
+                BrutalButton(onClick = onStats, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = Modifier.fillMaxWidth().testTag("btn_open_stats")) { ButtonLabel("Статистика обработки") }
             }
             SectionCard(title = "Хранилище") {
                 Text("Расшифровки и копии аудио хранятся только в приватной папке приложения: ${Format.bytes(historyBytes)}.", style = MaterialTheme.typography.bodyMedium)
-                OutlinedButton(onClick = { confirmClear = true }, modifier = Modifier.fillMaxWidth()) { Text("Очистить историю") }
+                BrutalButton(onClick = { confirmClear = true }, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Очистить историю") }
             }
             SectionCard(title = "О приложении") {
                 InfoRow("Версия", versionName)
                 InfoRow("Вариант", tier)
                 Text(
                     "Обработка выполняется на устройстве. Интернет используется только для скачивания моделей — по вашей кнопке в разделе «Модели».",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                     modifier = Modifier.semantics { contentDescription = "Обработка выполняется на устройстве. Интернет используется только для скачивания моделей." },
                 )
             }

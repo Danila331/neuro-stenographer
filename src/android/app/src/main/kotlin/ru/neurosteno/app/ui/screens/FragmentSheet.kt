@@ -10,14 +10,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -34,7 +28,18 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import ru.neurosteno.app.FragmentParams
 import ru.neurosteno.app.ui.Format
+import ru.neurosteno.app.ui.components.BrutalSheet
 import ru.neurosteno.app.ui.components.MessageCard
+import ru.neurosteno.app.ui.theme.Brutal
+import ru.neurosteno.app.ui.theme.BrutalButton
+import ru.neurosteno.app.ui.theme.BrutalButtonStyle
+import ru.neurosteno.app.ui.theme.BrutalCard
+import ru.neurosteno.app.ui.theme.BrutalChip
+import ru.neurosteno.app.ui.theme.BrutalProgress
+import ru.neurosteno.app.ui.theme.BrutalSwitch
+import ru.neurosteno.app.ui.theme.BrutalTag
+import ru.neurosteno.app.ui.theme.ButtonLabel
+import ru.neurosteno.app.ui.theme.SectionTitle
 
 /** Язык пересчёта фрагмента. */
 enum class FragmentLanguage(val label: String) {
@@ -79,33 +84,30 @@ fun FragmentOptionsSheet(
     var recompute by rememberSaveable { mutableStateOf(false) }
     var speakers by rememberSaveable { mutableStateOf(0) } // 0 -- авто
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
+    BrutalSheet(onDismissRequest = onDismiss, sheetState = sheet) {
         Column(
             Modifier.semantics { testTagsAsResourceId = true } // окно листа отдельное: resource-id тегов нужны скриптам автоматизации
                 .verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("Обработать заново", style = MaterialTheme.typography.titleLarge)
-            Text(
-                "$rangeLabel · ${Format.plural(utteranceCount, "реплика", "реплики", "реплик")}. Остальная расшифровка не изменится.",
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                "Чтобы получить другой результат, смените язык или включите “Заново определить говорящих”",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            SectionTitle("Обработать заново")
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                BrutalTag(rangeLabel, fill = Brutal.accent)
+                BrutalTag(Format.plural(utteranceCount, "реплика", "реплики", "реплик"))
+            }
+            Text("Остальная расшифровка не изменится.", style = MaterialTheme.typography.bodyMedium, color = Brutal.muted)
             blockedReason?.let { MessageCard(it, isError = true) }
 
             Text("Язык фрагмента", style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 FragmentLanguage.entries.forEach { l ->
                     val label = if (l == FragmentLanguage.AS_RECORDED) "${l.label} (${recordingLanguage.ifBlank { "ru" }})" else l.label
-                    FilterChip(selected = language == l, onClick = { language = l }, label = { Text(label) }, modifier = Modifier.testTag("fragment_lang_${l.name.lowercase()}"))
+                    BrutalChip(selected = language == l, onClick = { language = l }, label = label, modifier = Modifier.testTag("fragment_lang_${l.name.lowercase()}"))
                 }
             }
             Text(
                 "«Авто» определяет язык по фрагменту (если в нём не меньше 3 секунд речи), иначе берёт язык записи.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
             )
 
             Row(
@@ -117,38 +119,37 @@ fun FragmentOptionsSheet(
                     Text(
                         if (recompute) "Диаризация фрагмента и сопоставление с говорящими записи: дольше и расходует больше памяти."
                         else "Выключено: говорящие берутся из прежних реплик по времени — быстро, только распознавание речи.",
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                     )
                 }
-                Switch(checked = recompute, onCheckedChange = { recompute = it }, modifier = Modifier.testTag("fragment_recompute"))
+                BrutalSwitch(checked = recompute, onCheckedChange = { recompute = it }, modifier = Modifier.testTag("fragment_recompute"))
             }
 
             if (recompute && utteranceCount > 1) {
                 Text("Число говорящих во фрагменте", style = MaterialTheme.typography.titleSmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     (0..4).forEach { n ->
-                        FilterChip(selected = speakers == n, onClick = { speakers = n }, label = { Text(if (n == 0) "Авто" else n.toString()) },
-                            modifier = Modifier.testTag("fragment_speakers_$n"))
+                        BrutalChip(selected = speakers == n, onClick = { speakers = n }, label = if (n == 0) "Авто" else n.toString(), modifier = Modifier.testTag("fragment_speakers_$n"))
                     }
                 }
                 Text(
                     "Если число известно, укажите его: на коротком отрезке «Авто» может слить двух говорящих в одного.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                 )
             } else if (recompute) {
                 Text(
                     "Выделена одна реплика — она считается репликой одного говорящего (иначе голоса на коротком отрезке сливаются).",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f).testTag("btn_fragment_sheet_cancel")) { Text("Отмена") }
-                Button(
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                BrutalButton(onClick = onDismiss, style = BrutalButtonStyle.Secondary, modifier = Modifier.weight(1f).testTag("btn_fragment_sheet_cancel")) { ButtonLabel("Отмена") }
+                BrutalButton(
                     onClick = { onStart(FragmentOptions(language, recompute, speakers.takeIf { it > 0 })) },
                     enabled = blockedReason == null,
                     modifier = Modifier.weight(1f).testTag("btn_fragment_start"),
-                ) { Text("Обработать") }
+                ) { ButtonLabel("Обработать") }
             }
         }
     }
@@ -157,15 +158,15 @@ fun FragmentOptionsSheet(
 /** Индикатор пересчёта поверх расшифровки: прогресс, стадия, «Отменить». */
 @Composable
 fun FragmentProgressCard(label: String, stageTitle: String, overall: Float, cancelling: Boolean, onCancel: () -> Unit, modifier: Modifier = Modifier) {
-    androidx.compose.material3.Card(modifier.padding(24.dp).fillMaxWidth()) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    BrutalCard(modifier.padding(24.dp).fillMaxWidth(), shadow = 6.dp, contentPadding = androidx.compose.foundation.layout.PaddingValues(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Обработка: $label", style = MaterialTheme.typography.titleMedium)
-            LinearProgressIndicator(progress = { overall.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+            BrutalProgress(overall.coerceIn(0f, 1f))
             Text(
                 if (cancelling) "Отмена…" else "$stageTitle · ${Format.percent(overall)}",
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium, color = Brutal.muted,
             )
-            OutlinedButton(onClick = onCancel, enabled = !cancelling, modifier = Modifier.fillMaxWidth().testTag("btn_fragment_cancel")) { Text("Отменить") }
+            BrutalButton(onClick = onCancel, enabled = !cancelling, style = BrutalButtonStyle.Secondary, modifier = Modifier.fillMaxWidth().testTag("btn_fragment_cancel")) { ButtonLabel("Отменить") }
         }
     }
 }

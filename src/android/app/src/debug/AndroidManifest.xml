@@ -7,5 +7,10 @@
                 <action android:name="ru.neurosteno.app.DEBUG_CLIP" />
             </intent-filter>
         </receiver>
+        <receiver android:name="ru.neurosteno.app.DebugStyleReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="ru.neurosteno.app.DEBUG_ACCENT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

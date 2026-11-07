@@ -36,6 +36,7 @@ import ru.neurosteno.app.ui.screens.RecordScreen
 import ru.neurosteno.app.ui.screens.SettingsScreen
 import ru.neurosteno.app.ui.screens.StatsScreen
 import ru.neurosteno.app.ui.screens.TranscriptScreen
+import ru.neurosteno.app.ui.theme.NeuroTheme
 
 /** Всё, что экрану нужно от Activity: системные диалоги, разрешения, запуск обработки. */
 interface AppHost {

@@ -45,8 +45,8 @@ check "A: маркер с блоком fragment" bash -c "python3 -c \"import js
 sleep 8   # дать snackbar исчезнуть
 
 # B. две реплики, пересчёт говорящих, число 2
-adb shell input swipe 540 1500 540 500 400; sleep 1
-python3 "$U" longtap text:"С рыбками? Ну"; sleep 1; t text:"голосуем"; sleep 1; shot 45_fragment_selection_two
+adb shell input swipe 540 1700 540 500 400; sleep 1; adb shell input swipe 540 1700 540 700 400; sleep 1
+python3 "$U" longtap text:"С рыбками, но"; sleep 1; t text:"голосуем"; sleep 1; shot 45_fragment_selection_two
 t id:btn_fragment_reprocess; sleep 2; t id:fragment_recompute; sleep 1; t id:fragment_speakers_2; sleep 1; shot 46_fragment_options_speakers
 t id:btn_fragment_start; sleep 1; shot 47_fragment_progress_recompute
 w text:"обработан заново" 90; sleep 1; shot 48_fragment_result_snackbar
