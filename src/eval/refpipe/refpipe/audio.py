@@ -111,6 +111,8 @@ def _db(v: float) -> float:
 
 def normalize_gain(x: np.ndarray, cfg: dict | None) -> tuple[np.ndarray, float]:
     """`audio.normalize_gain` (BACKLOG B24), mode "peak": scale so that the peak is `peak_dbfs`.
+    refpipe extras: `apply_if_peak_below_dbfs` (null = always; e.g. -20 = only files whose peak is below -20 dBFS)
+    and `scope` (all | asr | asr_chunk, handled by the pipeline: which stages see the normalised signal).
     gain = clip(peak_dbfs - peak_db, -6, +max_gain_db), additionally never above (-1 dBFS - peak_db)
     (no clipping); files whose peak is below `skip_if_peak_below_dbfs` (digital silence) are untouched.
     Returns (audio, applied gain in dB)."""
@@ -121,6 +123,9 @@ def normalize_gain(x: np.ndarray, cfg: dict | None) -> tuple[np.ndarray, float]:
     pk = float(np.abs(x).max())
     pk_db = _db(pk)
     if pk_db < float(cfg.get("skip_if_peak_below_dbfs", -85.0)):
+        return x, 0.0
+    lim = cfg.get("apply_if_peak_below_dbfs")  # refpipe extra: normalise only quiet files
+    if lim is not None and pk_db >= float(lim):
         return x, 0.0
     g = float(np.clip(float(cfg.get("peak_dbfs", -1.0)) - pk_db, -6.0, float(cfg.get("max_gain_db", 40.0))))
     g = min(g, -1.0 - pk_db)

@@ -29,3 +29,11 @@ def test_loud_audio_is_attenuated_at_most_6_db_and_disabled_is_identity():
     y, g = normalize_gain(x, CFG)
     assert abs(g + 1.0) < 1e-6
     assert normalize_gain(x, {**CFG, "enabled": False})[1] == 0.0
+
+
+def test_apply_only_to_quiet_files():
+    quiet = np.full(100, 10 ** (-30 / 20), dtype=np.float32)
+    loud = np.full(100, 10 ** (-10 / 20), dtype=np.float32)
+    cfg = {**CFG, "apply_if_peak_below_dbfs": -20.0}
+    assert normalize_gain(quiet, cfg)[1] > 0
+    assert normalize_gain(loud, cfg)[1] == 0.0

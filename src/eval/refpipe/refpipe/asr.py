@@ -171,7 +171,7 @@ class AsrEngine:
             raise ValueError(f"unknown asr.engine {self.engine!r}")
         self.has_ts = self.engine != "whisper"
 
-    def recognize(self, x: np.ndarray, chunks: list[TimeSpan]):
+    def recognize(self, x: np.ndarray, chunks: list[TimeSpan], chunk_gain: dict | None = None):
         """Returns list of (chunk, sherpa result) in chunk order."""
         min_n = int(float(self.cfg["chunk"].get("min_s", 0)) * SR)
         bs = max(1, int(self.cfg.get("batch_size", 1)))
@@ -181,6 +181,10 @@ class AsrEngine:
             streams = []
             for c in batch:
                 seg = x[c.start_ms * SR // 1000:c.end_ms * SR // 1000]
+                if chunk_gain:  # normalize_gain.scope = asr_chunk: peak-normalise this chunk alone
+                    from .audio import normalize_gain
+
+                    seg = normalize_gain(seg, {**chunk_gain, "apply_if_peak_below_dbfs": chunk_gain.get("apply_if_peak_below_dbfs")})[0]
                 if len(seg) < min_n:  # pad with silence up to chunk.min_s
                     seg = np.concatenate([seg, np.zeros(min_n - len(seg), dtype=np.float32)])
                 s = self.rec.create_stream()
@@ -191,13 +195,13 @@ class AsrEngine:
         return results
 
     def transcribe(self, x: np.ndarray, chunks: list[TimeSpan], keep_punct: bool = False,
-                   drop_tiny_chars: int = 0) -> list[Word]:
+                   drop_tiny_chars: int = 0, chunk_gain: dict | None = None) -> list[Word]:
         """drop_tiny_chars (postprocess.drop_tiny_chunks.max_chars): chunks whose recognised text has at most
         that many letters/digits are discarded (hallucinated "а/э/няу" on noise or meowing)."""
         tail = int(self.cfg.get("word_tail_ms", 40))
         off = int(self.cfg.get("word_start_offset_ms", 0))
         words: list[Word] = []
-        for chunk, r in self.recognize(x, chunks):
+        for chunk, r in self.recognize(x, chunks, chunk_gain):
             if drop_tiny_chars and sum(c.isalnum() for c in r.text) <= drop_tiny_chars:
                 continue
             if self.has_ts and len(r.timestamps) >= len(r.tokens) > 0:

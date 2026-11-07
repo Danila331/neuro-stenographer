@@ -77,23 +77,21 @@ class LanguageId:
         return decide(raw), raw
 
 
-def smooth_languages(raw: list[str | None], durs_ms: list[int], switch_min_ms: int = 4000) -> list[str]:
-    """Offline hysteresis for per-chunk language ids (`language.per_chunk`).
+def smooth_languages(raw: list[str | None], durs_ms: list[int], confident_ms: int = 6000) -> list[str]:
+    """Hysteresis for per-chunk language ids -- 1:1 with Android `LanguageSmoother` (core/LanguageSmoother.kt).
 
-    raw[i] is the LID decision for chunk i ("ru"/"en") or None when the chunk was too short to classify.
-    The state starts at the first classified chunk.  A chunk changes the state only if its decision
-    differs from the state AND (the chunk lasts >= switch_min_ms OR the next classified chunk makes the same
-    decision); otherwise the chunk keeps the state (so single noisy decisions on short turns do not flip
-    the engine).  Chunks without a decision inherit the state."""
+    raw[i]: LID output of chunk i or None (chunk shorter than MIN_LID_MS = 1500 ms: not classified).  Each
+    prediction is binarised: starts with "en" -> "en", anything else -> "ru".  The state starts at "ru" (no file-level
+    LID in this mode).  A chunk with prediction p != state switches the state to p iff the NEXT chunk that has a
+    prediction also says p, or the chunk lasts >= confident_ms; a lone outlier between chunks of one language is
+    ignored.  Chunks without a prediction inherit the state.  Returns the language of every chunk."""
+    binp = [None if r is None else ("en" if r.lower().startswith("en") else "ru") for r in raw]
+    state = "ru"
     out: list[str] = []
-    state = next((r for r in raw if r), "ru")
-    idx = [i for i, r in enumerate(raw) if r]
-    nxt = {i: (raw[idx[k + 1]] if k + 1 < len(idx) else None) for k, i in enumerate(idx)}
-    first = True
-    for i, r in enumerate(raw):
-        if r and not first and r != state and (durs_ms[i] >= switch_min_ms or nxt[i] == r):
-            state = r
-        if r:
-            first = False
+    for i, p in enumerate(binp):
+        if p is not None and p != state:
+            nxt = next((q for q in binp[i + 1:] if q is not None), None)
+            if nxt == p or durs_ms[i] >= confident_ms:
+                state = p
         out.append(state)
     return out

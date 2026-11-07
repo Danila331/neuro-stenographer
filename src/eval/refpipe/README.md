@@ -28,10 +28,14 @@ mp3/ogg/opus/flac/wav читает libsndfile (soundfile). m4a/aac/mp4 — че�
 ```bash
 python scripts/fetch_models.py --list                      # таблица: каталог -> URL -> лицензия
 python scripts/fetch_models.py --tier medium --no-llm      # -> $ROOT/.cache/models (атомарно, sha256 в .sha256)
-python scripts/fetch_models.py --tier all --candidates     # + кандидаты для бенчей (GigaAM CTC v3, punct-варианты, эмбеддинги)
+python scripts/fetch_models.py --tier all                  # ВСЕ модели lite/medium/hard ровно по путям config/tiers/*.json
+python scripts/fetch_models.py --tier all --candidates     # + кандидаты для бенчей (GigaAM CTC v3, эмбеддинги, whisper-turbo ...)
+python scripts/fetch_models.py --verify [--tier medium]    # размер + sha256 каждого файла и покрытие путей из config/tiers/*.json
+python scripts/fetch_models.py --write-models-json config/models.json   # реестр: путь -> URL -> sha256 -> размер -> лицензия -> tier
 ```
-Только официальные источники (GitHub релизы k2-fsa/sherpa-onnx, HF `csukuangfj/*` и `ggml-org/*`), без токенов.
-Скрипту нужен только stdlib. Каталоги совпадают с путями в `config/tiers/*.json`.
+Только официальные источники (GitHub релизы k2-fsa/sherpa-onnx, HF `csukuangfj/*`, `ggml-org/*`, `Qwen/*`), без токенов.
+Скрипту нужен только stdlib. Каталоги совпадают с путями в `config/tiers/*.json`; уже скачанная под другим именем модель
+подхватывается жёсткой ссылкой только при совпадении sha256 с официальным.
 
 ## Запуск
 
@@ -63,11 +67,20 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
 * **denoise** (если `audio.denoise.enabled`) — `estimate_snr_db`: кадры 30 мс, мощность; шум = среднее по 10 % самых тихих,
   сигнал = среднее по 50 % самых громких; SNR < `snr_threshold_db` -> GTCRN (`OfflineSpeechDenoiser`), длина выхода
   приводится к длине входа.
+* **normalize_gain** (`audio.normalize_gain`) — режим `peak`: усиление так, чтобы пик файла = `peak_dbfs`; gain =
+  clip(`peak_dbfs` − пик_дБ, −6, `max_gain_db`), не выше (−1 дБFS − пик_дБ); файлы с пиком < `skip_if_peak_below_dbfs` не
+  трогаются. Расширения refpipe: `apply_if_peak_below_dbfs` (нормализовать только тихие файлы) и `scope`: `all` (все стадии
+  видят нормализованный сигнал), `asr` (VAD/rescue/диаризация видят исходный, ASR и LID — нормализованную копию),
+  `asr_chunk` (каждый чанк нормализуется по собственному пику только на входе ASR).
 * **VAD** — `SileroVadModelConfig(threshold, min_silence, min_speech, window=512, max_speech)`; окно подаётся по 512
   сэмплов, в конце `flush()`. Затем `pad_ms` с обеих сторон и склейка пересекающихся интервалов.
 * **LanguageId** (`lid.py`) — `language.mode`: `auto` (Whisper-LID по первым `language.lid_seconds`≈10 с речи;
   `en` -> `asr_en`, всё остальное -> `ru`), `ru`, `en`. Без `language.lid_model` или `asr_en` — всегда `ru`. `asr_en` — та же
   структура, что `asr` (недостающие поля берутся из дефолтов).
+* **vad.rescue** (экспериментально, `vad.rescue={enabled,snr_db,abs_floor_db,bridge_ms,min_ms,margin_ms}`) —
+  энергетические кандидаты речи там, где Silero ничего не нашёл (кадры 20 мс; порог = max(10-й перцентиль + `snr_db`,
+  `abs_floor_db`); склейка пауз < `bridge_ms`; куски ≥ `min_ms`, не пересекающиеся с VAD ± `margin_ms`).
+  Нужен для голосов, которых Silero «не видит» (синтетический телефон), вывод фильтруется `drop_tiny_chunks`.
 * **Чанки ASR** — жадно: добавляем следующий интервал, пока `last.end - first.start <= chunk.max_s`; чанк — непрерывный
   срез аудио (паузы внутри остаются). Слишком длинный интервал режется по самому тихому 20-мс кадру во второй половине
   допустимого окна. Чанк короче `chunk.min_s` дополняется нулями. `overlap_ms` пока не поддерживается (0).
@@ -94,6 +107,17 @@ refpipe run --config config/tiers/medium.json --input $ROOT/.cache/data/<dataset
   *punct*-моделей GigaAM v3 — их надо положить в `asr.model_dir`), `llm` (llama-cpp-python; промпты — зона llm-bench; если
   нет библиотеки/модели — предупреждение и откат на `none`). `norm`/`guard_text` — §6, кейсы `tests/guard_cases.json`.
 * **Экспорт** — реплики с `text` непустым, `end_ms` обрезается длительностью файла.
+
+## Перебор параметров
+
+```bash
+python -m refpipe.sweep --config config/tiers/medium.json --dataset $ROOT/.cache/data/<ds> --split dev \
+    --combos combos.json --out-dir $ROOT/.cache/runs/sweep1 --cache $ROOT/.cache/runs/refpipe-cache \
+    --csv artifacts/test-results/results.csv --prefix sweep1- --language ru
+```
+`combos.json` = `[{"name":..., "overrides":["vad.threshold=0.3", ...]}]`. Каждая комбинация: `refpipe run` + `stenoeval score`, строка
+`summary.tsv` (WER norm/S/D/I, WER punct, DER после Aligner с collar 0 и NIST, miss/fa/conf, число спикеров, RTF). Кэш ASR/диаризации
+(`--cache`) ключуется по аудио + релевантной части конфига: перебор `align.*`/`punctuation.*` не пересчитывает модели.
 
 ## Тесты
 
