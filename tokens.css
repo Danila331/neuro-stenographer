@@ -1,23 +1,27 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Workbench + Long Document + Narrative Workflow · design-system: design.md · designed-as-app · contrast: pass (46–50) · mobile: pass (36, 59, 61–69) */
-/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 */
+/* Revolut DNA · единая фиолетовая система · спецификация: design.md */
 :root {
-  --color-paper: #F6F7F3;
-  --color-surface: #FCFCF9;
-  --color-panel: #EAEDE7;
-  --color-ink: #1C211D;
-  --color-on-ink: #F7F9F5;
-  --color-muted: #5D675F;
-  --color-accent: #315D4B;
-  --color-accent-soft: #DFE9E1;
-  --color-on-accent: #F7FAF7;
-  --color-outline: #7B887D;
-  --color-outline-soft: #DDE2DA;
-  --color-error: #A94442;
-  --color-error-soft: #F4E3DF;
+  --color-paper: #F5F5F5;
+  --color-surface: #FFFFFF;
+  --color-panel: #F2F2F5;
+  --color-ink: #19191D;
+  --color-on-ink: #FFFFFF;
+  --color-muted: #71717C;
+  --color-accent: #540DFF;
+  --color-accent-soft: #EEE8FF;
+  --color-on-accent: #FFFFFF;
+  --color-hero: #540DFF;
+  --color-hero-end: #4309C9;
+  --color-hero-muted: #C2B5FF;
+  --color-card-dark: #29292D;
+  --color-on-card-dark: #FFFFFF;
+  --color-outline: #858590;
+  --color-outline-soft: #E7E7EB;
+  --color-error: #C9344D;
+  --color-error-soft: #FCE9ED;
 
-  --font-display: "Golos Text", sans-serif;
-  --font-body: "Golos Text", sans-serif;
-  --font-wordmark: "Unbounded", sans-serif;
+  --font-display: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-wordmark: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
   --space-3xs: 0.25rem;
@@ -38,9 +42,9 @@
   --text-2xl: 1.375rem;
   --text-3xl: 1.75rem;
 
-  --radius-control: 14px;
-  --radius-card: 18px;
-  --radius-sheet: 24px;
+  --radius-control: 16px;
+  --radius-card: 20px;
+  --radius-sheet: 28px;
   --rule-control: 1px;
   --rule-focus: 2px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -52,17 +56,22 @@
 }
 
 [data-theme="dark"] {
-  --color-paper: #111612;
-  --color-surface: #19201B;
-  --color-panel: #232B25;
-  --color-ink: #EDF1EB;
-  --color-on-ink: #172019;
-  --color-muted: #A8B2AA;
-  --color-accent: #91BBA1;
-  --color-accent-soft: #263B2E;
-  --color-on-accent: #142119;
-  --color-outline: #849487;
-  --color-outline-soft: #303A32;
-  --color-error: #E29A91;
-  --color-error-soft: #402825;
+  --color-paper: #0D0D10;
+  --color-surface: #17171B;
+  --color-panel: #242429;
+  --color-ink: #F5F5F7;
+  --color-on-ink: #19191D;
+  --color-muted: #A6A6B0;
+  --color-accent: #966FFF;
+  --color-accent-soft: #31224F;
+  --color-on-accent: #19191D;
+  --color-hero: #480BD6;
+  --color-hero-end: #290675;
+  --color-hero-muted: #C2B5FF;
+  --color-card-dark: #242428;
+  --color-on-card-dark: #FFFFFF;
+  --color-outline: #777782;
+  --color-outline-soft: #303036;
+  --color-error: #FF8CA1;
+  --color-error-soft: #40212B;
 }

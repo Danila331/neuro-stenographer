@@ -7,7 +7,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/../../../../scripts/env.sh"
 WAV="${1:?usage: $0 <audio.wav> <label> [seconds] [out-dir]}"; LABEL="${2:?}"; SECS="${3:-30}"
-OUT="${4:-$(cd "$HERE/../../../.." && pwd)/artifacts/demo/screens/live}"; mkdir -p "$OUT"
+OUT="${4:-$(cd "$HERE/../../../.." && pwd)/artifacts/demo/screens/purple/live}"; mkdir -p "$OUT"
 U="$HERE/uia.py"; PKG=ru.neurosteno.app.medium; D=/sdcard/Android/data/$PKG/files
 pss() { adb shell dumpsys meminfo "$(adb shell pidof $PKG | tr -d '\r')" 2>/dev/null | sed -n 's/.*TOTAL PSS: *\([0-9]*\).*/\1/p' | head -1; }
 adb shell am force-stop $PKG; adb shell am start -n $PKG/ru.neurosteno.app.MainActivity >/dev/null; python3 "$U" wait id:btn_pick_audio 20; sleep 1

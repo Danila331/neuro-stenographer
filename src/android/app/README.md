@@ -1,4 +1,4 @@
-# :app — интерфейс «Нейро-стенографиста» (Jetpack Compose, Quiet Spruce поверх Material 3)
+# :app — интерфейс «Нейро-стенографиста» (Jetpack Compose, Revolut DNA поверх Material 3)
 
 Один экран-Activity (`MainActivity`) + `AppRoot` с простым стеком навигации (`nav/Nav.kt`, стек переживает поворот).
 Обработка идёт в foreground-сервисе (`ProcessingService`), интерфейс только наблюдает `ProcessingState`.
@@ -27,20 +27,20 @@ JSON и в строке logcat `done <имя>: … peak_pss_mb=… threads=… d
 Если `results` недоступна для записи (остаток от другой установки/uid → `EACCES`), берётся `results-<uid>`, затем внутренняя `filesDir/results`;
 путь — в `results=` строки `done` и в `results_dir` маркера.
 
-## Дизайн-система (Quiet Spruce, `ui/theme`)
+## Дизайн-система (Revolut DNA, `ui/theme`)
 
-Полная спецификация — корневой `design.md`, краткие продуктовые ограничения — `docs/team/DESIGN_BRIEF.md`. Тёплые нейтральные фоны,
-хвойный акцент, границы 1 dp, радиусы 14–24 dp и нулевая тень по умолчанию. Старые имена `Brutal*` сохранены только как API совместимости.
+Полная спецификация — корневой `design.md`, краткие продуктовые ограничения — `docs/team/DESIGN_BRIEF.md`. Фиолетовый hero,
+нейтральные документные поверхности, Inter, границы 1 dp, радиусы 16–28 dp и нулевая тень по умолчанию. Старые имена `Brutal*` сохранены только как API совместимости.
 
-- `Accent.kt` — основной хвойный акцент и debug-вариант терракоты. Команда переключения прежняя: `green|pink|default`.
-- `Color.kt` — палитра светлой и тёмной темы, мягкие поверхности, контуры, ошибки и 8 приглушённых цветов говорящих через `speakerFill(id)`.
-- `Type.kt` — вшитые OFL-шрифты с кириллицей: Golos Text (UI и документ), Unbounded (только wordmark), JetBrains Mono (время и технические числа).
+- `Accent.kt` — основной фиолетовый акцент; прежние программные имена `green|pink|default` оставлены только для совместимости команд.
+- `Color.kt` — палитра светлой и тёмной темы, поверхности, контуры, ошибки и цвета говорящих через `speakerFill(id)`.
+- `Type.kt` — вшитый Inter с кириллицей для UI и документов; JetBrains Mono — время и технические числа.
 - `Theme.kt` — `NeuroTheme`, токены цвета, Material 3 scheme и формы. Compose-токены — единственный источник новых цветов.
 - `Primitives.kt` — `BrutalCard`/`BrutalSurface`, `BrutalButton` (спокойный press scale), `BrutalIconButton`, `BrutalChip`, `SpeakerChip`,
   `BrutalTag`, `BrutalPlaque`, `BrutalSwitch`, `BrutalProgress`, `BrutalSlider`, `BrutalTextField`, `SectionTitle`.
   Минимальная цель нажатия — 48 dp; `fillMaxWidth()` и `weight()` продолжают работать как прежде.
 - Резерв под «Выжимку» и «AI-поиск»: недоступные инструменты помечаются «· скоро» (`slot_summary`, `slot_ai_search`).
-- Проверки дизайн-токенов: `QuietSpruceThemeTest`; AI-состояния и темы: `InsightScreenshotsTest`.
+- Проверки дизайн-токенов: `RevolutThemeTest`; снимки: `RevolutScreenshotsTest`, `RevolutAdaptiveScreenshotsTest`; AI-состояния и темы: `InsightScreenshotsTest`.
 
 ## Живая расшифровка при записи (B13)
 

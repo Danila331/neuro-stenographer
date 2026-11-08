@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # B50/B51: проверка экранов «Выжимка» и «AI-поиск» на настоящих движках (LLM-выжимка, гибридный поиск, ответ LLM) на эмуляторе. Нужна история с cats_c01 и cats_c04
-# (process_on_device.sh). Снимки -- artifacts/demo/screens/summary-search/device/, экспорты -- artifacts/test-results/ui-summary-search/.
+# (process_on_device.sh). Снимки -- artifacts/demo/screens/purple/summary-search/device/, экспорты -- artifacts/test-results/ui-summary-search/.
 #   src/android/app/tools/insight_check.sh
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/../../../../scripts/env.sh"
 REPO="$(cd "$HERE/../../../.." && pwd)"
 U="$HERE/uia.py"; PKG=ru.neurosteno.app.medium
-S="$REPO/artifacts/demo/screens/summary-search/device"; mkdir -p "$S"
+S="$REPO/artifacts/demo/screens/purple/summary-search/device"; mkdir -p "$S"
 T="$REPO/artifacts/test-results/ui-summary-search/exports"; mkdir -p "$T"
 t() { python3 "$U" tap "$@" >/dev/null; sleep 1.3; }; w() { python3 "$U" wait "$@" >/dev/null; }; has() { python3 "$U" has "$@"; }
 shot() { python3 "$U" shot "$S/$1.png"; }

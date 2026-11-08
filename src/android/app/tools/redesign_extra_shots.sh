@@ -6,7 +6,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/../../../../scripts/env.sh"
 U="$HERE/uia.py"; PKG=ru.neurosteno.app.medium; D=/sdcard/Android/data/$PKG/files
-S="${1:-$(cd "$HERE/../../../.." && pwd)/artifacts/demo/screens/redesign}"; mkdir -p "$S"
+S="${1:-$(cd "$HERE/../../../.." && pwd)/artifacts/demo/screens/purple/redesign}"; mkdir -p "$S"
 AUD="$ROOT/.cache/data/ru-dialog-tts-cats/audio/cats_c04_v0_call_overlap.wav"
 t() { python3 "$U" tap "$@" >/dev/null; sleep 1.2; }; w() { python3 "$U" wait "$@" >/dev/null; }; shot() { python3 "$U" shot "$S/$1.png"; }
 back() { adb shell input keyevent KEYCODE_BACK; sleep 1; }

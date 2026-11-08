@@ -192,7 +192,7 @@
 
 ## Compose token contract
 
-Исходные токены: `ui/theme/Color.kt`, `Theme.kt`, `Type.kt`, `Accent.kt`, `Primitives.kt`. Имена `Brutal*` сохраняются только как API совместимости и теперь обозначают **Revolut DNA**, не прежнюю тему Quiet Spruce. Экраны не вводят собственные hex‑цвета вне палитры.
+Исходные токены: `ui/theme/Color.kt`, `Theme.kt`, `Type.kt`, `Accent.kt`, `Primitives.kt`. Имена `Brutal*` сохраняются только как API совместимости и обозначают актуальную фиолетовую систему **Revolut DNA**. Экраны не вводят собственные hex‑цвета вне палитры.
 
 ## Exports
 

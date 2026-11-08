@@ -6,7 +6,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/../../../../scripts/env.sh"
 U="$HERE/uia.py"; PKG=ru.neurosteno.app.medium
-OUT="${1:-$(cd "$HERE/../../../.." && pwd)/artifacts/demo/screens/redesign}"
+OUT="${1:-$(cd "$HERE/../../../.." && pwd)/artifacts/demo/screens/purple/redesign}"
 t() { python3 "$U" tap "$@" >/dev/null; sleep 1; }
 w() { python3 "$U" wait "$@" >/dev/null; }
 launch() { adb shell am force-stop $PKG; adb shell am start -n $PKG/ru.neurosteno.app.MainActivity >/dev/null; w id:btn_pick_audio 20; sleep 1; }

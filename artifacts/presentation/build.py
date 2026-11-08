@@ -37,8 +37,8 @@ slides.append(('Нейро-стенографист', f'''
  <div><p class="hero">Разговор в расшифровку — <mark>на устройстве</mark></p>
  <p>Русская и английская речь, говорящие, метки времени, локальная LLM и JSON строго по ТЗ. Без интернета.</p>
  <div class="chips"><span>офлайн</span><span>ARM64 · 4 ГБ</span><span>4 варианта APK</span></div><p class="sm">Жюри: WER 40, диаризация 25, метки 10, скорость 10, UX 10, защита 5. Проверка автоматическая, модели внутри APK.</p></div>
- <div class="shots">{shot('redesign/accent-green/01_home_light.png', 'Импорт и запись')}{shot('redesign/accent-green/02_transcript_dark.png', 'Расшифровка и плеер')}</div>
-</div>''', 'README.md; docs/INSTALL.md; docs/team/BACKLOG.md: Q2, Q6, Q7, Q9–Q10 (условия проверки). Скриншоты: artifacts/demo/screens/redesign/accent-green/.'))
+ <div class="shots">{shot('purple/01_home.png', 'Импорт и запись')}{shot('purple/03_transcript.png', 'Расшифровка и плеер')}</div>
+</div>''', 'README.md; docs/INSTALL.md; docs/team/BACKLOG.md: Q2, Q6, Q7, Q9–Q10 (условия проверки). Скриншоты: artifacts/demo/screens/purple/.'))
 
 slides.append(('Пайплайн', '''
 <div class="flow"><div>Импорт<br><small>любой формат → 16 кГц</small></div><div>VAD + язык<br><small>Silero · Whisper-tiny по чанкам</small></div><div class="hi">ASR ∥ диаризация<br><small>GigaAM v3 / Parakeet · pyannote</small></div><div class="hi">Говорящие по фразам<br><small>эмбеддинг на фразу + ward</small></div><div>Реплики и JSON<br><small>Aligner · ТЗ</small></div></div>
@@ -72,9 +72,9 @@ slides.append(('Скорость и память', '''
  'artifacts/test-results/prerelease2/README.md (пп. 3, 4, 8–12, 16); B44; docs/TEST_RESULTS.md: Устройства. TODO(финал): финальный прогон на Pixel с итоговым APK.'))
 
 slides.append(('Функции', f'''
-<div class="shots four">{shot('live/c04_3_end.png', 'Живой текст при записи')}{shot('timeline-pdf/03_timeline_playing_light.png', 'Дорожка говорящих')}{shot('summary-search/device/03_summary_final_light.png', 'Выжимка по темам')}{shot('summary-search/states/search_04_answer_done_light.png', 'AI-поиск с ответом')}</div>
+<div class="shots four">{shot('purple/04_record.png', 'Живой текст при записи')}{shot('purple/02_processing.png', 'Этапы обработки')}{shot('purple/03_transcript.png', 'Расшифровка и плеер')}{shot('purple/01_home.png', 'Главный экран')}</div>
 <p class="sm">Ещё: повторная обработка фрагмента, PDF, протокол, менеджер моделей, тёмная тема, шрифт ×1,6.</p>''',
- 'artifacts/demo/screens/live, timeline-pdf, summary-search; README.md: таблицы возможностей.'))
+ 'artifacts/demo/screens/purple; README.md: таблицы возможностей.'))
 
 slides.append(('ТЗ: Ultra Pro Max', '''
 <table class="tz"><tr><th>Пункт</th><th>Статус</th><th>Цифра</th></tr>
@@ -99,38 +99,38 @@ slides.append(('Команда и ИИ', '''
  'docs/DEFENSE.md, вопросы 36–38; docs/team/TEAM.md; docs/LICENSES.md. TODO(финал): распределение блоков между людьми.'))
 
 fonts = (
-    "@font-face{font-family:'Unbounded';src:url(" + b64(FONTS / 'unbounded.ttf', 'font/ttf') + ") format('truetype');font-weight:200 900}"
+    "@font-face{font-family:'Inter';src:url(" + b64(FONTS / 'inter.ttf', 'font/ttf') + ") format('truetype');font-weight:100 900}"
     "@font-face{font-family:'JetBrains Mono';src:url(" + b64(FONTS / 'jetbrains_mono.ttf', 'font/ttf') + ") format('truetype');font-weight:100 800}"
 )
 css = fonts + '''
-*{box-sizing:border-box}body{margin:0;background:#111;color:#111;font-family:Arial,Helvetica,sans-serif}
-.slide{background:#fff;width:100vw;height:100vh;padding:4vh 5vw;display:none;position:relative;border:.8vh solid #111;overflow:hidden}
+*{box-sizing:border-box}body{margin:0;background:#0D0D10;color:#19191D;font-family:'Inter',Arial,Helvetica,sans-serif}
+.slide{background:#F5F5F5;width:100vw;height:100vh;padding:4vh 5vw;display:none;position:relative;border:.8vh solid #19191D;overflow:hidden}
 .slide.active{display:block}
-header{display:flex;align-items:center;gap:1.5vw;border-bottom:.7vh solid #111;padding-bottom:1.6vh;margin-bottom:2.2vh}
-header strong{background:#b6ff00;border:.45vh solid #111;box-shadow:.5vh .5vh 0 #111;padding:.1em .4em;font:700 1.8vw 'JetBrains Mono',monospace}
-h1{font:800 3.1vw 'Unbounded',Arial Black,sans-serif;margin:0;line-height:1.1}
-h2{font:800 1.9vw 'Unbounded',Arial Black,sans-serif;margin:0 0 1.6vh;border-bottom:.6vh solid #b6ff00;display:inline-block}
-p{font-size:1.75vw;line-height:1.3;margin:1.4vh 0}.sm{font-size:1.3vw;color:#333}
-.hero{font:800 3.1vw 'Unbounded',Arial Black,sans-serif;line-height:1.2;margin:2vh 0 3vh}
-mark{background:#b6ff00;padding:0 .12em}
+header{display:flex;align-items:center;gap:1.5vw;border-bottom:.7vh solid #19191D;padding-bottom:1.6vh;margin-bottom:2.2vh}
+header strong{background:#540DFF;color:#fff;border:.45vh solid #19191D;box-shadow:.5vh .5vh 0 #19191D;padding:.1em .4em;font:700 1.8vw 'JetBrains Mono',monospace}
+h1{font:700 3.1vw 'Inter',Arial,sans-serif;margin:0;line-height:1.1}
+h2{font:700 1.9vw 'Inter',Arial,sans-serif;margin:0 0 1.6vh;border-bottom:.6vh solid #540DFF;display:inline-block}
+p{font-size:1.75vw;line-height:1.3;margin:1.4vh 0}.sm{font-size:1.3vw;color:#71717C}
+.hero{font:700 3.1vw 'Inter',Arial,sans-serif;line-height:1.2;margin:2vh 0 3vh}
+mark{background:#540DFF;color:#fff;padding:0 .12em}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:4vw;align-items:start}
-.chips span{display:inline-block;border:.4vh solid #111;box-shadow:.4vh .4vh 0 #111;padding:.4vh 1vw;margin:0 1vw 1vh 0;font:600 1.4vw 'JetBrains Mono',monospace;background:#fff}
+.chips span{display:inline-block;border:.4vh solid #19191D;box-shadow:.4vh .4vh 0 #19191D;padding:.4vh 1vw;margin:0 1vw 1vh 0;font:600 1.4vw 'JetBrains Mono',monospace;background:#fff}
 .shots{display:flex;gap:2.5vw;justify-content:center;height:76vh}.shots.four{gap:1.6vw;height:68vh;margin-top:.5vh}
-figure{margin:0;height:100%;text-align:center}figure img{height:calc(100% - 3.4vh);max-width:100%;object-fit:contain;border:.45vh solid #111;box-shadow:.7vh .7vh 0 #111}
-figcaption{font:700 1.2vw 'Unbounded',Arial,sans-serif;margin-top:1vh}
-.flow{display:flex;margin:2.4vh 0}.flow div{flex:1;border:.45vh solid #111;padding:2.2vh .8vw;font:700 1.5vw Arial,sans-serif;background:#fff}
-.flow div+div{border-left:0}.flow .hi{background:#b6ff00}.flow small{display:block;font:400 1vw 'JetBrains Mono',monospace;margin-top:.6vh}.flow.low div{background:#f2f2f2}
+figure{margin:0;height:100%;text-align:center}figure img{height:calc(100% - 3.4vh);max-width:100%;object-fit:contain;border:.45vh solid #19191D;box-shadow:.7vh .7vh 0 #19191D}
+figcaption{font:600 1.2vw 'Inter',Arial,sans-serif;margin-top:1vh}
+.flow{display:flex;margin:2.4vh 0}.flow div{flex:1;border:.45vh solid #19191D;padding:2.2vh .8vw;font:600 1.5vw 'Inter',Arial,sans-serif;background:#fff}
+.flow div+div{border-left:0}.flow .hi{background:#540DFF;color:#fff}.flow small{display:block;font:400 1vw 'JetBrains Mono',monospace;margin-top:.6vh}.flow.low div{background:#F2F2F5;color:#19191D}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5vw;margin:1vh 0 2.4vh}
-.m{border:.45vh solid #111;box-shadow:.6vh .6vh 0 #111;padding:1.8vh 1vw;background:#fff}
+.m{border:.45vh solid #19191D;box-shadow:.6vh .6vh 0 #19191D;padding:1.8vh 1vw;background:#fff}
 .m b{display:block;font:800 2.1vw 'JetBrains Mono',monospace;line-height:1.1}.m span{display:block;font-size:1.2vw;margin-top:1vh;line-height:1.25}
-.m.big{margin-bottom:3vh;background:#b6ff00}.m.big b{font-size:2.7vw}.m.big small{font-size:1.2vw;font-weight:400}
-table{border-collapse:collapse;width:100%;margin:1vh 0;font-size:1.45vw}th,td{border:.35vh solid #111;padding:1.1vh 1vw;text-align:left}th{background:#111;color:#fff}
-td.p{background:#fff3a6;font-weight:700}.tz td:nth-child(2){width:11vw}
-.bars div{position:relative;height:6.2vh;margin:1.2vh 0;border:.4vh solid #111;background:#fff}
-.bars div:before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:#b6ff00}
+.m.big{margin-bottom:3vh;background:#540DFF;color:#fff}.m.big b{font-size:2.7vw}.m.big small{font-size:1.2vw;font-weight:400}
+table{border-collapse:collapse;width:100%;margin:1vh 0;font-size:1.45vw}th,td{border:.35vh solid #19191D;padding:1.1vh 1vw;text-align:left}th{background:#19191D;color:#fff}
+td.p{background:#EEE8FF;font-weight:700}.tz td:nth-child(2){width:11vw}
+.bars div{position:relative;height:6.2vh;margin:1.2vh 0;border:.4vh solid #19191D;background:#fff}
+.bars div:before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:#540DFF}
 .bars b,.bars i{position:relative;font:700 1.5vw 'JetBrains Mono',monospace;line-height:5.4vh;padding:0 1vw}.bars i{float:right;font-style:normal}
-.notes{display:none;position:absolute;bottom:0;left:0;right:0;background:#b6ff00;border-top:.5vh solid #111;padding:1vh 1.5vw;font-size:1.05vw}
-.show-notes .notes{display:block}.hint{position:fixed;bottom:1vh;right:1.5vw;color:#999;font:12px 'JetBrains Mono',monospace}
+.notes{display:none;position:absolute;bottom:0;left:0;right:0;background:#540DFF;color:#fff;border-top:.5vh solid #19191D;padding:1vh 1.5vw;font-size:1.05vw}
+.show-notes .notes{display:block}.hint{position:fixed;bottom:1vh;right:1.5vw;color:#A6A6B0;font:12px 'JetBrains Mono',monospace}
 @media print{body{background:#fff}.slide{display:block;page-break-after:always;width:100vw;height:100vh}.hint,.notes{display:none!important}}
 '''
 html = '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Нейро-стенографист — защита</title><style>' + css + '</style><body>'

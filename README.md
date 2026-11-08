@@ -6,8 +6,7 @@ Android-приложение, которое **полностью офлайн**
 
 | | | | |
 |---|---|---|---|
-| ![Главный экран](artifacts/demo/screens/redesign/accent-green/01_home_light.png) | ![Расшифровка и плеер](artifacts/demo/screens/redesign/accent-green/02_transcript_dark.png) | ![Живая расшифровка при записи](artifacts/demo/screens/live/c04_3_end.png) | ![Дорожка говорящих](artifacts/demo/screens/timeline-pdf/03_timeline_playing_light.png) |
-| ![Протокол](artifacts/demo/screens/redesign/accent-green/03_protocol_light.png) | ![Выжимка](artifacts/demo/screens/summary-search/device/03_summary_final_light.png) | ![AI-поиск](artifacts/demo/screens/summary-search/states/search_04_answer_done_light.png) | ![Модели](artifacts/demo/screens/redesign/15_models.png) |
+| ![Главный экран — фиолетовая тема](artifacts/demo/screens/purple/01_home.png) | ![Обработка записи — фиолетовая тема](artifacts/demo/screens/purple/02_processing.png) | ![Расшифровка и плеер — фиолетовая тема](artifacts/demo/screens/purple/03_transcript.png) | ![Запись и живой текст — фиолетовая тема](artifacts/demo/screens/purple/04_record.png) |
 
 ## Возможности
 
@@ -46,8 +45,8 @@ Android-приложение, которое **полностью офлайн**
 | Фильтрация пауз и неречевых фрагментов | Silero VAD + дозабор тихой речи, отбрасывание вывода ≤ 2 букв | телефонная запись: WER 42,5 → 32,9 % (B42); тишина и шумовой фон дают пустой вывод; на мяуканье и кашле остаются отдельные ложные слова (`bench_asr/results/robust.jsonl`) |
 | Устойчивое определение участников при смене реплик | диаризация по фразам вместо кластеризации чанков | DER ±.25 24,0 → 11,7 %, число говорящих 42 → 77 % (до итоговой настройки); известны «флипы» числа (B57) |
 | Восстановление пунктуации | знаки и регистр ставит сама ASR-модель | WER со знаками 30,8 % против 45,9 % у модели без знаков (synth, test) |
-| Отображение прогресса обработки | проценты, оставшееся время, 7 стадий, «Отменить», уведомление | экран обработки (`screens/redesign/10_processing_light.png`) |
-| Воспроизведение аудио с переходом к реплике | плеер ±10 с, скорость 0,75–2×, тап по реплике, подсветка текущей, дорожка говорящих | `screens/timeline-pdf/` |
+| Отображение прогресса обработки | проценты, оставшееся время, 7 стадий, «Отменить», уведомление | экран обработки (`screens/purple/02_processing.png`) |
+| Воспроизведение аудио с переходом к реплике | плеер ±10 с, скорость 0,75–2×, тап по реплике, подсветка текущей, дорожка говорящих | `screens/purple/03_transcript.png` |
 
 **Ultra Pro Max**
 

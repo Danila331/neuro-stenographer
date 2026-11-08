@@ -2,14 +2,14 @@
 # B54: проверка дорожки говорящих и экспорта в PDF на эмуляторе (нужна история с cats_c01 и cats_c04: process_on_device.sh).
 # Снимает дорожку (светлая/тёмная, перемотка тапом и протяжкой, шрифт x1.6, альбомная, подсветка добавленных отрезков после
 # «Обработать заново»), экспортирует PDF через системный диалог (SAF), забирает файл, проверяет заголовок %PDF и рендерит страницы
-# на хосте (PyMuPDF через uv). Вывод: артефакты в artifacts/demo/screens/timeline-pdf/.
+# на хосте (PyMuPDF через uv). Вывод: артефакты в artifacts/demo/screens/purple/timeline-pdf/.
 #   src/android/app/tools/timeline_pdf_check.sh [каталог-вывода]
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/../../../../scripts/env.sh"
 REPO="$(cd "$HERE/../../../.." && pwd)"
 U="$HERE/uia.py"; PKG=ru.neurosteno.app.medium
-S="${1:-$REPO/artifacts/demo/screens/timeline-pdf}"; mkdir -p "$S/pdf"
+S="${1:-$REPO/artifacts/demo/screens/purple/timeline-pdf}"; mkdir -p "$S/pdf"
 PDF_REC="${PDF_REC:-Совещание_длинное}"   # запись для экспорта PDF (по умолчанию длинная: несколько страниц); PDF_REC=cats_c01_v0 -- короткая
 T="$REPO/artifacts/test-results/ux-timeline-pdf/pdf"; mkdir -p "$T"
 t() { python3 "$U" tap "$@" >/dev/null; sleep 1.3; }; w() { python3 "$U" wait "$@" >/dev/null; }; shot() { python3 "$U" shot "$S/$1.png"; }
