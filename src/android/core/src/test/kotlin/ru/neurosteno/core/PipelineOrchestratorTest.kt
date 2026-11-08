@@ -382,6 +382,40 @@ class PipelineOrchestratorTest {
     }
 
     @Test
+    fun `adaptive per chunk language splits a mixed chunk before asr`() = runBlocking {
+        val seen = java.util.Collections.synchronizedMap(HashMap<String, List<TimeSpan>>())
+        fun asrFor(lang: String) = object : AsrEngine {
+            override fun transcribe(audio: AudioBuffer, speech: List<TimeSpan>, progress: ProgressListener): List<Word> {
+                seen[lang] = speech
+                return speech.map { Word("$lang${it.startMs}", it.startMs, it.startMs + 100) }
+            }
+            override fun close() = Unit
+        }
+        val lid = object : LanguageId {
+            override fun detect(audio: AudioBuffer, speech: List<TimeSpan>) =
+                if (speech.single().startMs < 10_000) "en" else "ru"
+            override fun close() = Unit
+        }
+        PipelineOrchestrator(
+            FakeDecoder(silence(20_000)),
+            EngineProviders(
+                vad = { FakeVad(spans = listOf(
+                    TimeSpan(0, 5_000), TimeSpan(5_000, 10_000),
+                    TimeSpan(10_000, 15_000), TimeSpan(15_000, 20_000),
+                )) },
+                asr = { lang -> asrFor(lang) },
+                diarizer = { FakeDiarizer() },
+                languageId = { lid },
+            ),
+            settings.copy(languageMode = "auto", supportedLanguages = setOf("ru", "en"), perChunkLanguage = true),
+            Dispatchers.IO,
+        ).run(input)
+
+        assertEquals(listOf(TimeSpan(0, 5_000), TimeSpan(5_000, 10_000)), seen["en"])
+        assertEquals(listOf(TimeSpan(10_000, 15_000), TimeSpan(15_000, 20_000)), seen["ru"])
+    }
+
+    @Test
     fun `numbers are spelled when postprocess numbers is words`() = runBlocking {
         val r = orchestrator(asr = FakeAsr(listOf(Word("в", 0, 100), Word("25", 100, 600), Word("мышей", 600, 900))), s = settings.copy(spellNumbers = true)).run(input)
         assertEquals("в двадцать пять мышей", r.transcript.utterances.single().text)

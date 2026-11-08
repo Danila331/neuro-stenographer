@@ -120,6 +120,21 @@ Mac M3 Pro, sherpa-onnx, int8, 4 потока, test-части, WER %. Полн�
 
 **Финальный прогон на Pixel 10** (release-APK medium 0.1.0 из GitHub Release, `artifacts/test-results/pixel-final/README.md`): те же 6 эталонов, WER norm 28,2 % и DER ±.25 20,7 % (микро) — **совпадают с эмулятором**; RTF 0,09–0,22 (среднее 0,144, быстрее реального времени в 4,5–11 раз), пик PSS 516–735 МБ, без падений и ANR; все JSON проходят `stenoeval validate`.
 
+## Актуальный Hard на Pixel 10 (08.11)
+
+Release-APK `0.1.0-hard`, 3 160 397 363 байта, SHA-256 `468acd230b3ad3a8b32e28cbf4b637607c710d69185a10e6d776732382d49d76`; 22 модели и их хэши проверены внутри APK. Подробные файлы — `artifacts/test-results/hard-pixel/` и `artifacts/test-results/hard-pixel-offline/`.
+
+| Проверка | Результат |
+|---|---|
+| farfield / phone / noise | 24 / 15 / 20 реплик; RTF 0,201 / 0,333 / 0,301; все JSON валидны |
+| Сводные метрики по трём файлам | WER norm **20,26 %**, cpWER **41,48 %**, DER ±.25 **13,11 %** |
+| Режим полёта, `cats_c04` | 6 реплик, RTF **0,277**, пик PSS **732 МБ**, JSON валиден |
+| Видеодемонстрация | `artifacts/demo/demo.mp4`, реальный Pixel, обработка без ускорения; экспортированные JSON и PDF проверены |
+
+Актуальные release-сборки lite/medium/hard/online подписаны. JVM-отчёты текущего кода: **828 core + 186 app = 1014 тестов**, 0 failures / 0 errors; команда `./gradlew :core:test :app:testMediumDebugUnitTest` завершилась `BUILD SUCCESSFUL`.
+
+В lite отсутствует необязательная ONNX-модель эмбеддингов `rubert-tiny-turbo`: поиск использует BM25, остальные 21 файл моделей встроены. В medium и hard проверены все 22 файла, включая эмбеддинги.
+
 | Устройство, условия | Проверка | Результат | Источник |
 |---|---|---|---|
 | jury-4g, medium release | путь жюри, 6 записей + `cats_c01` | `.done.json` и `stenoeval validate` OK; RTF 0,075–0,133 | prerelease2, п. 1, 4 |

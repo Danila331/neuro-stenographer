@@ -92,6 +92,7 @@ CC BY 4.0 (Parakeet) скачан с creativecommons.org 07.11.2026; для на
 | Unbounded (вариативный) | SIL OFL 1.1, Copyright 2022 The Unbounded Project Authors | `assets/licenses/OFL-unbounded.txt` |
 | Golos Text (вариативный) | SIL OFL 1.1, Copyright 2019 The Golos Text Project Authors | `assets/licenses/OFL-golostext.txt` |
 | JetBrains Mono (вариативный) | SIL OFL 1.1, Copyright 2020 The JetBrains Mono Project Authors | `assets/licenses/OFL-jetbrainsmono.txt` |
+| Inter (вариативный, opsz/wght) | SIL OFL 1.1, Copyright 2020 The Inter Project Authors | `assets/licenses/OFL-inter.txt` |
 
 Python: прямые зависимости и диапазоны — `src/eval/*/pyproject.toml`; `.venv` в рабочей копии отсутствуют. Зафиксированные версии stenoeval — `src/eval/stenoeval/uv.lock`; лицензии локально не подтверждены. Транзитивные зависимости требуют отдельной инвентаризации.
 

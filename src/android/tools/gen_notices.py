@@ -98,12 +98,14 @@ items = [
     entry(L, "commons-compress", "Apache Commons Compress", V["commons-compress"], "Распаковка архивов наборов моделей при загрузке", APACHE, "https://commons.apache.org/proper/commons-compress/",
           "Входит в модуль загрузки моделей."),
     # ---------------------------------------------------------------- шрифты (вшиты в APK)
-    entry(F, "font/unbounded", "Unbounded", "variable (wght 200-900)", "Заголовки интерфейса", ("OFL-1.1", "OFL-unbounded.txt"), "https://github.com/googlefonts/unbounded",
+    entry(F, "font/unbounded", "Unbounded", "variable (wght 200-900)", "Резервный display-шрифт", ("OFL-1.1", "OFL-unbounded.txt"), "https://github.com/googlefonts/unbounded",
           "Copyright 2022 The Unbounded Project Authors"),
-    entry(F, "font/golos-text", "Golos Text", "variable (wght 400-900)", "Основной текст интерфейса", ("OFL-1.1", "OFL-golostext.txt"), "https://github.com/googlefonts/golos-text",
+    entry(F, "font/golos-text", "Golos Text", "variable (wght 400-900)", "Резервный текстовый шрифт", ("OFL-1.1", "OFL-golostext.txt"), "https://github.com/googlefonts/golos-text",
           "Copyright 2019 The Golos Text Project Authors"),
     entry(F, "font/jetbrains-mono", "JetBrains Mono", "variable (wght 100-800)", "Таймкоды и числа", ("OFL-1.1", "OFL-jetbrainsmono.txt"), "https://github.com/JetBrains/JetBrainsMono",
           "Copyright 2020 The JetBrains Mono Project Authors"),
+    entry(F, "font/inter", "Inter", "variable (opsz, wght)", "Основной текст и заголовки интерфейса", ("OFL-1.1", "OFL-inter.txt"), "https://github.com/rsms/inter",
+          "Copyright 2020 The Inter Project Authors"),
 ]
 
 ids = [i["id"] for i in items]

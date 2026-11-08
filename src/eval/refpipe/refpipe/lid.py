@@ -77,6 +77,68 @@ class LanguageId:
         return decide(raw), raw
 
 
+def adaptive_lid_chunks(x: np.ndarray, chunks: list[TimeSpan], lid: LanguageId, max_s: float = 5.0) -> tuple[list[TimeSpan], list[str | None]]:
+    """LID on short subsegments; keep original chunks when every subsegment has the same language.
+
+    A mixed chunk is split at max_s boundaries. A single-language chunk keeps its original boundaries, so Russian
+    ASR cost and quality do not depend on a globally smaller chunk size.
+    """
+    out: list[TimeSpan] = []
+    raw: list[str | None] = []
+    for chunk in chunks:
+        pieces: list[TimeSpan] = []
+        start = chunk.start_ms
+        while start < chunk.end_ms:
+            end = min(chunk.end_ms, start + int(max_s * 1000))
+            pieces.append(TimeSpan(start, end))
+            start = end
+        preds = [lid.detect_chunk(x, piece)[0] for piece in pieces]
+        languages = {p for p in preds if p is not None}
+        if len(pieces) == 1 or len(languages) <= 1:
+            out.append(chunk)
+            raw.append(next((p for p in preds if p is not None), None))
+        else:
+            out.extend(pieces)
+            raw.extend(preds)
+    return out, raw
+
+
+def adaptive_lid_plan(x: np.ndarray, chunks: list[TimeSpan], lid_chunks: list[TimeSpan], lid: LanguageId,
+                      switch_min_ms: int = 6000) -> tuple[list[TimeSpan], list[str | None], list[str]]:
+    """Smooth VAD-sized LID chunks first, then preserve original ASR chunks whose labels agree."""
+    groups: list[list[int]] = []
+    cursor = 0
+    for chunk in chunks:
+        group: list[int] = []
+        while cursor < len(lid_chunks) and lid_chunks[cursor].end_ms <= chunk.end_ms:
+            if lid_chunks[cursor].start_ms < chunk.start_ms:
+                group = []
+                break
+            group.append(cursor)
+            cursor += 1
+        groups.append(group)
+    if any(not g for g in groups) or cursor != len(lid_chunks):
+        raw = [lid.detect_chunk(x, c)[0] for c in chunks]
+        return chunks, raw, smooth_languages(raw, [c.dur_ms for c in chunks], switch_min_ms)
+
+    raw_fine = [lid.detect_chunk(x, c)[0] for c in lid_chunks]
+    fine_langs = smooth_languages(raw_fine, [c.dur_ms for c in lid_chunks], switch_min_ms)
+    out: list[TimeSpan] = []
+    raw: list[str | None] = []
+    languages: list[str] = []
+    for chunk, group in zip(chunks, groups):
+        labels = [fine_langs[i] for i in group]
+        if len(set(labels)) == 1:
+            out.append(chunk)
+            raw.append(next((raw_fine[i] for i in group if raw_fine[i] is not None), None))
+            languages.append(labels[0])
+        else:
+            out.extend(lid_chunks[i] for i in group)
+            raw.extend(raw_fine[i] for i in group)
+            languages.extend(labels)
+    return out, raw, languages
+
+
 def smooth_languages(raw: list[str | None], durs_ms: list[int], confident_ms: int = 6000) -> list[str]:
     """Hysteresis for per-chunk language ids -- 1:1 with Android `LanguageSmoother` (core/LanguageSmoother.kt).
 

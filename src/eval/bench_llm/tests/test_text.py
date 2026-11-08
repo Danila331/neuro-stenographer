@@ -60,3 +60,42 @@ def test_data():
     words, gold, noisy = inject_boundary_errors(d[0], seed=0)
     assert len(words) == len(gold) == len(noisy) and gold != noisy
     assert len(load_fleurs("test", 10)) == 10
+
+
+def test_protocol_fragment_budget_preserves_short_and_focuses_long():
+    from bench_llm.android_flow import chunk, combine, fragment_budget, lines_of
+
+    dialogs = load_dialogs()
+    budget = fragment_budget(4096, 1292)
+    assert budget == 2500
+    for dialog in dialogs:
+        lines = lines_of(combine([dialog])[0])
+        assert len(chunk(lines, budget)) == 1
+    long_lines = lines_of(combine(dialogs)[0])
+    assert len(chunk(long_lines, budget)) == 4
+
+
+def test_qa_material_matches_android_quarter_budget_for_long_records():
+    from bench_llm.android_flow import chunk, combine, content_budget, lines_of, qa_material
+
+    dialogs = load_dialogs()
+    question = "Сколько рублей осталось в казне?"
+    budget = content_budget(4096, 400, 300)
+    short_lines = lines_of(combine([dialogs[0]])[0])
+    assert qa_material(short_lines, question, budget) == chunk(short_lines, budget)
+
+    long_lines = lines_of(combine(dialogs)[0])
+    material = qa_material(long_lines, question, budget)
+    assert sum(map(len, material)) <= budget * 0.25 + 1
+    assert any("казне" in part for part in material)
+    previous = qa_material(long_lines, question, budget, ratio=1.0)
+    assert sum(map(len, previous)) > sum(map(len, material))
+
+
+def test_qa_retrieval_prioritizes_rare_matching_terms():
+    from bench_llm.android_flow import combine, content_budget, lines_of, qa_material
+
+    lines = lines_of(combine(load_dialogs())[0])
+    budget = content_budget(4096, 400, 300)
+    material = qa_material(lines, "Сколько будут платить дворникам после повышения?", budget)
+    assert any("семидесяти" in part for part in material)

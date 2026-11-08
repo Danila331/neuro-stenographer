@@ -1,0 +1,39 @@
+{
+  "status": "done",
+  "source": "cats_c02_v0_call_phone.wav",
+  "finished_at_ms": 1794106431513,
+  "audio_duration_ms": 41197,
+  "processing_ms": 13699,
+  "rtf": 0.333,
+  "language": "ru",
+  "utterances": 15,
+  "tier": "hard",
+  "model_set": "hard",
+  "stage_ms": {
+    "decode": 41,
+    "vad": 492,
+    "lid": 3037,
+    "asr": 5185,
+    "diarization": 10100,
+    "align": 1,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 4739,
+    "total": 13699
+  },
+  "peak_pss_mb": 764,
+  "threads": 3,
+  "device_model": "Google Pixel 10",
+  "android_sdk": 37,
+  "total_ram_mb": 11563,
+  "app_version": "0.1.0-hard",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.hard/files/results",
+  "files": [
+    "cats_c02_v0_call_phone.json",
+    "cats_c02_v0_call_phone.full.json"
+  ],
+  "problems": [],
+  "warnings": [
+    "Ресурсы: мало памяти (доступно 3828 МБ, нужно ~4000 МБ): потоков 3, без второго прохода и денойза"
+  ]
+}

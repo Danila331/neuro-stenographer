@@ -186,16 +186,20 @@ object SpeakerRelabeler {
         return IntArray(n) { i -> roots.getOrPut(find(i)) { roots.size } }
     }
 
-    fun silhouette(y: Array<DoubleArray>, lab: IntArray): Double {
+    private fun cosineDistances(y: Array<DoubleArray>): Array<DoubleArray> =
+        Array(y.size) { i -> DoubleArray(y.size) { j -> 1.0 - dot(y[i], y[j]) } }
+
+    fun silhouette(y: Array<DoubleArray>, lab: IntArray): Double = silhouette(y, lab, cosineDistances(y))
+
+    private fun silhouette(y: Array<DoubleArray>, lab: IntArray, distances: Array<DoubleArray>): Double {
         val ks = lab.toSortedSet().toList()
         if (ks.size < 2) return -1.0
         val n = y.size
-        val d = Array(n) { i -> DoubleArray(n) { j -> 1.0 - dot(y[i], y[j]) } }
         var total = 0.0
         for (i in 0 until n) {
             var sameCnt = 0
             var sameSum = 0.0
-            for (j in 0 until n) if (lab[j] == lab[i]) { sameCnt++; sameSum += d[i][j] }
+            for (j in 0 until n) if (lab[j] == lab[i]) { sameCnt++; sameSum += distances[i][j] }
             if (sameCnt <= 1) continue
             val a = sameSum / (sameCnt - 1)
             var b = Double.POSITIVE_INFINITY
@@ -203,7 +207,7 @@ object SpeakerRelabeler {
                 if (q == lab[i]) continue
                 var c = 0
                 var s = 0.0
-                for (j in 0 until n) if (lab[j] == q) { c++; s += d[i][j] }
+                for (j in 0 until n) if (lab[j] == q) { c++; s += distances[i][j] }
                 b = min(b, s / c)
             }
             total += (b - a) / max(max(a, b), 1e-9)
@@ -230,10 +234,11 @@ object SpeakerRelabeler {
         if (idx.size < 3) return IntArray(n)
         val y = Array(idx.size) { e[idx[it]] }
         val merges = wardMerges(y)
+        val distances = cosineDistances(y)
         var bestK = max(p.kMin, 2)
         var best = -2.0
         for (k in max(p.kMin, 2)..min(p.kMax, idx.size - 1)) {
-            val s = silhouette(y, cut(idx.size, merges, k))
+            val s = silhouette(y, cut(idx.size, merges, k), distances)
             if (s > best + 1e-12) {
                 best = s
                 bestK = k

@@ -1,0 +1,39 @@
+{
+  "status": "done",
+  "source": "cats_c01_v0_meeting_farfield.wav",
+  "finished_at_ms": 1794106396221,
+  "audio_duration_ms": 59118,
+  "processing_ms": 11899,
+  "rtf": 0.201,
+  "language": "ru",
+  "utterances": 24,
+  "tier": "hard",
+  "model_set": "hard",
+  "stage_ms": {
+    "decode": 47,
+    "vad": 1622,
+    "lid": 1476,
+    "asr": 4224,
+    "diarization": 5968,
+    "align": 1,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 4502,
+    "total": 11899
+  },
+  "peak_pss_mb": 598,
+  "threads": 3,
+  "device_model": "Google Pixel 10",
+  "android_sdk": 37,
+  "total_ram_mb": 11563,
+  "app_version": "0.1.0-hard",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.hard/files/results",
+  "files": [
+    "cats_c01_v0_meeting_farfield.json",
+    "cats_c01_v0_meeting_farfield.full.json"
+  ],
+  "problems": [],
+  "warnings": [
+    "Ресурсы: мало памяти (доступно 3638 МБ, нужно ~4000 МБ): потоков 3, без второго прохода и денойза"
+  ]
+}

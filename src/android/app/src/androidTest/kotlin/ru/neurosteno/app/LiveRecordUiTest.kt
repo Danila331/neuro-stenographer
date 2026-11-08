@@ -40,7 +40,7 @@ class LiveRecordUiTest {
             onStop = { stopped = true },
         )
         rule.onNodeWithTag("live_panel").assertIsDisplayed()
-        rule.onNodeWithText("ЖИВОЙ ТЕКСТ · ПРЕВЬЮ").assertIsDisplayed()
+        rule.onNodeWithText("Живой текст").assertIsDisplayed()
         rule.onNodeWithContentDescription("Живой текст: Добрый день коллеги начинаем").assertIsDisplayed()
         rule.onNodeWithText("Остановить и расшифровать", substring = true).assertIsDisplayed()
         rule.onNodeWithTag("btn_stop_record").performClick()
@@ -50,7 +50,7 @@ class LiveRecordUiTest {
     @Test
     fun emptyAndLoadingStatesAreExplained() {
         show(recording, LiveUi(enabled = true, status = LiveStatus.Loading))
-        rule.onNodeWithText("ЗАГРУЗКА МОДЕЛИ…").assertIsDisplayed()
+        rule.onNodeWithText("Загрузка модели…").assertIsDisplayed()
         rule.onNodeWithText("Говорите — слова появятся здесь…").assertIsDisplayed()
     }
 
@@ -65,7 +65,7 @@ class LiveRecordUiTest {
     fun disabledPreviewShowsReasonAndKeepsClassicScreen() {
         show(recording, LiveUi(offReason = "Живой текст выключен: мало памяти. Итог после остановки будет таким же."))
         rule.onNodeWithTag("live_off_reason").assertIsDisplayed()
-        rule.onNodeWithText("Идёт запись… Не сворачивайте приложение, пока записываете.").assertIsDisplayed()
+        rule.onNodeWithText("Говорите естественно. Уровень микрофона показан выше — после остановки начнётся точная расшифровка.").assertIsDisplayed()
         rule.onNodeWithTag("btn_stop_record").assertIsDisplayed()
     }
 
@@ -73,6 +73,6 @@ class LiveRecordUiTest {
     fun beforeRecordingStartButtonIsShown() {
         show(RecorderUi(), LiveUi())
         rule.onNodeWithTag("btn_start_record").assertIsDisplayed()
-        rule.onNodeWithText("Нажмите кнопку, чтобы начать запись разговора.").assertIsDisplayed()
+        rule.onNodeWithText("Начните запись разговора. Разрешение микрофона понадобится только сейчас.").assertIsDisplayed()
     }
 }

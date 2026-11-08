@@ -46,7 +46,7 @@ class ProtocolFlowTest {
     @Test
     fun longRecordIsSplitIntoFragmentsAndMergedInCode() {
         val l = lines(60, words = 15)
-        val budget = PromptBuilder.contentBudgetChars(2048, 450, system.length)
+        val budget = minOf(PromptBuilder.contentBudgetChars(2048, 450, system.length), 2500)
         val expectedFragments = PromptBuilder.chunk(l, budget).size
         assertTrue(expectedFragments >= 2)
         val llm = FakeLlm(List(expectedFragments) { if (it % 2 == 0) protocolA else protocolB })
@@ -94,6 +94,15 @@ class ProtocolFlowTest {
         assertTrue(llm.prompts.last().contains("Часть 1:\n- пункт конспекта 0"))
         assertEquals(700, llm.maxTokens.last())
         assertEquals(320, llm.maxTokens.first())
+    }
+
+    @Test
+    fun longRecordUsesFourFocusedFragments() {
+        val longLines = List(24) { i -> "[00:${(i % 60).toString().padStart(2, '0')}] Говорящий 1: " + "я".repeat(380) }
+        val llm = FakeLlm(List(4) { protocolA })
+        ProtocolFlow(4096, chunkMerge = true, filterQuotes = false, system = system, notesSystem = notes)
+            .run(longLines, emptyList(), { p, m, cb -> llm.generate(p, m, cb) })
+        assertEquals(4, llm.prompts.size)
     }
 
     @Test(expected = IllegalArgumentException::class)

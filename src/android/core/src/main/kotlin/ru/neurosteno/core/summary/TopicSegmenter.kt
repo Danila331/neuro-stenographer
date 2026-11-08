@@ -12,7 +12,7 @@ object TopicSegmenter {
     fun gapSims(vecs: List<DoubleArray>, k: Int): DoubleArray {
         val n = vecs.size
         val out = DoubleArray(maxOf(0, n - 1)) { 1.0 }
-        for (g in 0 until n - 1) {
+        java.util.stream.IntStream.range(0, n - 1).parallel().forEach { g ->
             val a = mean(vecs, maxOf(0, g - k + 1), g + 1)
             val b = mean(vecs, g + 1, minOf(n, g + 1 + k))
             var dot = 0.0

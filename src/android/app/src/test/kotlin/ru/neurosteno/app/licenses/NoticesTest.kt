@@ -102,8 +102,8 @@ class NoticesTest {
     @Test
     fun bundledFontsMatchRegistry() {
         val fonts = File(repoRoot, "src/android/app/src/main/res/font").listFiles()!!.map { it.nameWithoutExtension }.toSet()
-        assertEquals(setOf("unbounded", "golos_text", "jetbrains_mono"), fonts)
-        assertEquals(3, notices.count { it.kind == Notice.FONT })
+        assertEquals(setOf("unbounded", "golos_text", "jetbrains_mono", "inter"), fonts)
+        assertEquals(4, notices.count { it.kind == Notice.FONT })
     }
 
     @Test
@@ -115,6 +115,6 @@ class NoticesTest {
             val keys = listOf(n.id, n.id.substringBefore('/'), n.name.substringBefore(" (")) + (2..dotted.size).map { dotted.take(it).joinToString(".") } + n.id.replace('-', '.')
             assertTrue("в docs/LICENSES.md нет компонента ${n.id}", keys.any { doc.contains(it.lowercase()) })
         }
-        for (f in listOf("Unbounded", "Golos Text", "JetBrains Mono")) assertTrue(f, doc.contains(f.lowercase()))
+        for (f in listOf("Unbounded", "Golos Text", "JetBrains Mono", "Inter")) assertTrue(f, doc.contains(f.lowercase()))
     }
 }

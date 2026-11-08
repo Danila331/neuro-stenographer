@@ -14,13 +14,13 @@ else
   _ns_self="$0"
 fi
 _ns_dir="$(cd "$(dirname "$_ns_self")" && pwd)"
-_ns_common="$(git -C "$_ns_dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
-if [ -z "$_ns_common" ]; then
-  echo "env.sh: не удалось определить корень репозитория (git rev-parse --git-common-dir)" >&2
-  unset _ns_self _ns_dir _ns_common
-  return 1 2>/dev/null || exit 1
+_ns_common="$(git -C "$_ns_dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+if [ -n "$_ns_common" ]; then
+  export NEUROSTENO_ROOT="$(dirname "$_ns_common")"
+else
+  # Рабочие копии без .git (например, распакованный архив): корень — родитель scripts/ или явный NEUROSTENO_ROOT.
+  export NEUROSTENO_ROOT="${NEUROSTENO_ROOT:-$(cd "$_ns_dir/.." && pwd)}"
 fi
-export NEUROSTENO_ROOT="$(dirname "$_ns_common")"
 ROOT="$NEUROSTENO_ROOT"
 export ROOT
 unset _ns_self _ns_dir _ns_common
@@ -40,7 +40,7 @@ fi
 if [ -n "${JAVA_HOME:-}" ]; then export JAVA_HOME; fi
 
 # --- Android SDK и пользовательские каталоги: всё внутри $ROOT/.local ---
-export ANDROID_HOME="$LOCAL/android-sdk"
+export ANDROID_HOME="${ANDROID_HOME:-$LOCAL/android-sdk}"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export ANDROID_USER_HOME="$LOCAL/android-user"
 export ANDROID_AVD_HOME="$LOCAL/avd"

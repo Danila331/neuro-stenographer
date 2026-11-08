@@ -1,0 +1,786 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 596,
+      "end_ms": 3036,
+      "text": "Переходим к первому вопросу. Кто доложил про склад?",
+      "words": [
+        {
+          "text": "Переходим",
+          "start_ms": 596,
+          "end_ms": 956,
+          "confidence": null
+        },
+        {
+          "text": "к",
+          "start_ms": 1036,
+          "end_ms": 1076,
+          "confidence": null
+        },
+        {
+          "text": "первому",
+          "start_ms": 1156,
+          "end_ms": 1436,
+          "confidence": null
+        },
+        {
+          "text": "вопросу.",
+          "start_ms": 1556,
+          "end_ms": 1796,
+          "confidence": null
+        },
+        {
+          "text": "Кто",
+          "start_ms": 2036,
+          "end_ms": 2116,
+          "confidence": null
+        },
+        {
+          "text": "доложил",
+          "start_ms": 2236,
+          "end_ms": 2596,
+          "confidence": null
+        },
+        {
+          "text": "про",
+          "start_ms": 2596,
+          "end_ms": 2636,
+          "confidence": null
+        },
+        {
+          "text": "склад?",
+          "start_ms": 2756,
+          "end_ms": 3036,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 3516,
+      "end_ms": 7116,
+      "text": "Я Маркей. За прошлую неделю мы насчитали сорок семь мышей.",
+      "words": [
+        {
+          "text": "Я",
+          "start_ms": 3516,
+          "end_ms": 3556,
+          "confidence": null
+        },
+        {
+          "text": "Маркей.",
+          "start_ms": 3796,
+          "end_ms": 4116,
+          "confidence": null
+        },
+        {
+          "text": "За",
+          "start_ms": 4396,
+          "end_ms": 4436,
+          "confidence": null
+        },
+        {
+          "text": "прошлую",
+          "start_ms": 4556,
+          "end_ms": 4956,
+          "confidence": null
+        },
+        {
+          "text": "неделю",
+          "start_ms": 5036,
+          "end_ms": 5316,
+          "confidence": null
+        },
+        {
+          "text": "мы",
+          "start_ms": 5436,
+          "end_ms": 5476,
+          "confidence": null
+        },
+        {
+          "text": "насчитали",
+          "start_ms": 5596,
+          "end_ms": 5996,
+          "confidence": null
+        },
+        {
+          "text": "сорок",
+          "start_ms": 6196,
+          "end_ms": 6436,
+          "confidence": null
+        },
+        {
+          "text": "семь",
+          "start_ms": 6516,
+          "end_ms": 6556,
+          "confidence": null
+        },
+        {
+          "text": "мышей.",
+          "start_ms": 6756,
+          "end_ms": 7116,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 7556,
+      "end_ms": 8596,
+      "text": "47. Это много.",
+      "words": [
+        {
+          "text": "47.",
+          "start_ms": 7556,
+          "end_ms": 7836,
+          "confidence": null
+        },
+        {
+          "text": "Это",
+          "start_ms": 8396,
+          "end_ms": 8436,
+          "confidence": null
+        },
+        {
+          "text": "много.",
+          "start_ms": 8556,
+          "end_ms": 8596,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 9516,
+      "end_ms": 17036,
+      "text": "Это почти вдвое больше, чем в октябре. А откуда они взялись? Говорят, привезли вместе с мешками. Мешки, когда привезли. Третьего числа...",
+      "words": [
+        {
+          "text": "Это",
+          "start_ms": 9516,
+          "end_ms": 9556,
+          "confidence": null
+        },
+        {
+          "text": "почти",
+          "start_ms": 9716,
+          "end_ms": 9916,
+          "confidence": null
+        },
+        {
+          "text": "вдвое",
+          "start_ms": 9996,
+          "end_ms": 10276,
+          "confidence": null
+        },
+        {
+          "text": "больше,",
+          "start_ms": 10396,
+          "end_ms": 10436,
+          "confidence": null
+        },
+        {
+          "text": "чем",
+          "start_ms": 10676,
+          "end_ms": 10716,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 10796,
+          "end_ms": 10836,
+          "confidence": null
+        },
+        {
+          "text": "октябре.",
+          "start_ms": 10916,
+          "end_ms": 11236,
+          "confidence": null
+        },
+        {
+          "text": "А",
+          "start_ms": 11436,
+          "end_ms": 11476,
+          "confidence": null
+        },
+        {
+          "text": "откуда",
+          "start_ms": 11556,
+          "end_ms": 11796,
+          "confidence": null
+        },
+        {
+          "text": "они",
+          "start_ms": 11916,
+          "end_ms": 11956,
+          "confidence": null
+        },
+        {
+          "text": "взялись?",
+          "start_ms": 12036,
+          "end_ms": 12396,
+          "confidence": null
+        },
+        {
+          "text": "Говорят,",
+          "start_ms": 12916,
+          "end_ms": 13276,
+          "confidence": null
+        },
+        {
+          "text": "привезли",
+          "start_ms": 13436,
+          "end_ms": 13756,
+          "confidence": null
+        },
+        {
+          "text": "вместе",
+          "start_ms": 13836,
+          "end_ms": 14076,
+          "confidence": null
+        },
+        {
+          "text": "с",
+          "start_ms": 14116,
+          "end_ms": 14156,
+          "confidence": null
+        },
+        {
+          "text": "мешками.",
+          "start_ms": 14236,
+          "end_ms": 14596,
+          "confidence": null
+        },
+        {
+          "text": "Мешки,",
+          "start_ms": 15076,
+          "end_ms": 15356,
+          "confidence": null
+        },
+        {
+          "text": "когда",
+          "start_ms": 15516,
+          "end_ms": 15556,
+          "confidence": null
+        },
+        {
+          "text": "привезли.",
+          "start_ms": 15756,
+          "end_ms": 16116,
+          "confidence": null
+        },
+        {
+          "text": "Третьего",
+          "start_ms": 16356,
+          "end_ms": 16716,
+          "confidence": null
+        },
+        {
+          "text": "числа...",
+          "start_ms": 16836,
+          "end_ms": 17036,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 17316,
+      "end_ms": 18836,
+      "text": "Нам нужен дежурный по складу. Кто готов?",
+      "words": [
+        {
+          "text": "Нам",
+          "start_ms": 17316,
+          "end_ms": 17436,
+          "confidence": null
+        },
+        {
+          "text": "нужен",
+          "start_ms": 17436,
+          "end_ms": 17596,
+          "confidence": null
+        },
+        {
+          "text": "дежурный",
+          "start_ms": 17636,
+          "end_ms": 17916,
+          "confidence": null
+        },
+        {
+          "text": "по",
+          "start_ms": 17996,
+          "end_ms": 18036,
+          "confidence": null
+        },
+        {
+          "text": "складу.",
+          "start_ms": 18076,
+          "end_ms": 18356,
+          "confidence": null
+        },
+        {
+          "text": "Кто",
+          "start_ms": 18596,
+          "end_ms": 18676,
+          "confidence": null
+        },
+        {
+          "text": "готов?",
+          "start_ms": 18796,
+          "end_ms": 18836,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 19396,
+      "end_ms": 19716,
+      "text": "Я могу.",
+      "words": [
+        {
+          "text": "Я",
+          "start_ms": 19396,
+          "end_ms": 19436,
+          "confidence": null
+        },
+        {
+          "text": "могу.",
+          "start_ms": 19676,
+          "end_ms": 19716,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 20516,
+      "end_ms": 22196,
+      "text": "Вадира, у тебя же ночная смена на рыбном...",
+      "words": [
+        {
+          "text": "Вадира,",
+          "start_ms": 20516,
+          "end_ms": 20796,
+          "confidence": null
+        },
+        {
+          "text": "у",
+          "start_ms": 20956,
+          "end_ms": 20996,
+          "confidence": null
+        },
+        {
+          "text": "тебя",
+          "start_ms": 21036,
+          "end_ms": 21076,
+          "confidence": null
+        },
+        {
+          "text": "же",
+          "start_ms": 21196,
+          "end_ms": 21236,
+          "confidence": null
+        },
+        {
+          "text": "ночная",
+          "start_ms": 21316,
+          "end_ms": 21556,
+          "confidence": null
+        },
+        {
+          "text": "смена",
+          "start_ms": 21636,
+          "end_ms": 21836,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 21916,
+          "end_ms": 21956,
+          "confidence": null
+        },
+        {
+          "text": "рыбном...",
+          "start_ms": 22036,
+          "end_ms": 22196,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 22596,
+      "end_ms": 24836,
+      "text": "Смену я поменяю симвой. Он согласен.",
+      "words": [
+        {
+          "text": "Смену",
+          "start_ms": 22596,
+          "end_ms": 22876,
+          "confidence": null
+        },
+        {
+          "text": "я",
+          "start_ms": 22956,
+          "end_ms": 22996,
+          "confidence": null
+        },
+        {
+          "text": "поменяю",
+          "start_ms": 23116,
+          "end_ms": 23476,
+          "confidence": null
+        },
+        {
+          "text": "симвой.",
+          "start_ms": 23556,
+          "end_ms": 23916,
+          "confidence": null
+        },
+        {
+          "text": "Он",
+          "start_ms": 24156,
+          "end_ms": 24196,
+          "confidence": null
+        },
+        {
+          "text": "согласен.",
+          "start_ms": 24356,
+          "end_ms": 24836,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 25332,
+      "end_ms": 28172,
+      "text": "Хорошо. Дежурство с понедельника с 8 вечера до 6:00 утра.",
+      "words": [
+        {
+          "text": "Хорошо.",
+          "start_ms": 25332,
+          "end_ms": 25372,
+          "confidence": null
+        },
+        {
+          "text": "Дежурство",
+          "start_ms": 25852,
+          "end_ms": 26212,
+          "confidence": null
+        },
+        {
+          "text": "с",
+          "start_ms": 26332,
+          "end_ms": 26372,
+          "confidence": null
+        },
+        {
+          "text": "понедельника",
+          "start_ms": 26452,
+          "end_ms": 26852,
+          "confidence": null
+        },
+        {
+          "text": "с",
+          "start_ms": 26932,
+          "end_ms": 26972,
+          "confidence": null
+        },
+        {
+          "text": "8",
+          "start_ms": 27092,
+          "end_ms": 27132,
+          "confidence": null
+        },
+        {
+          "text": "вечера",
+          "start_ms": 27332,
+          "end_ms": 27492,
+          "confidence": null
+        },
+        {
+          "text": "до",
+          "start_ms": 27612,
+          "end_ms": 27652,
+          "confidence": null
+        },
+        {
+          "text": "6:00",
+          "start_ms": 27732,
+          "end_ms": 27932,
+          "confidence": null
+        },
+        {
+          "text": "утра.",
+          "start_ms": 28012,
+          "end_ms": 28172,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 28532,
+      "end_ms": 29932,
+      "text": "Мне нужен отчёт каждое утро.",
+      "words": [
+        {
+          "text": "Мне",
+          "start_ms": 28532,
+          "end_ms": 28572,
+          "confidence": null
+        },
+        {
+          "text": "нужен",
+          "start_ms": 28692,
+          "end_ms": 28932,
+          "confidence": null
+        },
+        {
+          "text": "отчёт",
+          "start_ms": 29052,
+          "end_ms": 29212,
+          "confidence": null
+        },
+        {
+          "text": "каждое",
+          "start_ms": 29372,
+          "end_ms": 29652,
+          "confidence": null
+        },
+        {
+          "text": "утро.",
+          "start_ms": 29732,
+          "end_ms": 29932,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 30292,
+      "end_ms": 32532,
+      "text": "Отчёт принимает секретарь. Котята, вы слышите?",
+      "words": [
+        {
+          "text": "Отчёт",
+          "start_ms": 30292,
+          "end_ms": 30492,
+          "confidence": null
+        },
+        {
+          "text": "принимает",
+          "start_ms": 30612,
+          "end_ms": 30772,
+          "confidence": null
+        },
+        {
+          "text": "секретарь.",
+          "start_ms": 31012,
+          "end_ms": 31412,
+          "confidence": null
+        },
+        {
+          "text": "Котята,",
+          "start_ms": 31652,
+          "end_ms": 31972,
+          "confidence": null
+        },
+        {
+          "text": "вы",
+          "start_ms": 32092,
+          "end_ms": 32132,
+          "confidence": null
+        },
+        {
+          "text": "слышите?",
+          "start_ms": 32212,
+          "end_ms": 32532,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 33012,
+      "end_ms": 35052,
+      "text": "Слышим. Мяу. Будем принимать.",
+      "words": [
+        {
+          "text": "Слышим.",
+          "start_ms": 33012,
+          "end_ms": 33412,
+          "confidence": null
+        },
+        {
+          "text": "Мяу.",
+          "start_ms": 33772,
+          "end_ms": 34052,
+          "confidence": null
+        },
+        {
+          "text": "Будем",
+          "start_ms": 34412,
+          "end_ms": 34612,
+          "confidence": null
+        },
+        {
+          "text": "принимать.",
+          "start_ms": 34692,
+          "end_ms": 35052,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 35692,
+      "end_ms": 38012,
+      "text": "Тогда решение: назначить дежурным по отделу. Кто за?",
+      "words": [
+        {
+          "text": "Тогда",
+          "start_ms": 35692,
+          "end_ms": 35892,
+          "confidence": null
+        },
+        {
+          "text": "решение:",
+          "start_ms": 36012,
+          "end_ms": 36212,
+          "confidence": null
+        },
+        {
+          "text": "назначить",
+          "start_ms": 36492,
+          "end_ms": 36892,
+          "confidence": null
+        },
+        {
+          "text": "дежурным",
+          "start_ms": 36932,
+          "end_ms": 37212,
+          "confidence": null
+        },
+        {
+          "text": "по",
+          "start_ms": 37332,
+          "end_ms": 37372,
+          "confidence": null
+        },
+        {
+          "text": "отделу.",
+          "start_ms": 37452,
+          "end_ms": 37692,
+          "confidence": null
+        },
+        {
+          "text": "Кто",
+          "start_ms": 37812,
+          "end_ms": 37892,
+          "confidence": null
+        },
+        {
+          "text": "за?",
+          "start_ms": 37972,
+          "end_ms": 38012,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 38332,
+      "end_ms": 39372,
+      "text": "Я за. И я за.",
+      "words": [
+        {
+          "text": "Я",
+          "start_ms": 38332,
+          "end_ms": 38372,
+          "confidence": null
+        },
+        {
+          "text": "за.",
+          "start_ms": 38532,
+          "end_ms": 38572,
+          "confidence": null
+        },
+        {
+          "text": "И",
+          "start_ms": 38972,
+          "end_ms": 39012,
+          "confidence": null
+        },
+        {
+          "text": "я",
+          "start_ms": 39092,
+          "end_ms": 39132,
+          "confidence": null
+        },
+        {
+          "text": "за.",
+          "start_ms": 39332,
+          "end_ms": 39372,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 39852,
+      "end_ms": 40532,
+      "text": "Единогласно.",
+      "words": [
+        {
+          "text": "Единогласно.",
+          "start_ms": 39852,
+          "end_ms": 40532,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-hard",
+    "tier": "hard",
+    "language": "ru",
+    "audio_duration_ms": 41197,
+    "processing_ms": 13699,
+    "rtf": 0.333,
+    "stage_ms": {
+      "decode": 41,
+      "vad": 492,
+      "lid": 3037,
+      "asr": 5185,
+      "diarization": 10100,
+      "align": 1,
+      "punctuation": 0,
+      "export": 0,
+      "relabel": 4739,
+      "total": 13699
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/emb-eres2netv2/model.onnx",
+      "llm": "llm/qwen3-4b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 764,
+    "threads": 3,
+    "device_model": "Google Pixel 10",
+    "android_sdk": 37,
+    "total_ram_mb": 11563
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1",
+    "speaker_2": "Говорящий 2"
+  }
+}

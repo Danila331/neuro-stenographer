@@ -9,8 +9,8 @@ URL="https://github.com/ggml-org/llama.cpp/archive/refs/tags/${TAG}.tar.gz"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANDROID_DIR="$(cd "$HERE/.." && pwd)"
-COMMON="$(git -C "$HERE" rev-parse --path-format=absolute --git-common-dir)"
-ROOT="$(dirname "$COMMON")"
+COMMON="$(git -C "$HERE" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+if [ -n "$COMMON" ]; then ROOT="$(dirname "$COMMON")"; else ROOT="$(cd "$HERE/../../.." && pwd)"; fi
 CACHE="$ROOT/.cache/android-deps/llama.cpp-${TAG}"
 DEST="$ANDROID_DIR/engine-llm/src/main/cpp/llama.cpp"
 TAR="$CACHE/llama.cpp-${TAG}.tar.gz"

@@ -25,11 +25,11 @@ from .asr import AsrEngine
 from .audio import agc, decode_audio, denoise, estimate_snr_db, normalize_gain, segment_gain
 from .config import DEFAULTS, canonical, config_hash, deep_merge
 from .diar import Diarizer, SubprocessDiarizer
-from .lid import LanguageId, smooth_languages
+from .lid import LanguageId, adaptive_lid_plan, smooth_languages
 from .punct import make_punctuator
 from .relabel import Params as RelabelParams, UnitEmbedder, embed_units, label_units, make_units, stock_is_single
 from .types import SpeakerTurn, TimeSpan, Utterance, Word
-from .vad import SileroVad, speech_chunks
+from .vad import SileroVad, speech_chunks, speech_chunks_with_lid
 
 log = logging.getLogger(__name__)
 SR = 16000
@@ -120,6 +120,7 @@ class Pipeline:
         if self.lang_mode == "en" and not cfg.get("asr_en"):
             raise ValueError("language.mode=en requires an asr_en section in the config")
         self.per_chunk = bool(lang.get("per_chunk")) and self.lid is not None
+        self.adaptive_lid = bool(lang.get("adaptive_lid", True))
         self.switch_min_ms = int(lang.get("switch_min_ms", 6000))
         self.asr_en = None
         dt_ = (cfg.get("postprocess") or {}).get("drop_tiny_chunks") or {}
@@ -297,7 +298,11 @@ class Pipeline:
                 return ([TimeSpan(*t) for t in hit["speech"]], [TimeSpan(*t) for t in hit["chunks"]],
                         [Word(*w) for w in hit["words"]], 0, 0, 0, 0)
             t1 = time.perf_counter()
-            speech, chunks = speech_chunks(x, cfg, self.vad)
+            if self.per_chunk and self.adaptive_lid:
+                speech, chunks, lid_chunks = speech_chunks_with_lid(x, cfg, self.vad)
+            else:
+                speech, chunks = speech_chunks(x, cfg, self.vad)
+                lid_chunks = chunks
             vad_ms = _ms(t1)
             xa = segment_gain(x_asr, [(a_.start_ms, a_.end_ms) for a_ in speech], seg_gain) if seg_gain else x_asr
             t_l = time.perf_counter()
@@ -307,10 +312,13 @@ class Pipeline:
             if self.lang_mode == "en":
                 lang, langs = "en", ["en"] * len(chunks)
             elif self.lid is not None and speech and self.per_chunk:
-                # per chunk (Android LanguageSmoother): LID of the first lid_seconds of every chunk >= 1.5 s, state
-                # starts at ru, no file-level LID
-                raw_langs = [self.lid.detect_chunk(xa, c)[0] for c in chunks]
-                langs = smooth_languages(raw_langs, [c.dur_ms for c in chunks], self.switch_min_ms)
+                # Smooth VAD-sized LID chunks first; merge them back when the whole ASR chunk has one language.
+                if self.adaptive_lid:
+                    chunks, raw_langs, langs = adaptive_lid_plan(
+                        xa, chunks, lid_chunks, self.lid, self.switch_min_ms)
+                else:
+                    raw_langs = [self.lid.detect_chunk(xa, c)[0] for c in chunks]
+                    langs = smooth_languages(raw_langs, [c.dur_ms for c in chunks], self.switch_min_ms)
                 en_ms = sum(c.dur_ms for c, l_ in zip(chunks, langs) if l_ == "en")
                 lang = "en" if en_ms > sum(c.dur_ms for c in chunks) - en_ms else "ru"
             elif self.lid is not None and speech:

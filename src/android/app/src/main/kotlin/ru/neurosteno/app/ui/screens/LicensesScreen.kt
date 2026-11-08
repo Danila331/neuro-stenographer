@@ -69,9 +69,9 @@ private fun NoticeCard(n: Notice, onOpen: (Notice) -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(n.name, style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                BrutalTag(n.license, fill = Brutal.accent)
+                BrutalTag(n.license, fill = Brutal.accentSoft)
                 if (n.version.isNotBlank()) BrutalTag(n.version)
-                n.tiers.forEach { BrutalTag(it.uppercase()) }
+                n.tiers.forEach { BrutalTag(it) }
             }
             if (n.purpose.isNotBlank()) Text(n.purpose, style = MaterialTheme.typography.bodyMedium)
             if (n.source.isNotBlank()) Text(n.source.removePrefix("https://"), style = MaterialTheme.typography.labelMedium, color = Brutal.muted)
@@ -86,7 +86,7 @@ fun LicenseTextScreen(notice: Notice, text: String?, onBack: () -> Unit) {
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar(notice.name, onBack = onBack, titleMaxLines = 2) }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                BrutalTag(notice.license, fill = Brutal.accent)
+                BrutalTag(notice.license, fill = Brutal.accentSoft)
                 if (notice.version.isNotBlank()) BrutalTag(notice.version)
             }
             if (notice.source.isNotBlank()) Text("Источник: ${notice.source}", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)

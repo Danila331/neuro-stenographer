@@ -92,7 +92,7 @@ fun FragmentOptionsSheet(
         ) {
             SectionTitle("Обработать заново")
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                BrutalTag(rangeLabel, fill = Brutal.accent)
+                BrutalTag(rangeLabel, fill = Brutal.accentSoft)
                 BrutalTag(Format.plural(utteranceCount, "реплика", "реплики", "реплик"))
             }
             Text("Остальная расшифровка не изменится.", style = MaterialTheme.typography.bodyMedium, color = Brutal.muted)
@@ -158,7 +158,7 @@ fun FragmentOptionsSheet(
 /** Индикатор пересчёта поверх расшифровки: прогресс, стадия, «Отменить». */
 @Composable
 fun FragmentProgressCard(label: String, stageTitle: String, overall: Float, cancelling: Boolean, onCancel: () -> Unit, modifier: Modifier = Modifier) {
-    BrutalCard(modifier.padding(24.dp).fillMaxWidth(), shadow = 6.dp, contentPadding = androidx.compose.foundation.layout.PaddingValues(18.dp)) {
+    BrutalCard(modifier.padding(24.dp).fillMaxWidth(), shadow = 2.dp, contentPadding = androidx.compose.foundation.layout.PaddingValues(18.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Обработка: $label", style = MaterialTheme.typography.titleMedium)
             BrutalProgress(overall.coerceIn(0f, 1f))

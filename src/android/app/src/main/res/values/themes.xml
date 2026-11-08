@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Окно за Compose-интерфейсом: цвета фона совпадают с темой, чтобы при запуске не было вспышки -->
     <style name="Theme.Neurosteno" parent="@android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">#FFF9F9FF</item>
+        <item name="android:windowBackground">#F6F7F3</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>

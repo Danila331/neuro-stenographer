@@ -149,10 +149,10 @@ private fun ProtocolTab(
             if (ui.protocol.isNotBlank()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                     BrutalButton(onClick = { onCopy(ui.protocol) }, style = BrutalButtonStyle.Secondary, modifier = Modifier.weight(1f)) {
-                        Icon(AppIcons.Copy, contentDescription = null, modifier = Modifier.size(18.dp)); ButtonLabel("  Копировать")
+                        Icon(AppIcons.Copy, contentDescription = null, modifier = Modifier.size(18.dp)); ButtonLabel("Копировать")
                     }
                     BrutalButton(onClick = { onShareText(ui.protocol) }, style = BrutalButtonStyle.Secondary, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp)); ButtonLabel("  Поделиться")
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp)); ButtonLabel("Поделиться")
                     }
                 }
             }
@@ -183,8 +183,10 @@ private fun QaTab(llm: LlmController, transcript: EditableTranscript, available:
                 }
             }
             items(ui.qa) { item ->
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BrutalCard(Modifier.fillMaxWidth(), fill = Brutal.ink) { Text(item.question, style = MaterialTheme.typography.titleSmall, color = Brutal.onInk) }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    BrutalCard(Modifier.fillMaxWidth(), fill = Brutal.accentSoft) {
+                        Text(item.question, style = MaterialTheme.typography.titleSmall, color = Brutal.ink)
+                    }
                     BrutalCard(Modifier.fillMaxWidth()) {
                         SelectionContainer {
                             Text(item.answer.ifBlank { if (item.done) "" else "…" }, style = MaterialTheme.typography.bodyLarge)

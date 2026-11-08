@@ -40,7 +40,7 @@ DEFAULTS: dict[str, Any] = {
     },
     # language: refpipe/Android read it as in ARCHITECTURE (auto | ru | en); without lid_model or asr_en -> ru
     "language": {"mode": "auto", "lid_model": None, "lid_seconds": 10.0, "per_chunk": False,
-                 "switch_min_ms": 6000},  # switch_min_ms = Android CONFIDENT_MS (hysteresis, see lid.smooth_languages)
+                 "adaptive_lid": True, "switch_min_ms": 6000},  # switch_min_ms = Android CONFIDENT_MS (hysteresis, see lid.smooth_languages)
     "postprocess": {"numbers": "as_is", "strip_dashes": "off", "drop_tiny_chunks": {"enabled": False, "max_chars": 2}},
     "asr_en": None,  # same structure as "asr"
     "align": {"max_gap_ms": 1500, "min_island_words": 1, "min_island_ms": 400},

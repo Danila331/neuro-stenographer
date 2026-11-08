@@ -57,11 +57,32 @@ def _stems(text: str) -> set[str]:
     return {w[:5] for w in re.findall(r"[\w]+", text.lower().replace("ё", "е")) if len(w) >= 4}
 
 
+QUESTION_STOPWORDS = {
+    "сколько", "какой", "какая", "какие", "как", "что", "когда", "где", "почему", "зачем", "быть", "будут",
+    "будет", "есть", "после", "перед", "для", "это", "все", "всего", "может", "надо", "нужно",
+}
+
+
+def _retrieval_stems(text: str) -> set[str]:
+    """Four-letter prefixes link Russian inflections; question/function words carry no retrieval signal."""
+    return {w[:4] for w in re.findall(r"[\w]+", text.lower().replace("ё", "е"))
+            if len(w) >= 4 and w not in QUESTION_STOPWORDS}
+
+
 def select_relevant(chunks: list[str], question: str, budget: int) -> list[str]:
     if sum(len(c) for c in chunks) <= budget:
         return chunks
-    keys = _stems(question)
-    scored = sorted(((i, sum(1 for k in keys if k in _stems(c))) for i, c in enumerate(chunks)), key=lambda x: (-x[1], x[0]))
+    keys = _retrieval_stems(question)
+    doc_stems = [_retrieval_stems(c) for c in chunks]
+    df = {k: sum(k in cs for cs in doc_stems) for k in keys}
+    import math
+
+    def idf(k: str) -> float:
+        freq = df[k]
+        return math.log((len(chunks) - freq + 0.5) / (freq + 0.5) + 1.0)
+
+    scored = sorted(((i, sum(idf(k) for k in keys if k in doc_stems[i])) for i in range(len(chunks))),
+                    key=lambda x: (-x[1], x[0]))
     chosen, used = [], 0
     for i, _ in scored:
         if used + len(chunks[i]) > budget:
@@ -71,6 +92,15 @@ def select_relevant(chunks: list[str], question: str, budget: int) -> list[str]:
     if not chosen:
         chosen.append(scored[0][0])
     return [chunks[i] for i in sorted(chosen)]
+
+
+def qa_material(lines: list[str], question: str, budget: int, ratio: float = 0.25) -> list[str]:
+    """Android `PromptBuilder.qaMaterial`: whole short records, small relevant chunks for long ones."""
+    whole = chunk(lines, budget)
+    if sum(len(c) for c in whole) <= budget:
+        return whole
+    frag_budget = max(int(budget * min(1.0, max(0.05, ratio))), 200)
+    return select_relevant(chunk(lines, frag_budget), question, frag_budget)
 
 
 def clean(raw: str) -> str:
@@ -139,8 +169,7 @@ def ask(srv: Server, pdir: Path, n_ctx: int, lines: list[str], q: str) -> tuple[
     st = Stats()
     system = read(pdir, "qa_system.txt")
     budget = content_budget(n_ctx, QA_MAX, len(system) + len(q))
-    chunks = chunk(lines, budget)
-    material = "\n...\n".join(select_relevant(chunks, q, budget))
+    material = "\n...\n".join(qa_material(lines, q, budget))
     full = gen(srv, chatml(system, f"Расшифровка:\n{material}\n\nВопрос: {q}"), QA_MAX, st)
     i = runaway_index(full)
     return clean(full[:i] if i >= 0 else full) or "Модель не дала ответа.", st
@@ -172,6 +201,12 @@ def check(text: str, items: list[tuple[int, Utt]], gold_items: list[dict]) -> di
 # ----------------------------------------------------------------------------- proposal: per-fragment protocols + merge in code
 SECTIONS = ["Резюме", "Вопросы", "Решения", "Поручения", "Цитаты"]
 FRAG_MAX = 450
+FRAGMENT_BUDGET_CHARS = 2500
+
+
+def fragment_budget(n_ctx: int, system_chars: int) -> int:
+    """Focused fragments preserve facts on long records; short records still fit in one request."""
+    return min(content_budget(n_ctx, FRAG_MAX, system_chars), FRAGMENT_BUDGET_CHARS)
 
 
 def split_sections(text: str) -> dict[str, list[str]]:
@@ -212,7 +247,7 @@ def merge_protocols(parts: list[str]) -> str:
 def protocol_merge(srv: Server, pdir: Path, n_ctx: int, lines: list[str]) -> tuple[str, Stats, int]:
     st = Stats()
     system = read(pdir, "protocol_system.txt")
-    frags = chunk(lines, content_budget(n_ctx, FRAG_MAX, len(system)))
+    frags = chunk(lines, fragment_budget(n_ctx, len(system)))
     outs = [clean(gen(srv, chatml(system, f"Расшифровка (часть {i + 1} из {len(frags)}):\n{part}"), FRAG_MAX, st)) for i, part in enumerate(frags)]
     return (outs[0] if len(outs) == 1 else merge_protocols(outs)), st, len(frags)
 

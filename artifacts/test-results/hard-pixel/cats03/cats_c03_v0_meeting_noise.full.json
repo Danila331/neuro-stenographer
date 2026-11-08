@@ -1,0 +1,712 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 556,
+      "end_ms": 876,
+      "text": "Тихон,",
+      "words": [
+        {
+          "text": "Тихон,",
+          "start_ms": 556,
+          "end_ms": 876,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 1396,
+      "end_ms": 1436,
+      "text": "давай",
+      "words": [
+        {
+          "text": "давай",
+          "start_ms": 1396,
+          "end_ms": 1436,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 1676,
+      "end_ms": 3476,
+      "text": "посмотрим расходы на рыбу за квартал.",
+      "words": [
+        {
+          "text": "посмотрим",
+          "start_ms": 1676,
+          "end_ms": 2036,
+          "confidence": null
+        },
+        {
+          "text": "расходы",
+          "start_ms": 2236,
+          "end_ms": 2556,
+          "confidence": null
+        },
+        {
+          "text": "на",
+          "start_ms": 2636,
+          "end_ms": 2676,
+          "confidence": null
+        },
+        {
+          "text": "рыбу",
+          "start_ms": 2796,
+          "end_ms": 2916,
+          "confidence": null
+        },
+        {
+          "text": "за",
+          "start_ms": 3036,
+          "end_ms": 3076,
+          "confidence": null
+        },
+        {
+          "text": "квартал.",
+          "start_ms": 3156,
+          "end_ms": 3476,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 3876,
+      "end_ms": 6796,
+      "text": "Смотрю, в июле потратили 8 400 ₽,",
+      "words": [
+        {
+          "text": "Смотрю,",
+          "start_ms": 3876,
+          "end_ms": 4196,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 4396,
+          "end_ms": 4436,
+          "confidence": null
+        },
+        {
+          "text": "июле",
+          "start_ms": 4476,
+          "end_ms": 4756,
+          "confidence": null
+        },
+        {
+          "text": "потратили",
+          "start_ms": 4916,
+          "end_ms": 5316,
+          "confidence": null
+        },
+        {
+          "text": "8",
+          "start_ms": 5556,
+          "end_ms": 5596,
+          "confidence": null
+        },
+        {
+          "text": "400",
+          "start_ms": 6316,
+          "end_ms": 6556,
+          "confidence": null
+        },
+        {
+          "text": "₽,",
+          "start_ms": 6756,
+          "end_ms": 6796,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 7076,
+      "end_ms": 7676,
+      "text": "а в августе",
+      "words": [
+        {
+          "text": "а",
+          "start_ms": 7076,
+          "end_ms": 7116,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 7196,
+          "end_ms": 7236,
+          "confidence": null
+        },
+        {
+          "text": "августе",
+          "start_ms": 7276,
+          "end_ms": 7676,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 8036,
+      "end_ms": 9556,
+      "text": "11 200.",
+      "words": [
+        {
+          "text": "11",
+          "start_ms": 8036,
+          "end_ms": 8276,
+          "confidence": null
+        },
+        {
+          "text": "200.",
+          "start_ms": 9276,
+          "end_ms": 9556,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 9916,
+      "end_ms": 10796,
+      "text": "Почему так выросло?",
+      "words": [
+        {
+          "text": "Почему",
+          "start_ms": 9916,
+          "end_ms": 9956,
+          "confidence": null
+        },
+        {
+          "text": "так",
+          "start_ms": 10196,
+          "end_ms": 10236,
+          "confidence": null
+        },
+        {
+          "text": "выросло?",
+          "start_ms": 10436,
+          "end_ms": 10796,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 10956,
+      "end_ms": 13676,
+      "text": "Был праздник День рождения старейшины. Купили сёмгу.",
+      "words": [
+        {
+          "text": "Был",
+          "start_ms": 10956,
+          "end_ms": 11076,
+          "confidence": null
+        },
+        {
+          "text": "праздник",
+          "start_ms": 11156,
+          "end_ms": 11396,
+          "confidence": null
+        },
+        {
+          "text": "День",
+          "start_ms": 11556,
+          "end_ms": 11676,
+          "confidence": null
+        },
+        {
+          "text": "рождения",
+          "start_ms": 11796,
+          "end_ms": 12036,
+          "confidence": null
+        },
+        {
+          "text": "старейшины.",
+          "start_ms": 12196,
+          "end_ms": 12716,
+          "confidence": null
+        },
+        {
+          "text": "Купили",
+          "start_ms": 12916,
+          "end_ms": 13196,
+          "confidence": null
+        },
+        {
+          "text": "сёмгу.",
+          "start_ms": 13276,
+          "end_ms": 13676,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 14401,
+      "end_ms": 15761,
+      "text": "Сюму, по чьему решению?",
+      "words": [
+        {
+          "text": "Сюму,",
+          "start_ms": 14401,
+          "end_ms": 14641,
+          "confidence": null
+        },
+        {
+          "text": "по",
+          "start_ms": 14961,
+          "end_ms": 15001,
+          "confidence": null
+        },
+        {
+          "text": "чьему",
+          "start_ms": 15121,
+          "end_ms": 15361,
+          "confidence": null
+        },
+        {
+          "text": "решению?",
+          "start_ms": 15481,
+          "end_ms": 15761,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 16401,
+      "end_ms": 20841,
+      "text": "По-вашему, Василий Петрович, вы сами сказали ни в чём себе не отказывать.",
+      "words": [
+        {
+          "text": "По-вашему,",
+          "start_ms": 16401,
+          "end_ms": 16961,
+          "confidence": null
+        },
+        {
+          "text": "Василий",
+          "start_ms": 17321,
+          "end_ms": 17761,
+          "confidence": null
+        },
+        {
+          "text": "Петрович,",
+          "start_ms": 17841,
+          "end_ms": 18121,
+          "confidence": null
+        },
+        {
+          "text": "вы",
+          "start_ms": 18481,
+          "end_ms": 18521,
+          "confidence": null
+        },
+        {
+          "text": "сами",
+          "start_ms": 18681,
+          "end_ms": 18801,
+          "confidence": null
+        },
+        {
+          "text": "сказали",
+          "start_ms": 19001,
+          "end_ms": 19241,
+          "confidence": null
+        },
+        {
+          "text": "ни",
+          "start_ms": 19521,
+          "end_ms": 19561,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 19601,
+          "end_ms": 19641,
+          "confidence": null
+        },
+        {
+          "text": "чём",
+          "start_ms": 19681,
+          "end_ms": 19841,
+          "confidence": null
+        },
+        {
+          "text": "себе",
+          "start_ms": 19921,
+          "end_ms": 19961,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 20241,
+          "end_ms": 20281,
+          "confidence": null
+        },
+        {
+          "text": "отказывать.",
+          "start_ms": 20361,
+          "end_ms": 20841,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 21441,
+      "end_ms": 22561,
+      "text": "Помню, помню.",
+      "words": [
+        {
+          "text": "Помню,",
+          "start_ms": 21441,
+          "end_ms": 21761,
+          "confidence": null
+        },
+        {
+          "text": "помню.",
+          "start_ms": 22241,
+          "end_ms": 22561,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 22841,
+      "end_ms": 22881,
+      "text": "Но",
+      "words": [
+        {
+          "text": "Но",
+          "start_ms": 22841,
+          "end_ms": 22881,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 23161,
+      "end_ms": 23601,
+      "text": "сентябрь...",
+      "words": [
+        {
+          "text": "сентябрь...",
+          "start_ms": 23161,
+          "end_ms": 23601,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 23961,
+      "end_ms": 25401,
+      "text": "9 650.",
+      "words": [
+        {
+          "text": "9",
+          "start_ms": 23961,
+          "end_ms": 24001,
+          "confidence": null
+        },
+        {
+          "text": "650.",
+          "start_ms": 24921,
+          "end_ms": 25401,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 26161,
+      "end_ms": 27921,
+      "text": "Тогда за квартал выходит около 30",
+      "words": [
+        {
+          "text": "Тогда",
+          "start_ms": 26161,
+          "end_ms": 26361,
+          "confidence": null
+        },
+        {
+          "text": "за",
+          "start_ms": 26401,
+          "end_ms": 26441,
+          "confidence": null
+        },
+        {
+          "text": "квартал",
+          "start_ms": 26561,
+          "end_ms": 26921,
+          "confidence": null
+        },
+        {
+          "text": "выходит",
+          "start_ms": 27041,
+          "end_ms": 27241,
+          "confidence": null
+        },
+        {
+          "text": "около",
+          "start_ms": 27481,
+          "end_ms": 27721,
+          "confidence": null
+        },
+        {
+          "text": "30",
+          "start_ms": 27881,
+          "end_ms": 27921,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 28281,
+      "end_ms": 32700,
+      "text": "000. Точнее, 29 250. Хорошо.",
+      "words": [
+        {
+          "text": "000.",
+          "start_ms": 28281,
+          "end_ms": 28321,
+          "confidence": null
+        },
+        {
+          "text": "Точнее,",
+          "start_ms": 29180,
+          "end_ms": 29660,
+          "confidence": null
+        },
+        {
+          "text": "29",
+          "start_ms": 29900,
+          "end_ms": 30300,
+          "confidence": null
+        },
+        {
+          "text": "250.",
+          "start_ms": 31020,
+          "end_ms": 31460,
+          "confidence": null
+        },
+        {
+          "text": "Хорошо.",
+          "start_ms": 32660,
+          "end_ms": 32700,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 33380,
+      "end_ms": 35380,
+      "text": "Предлагаю сократить закупку. Семги в бюджет. Это",
+      "words": [
+        {
+          "text": "Предлагаю",
+          "start_ms": 33380,
+          "end_ms": 33780,
+          "confidence": null
+        },
+        {
+          "text": "сократить",
+          "start_ms": 33860,
+          "end_ms": 34220,
+          "confidence": null
+        },
+        {
+          "text": "закупку.",
+          "start_ms": 34260,
+          "end_ms": 34620,
+          "confidence": null
+        },
+        {
+          "text": "Семги",
+          "start_ms": 34700,
+          "end_ms": 34940,
+          "confidence": null
+        },
+        {
+          "text": "в",
+          "start_ms": 35020,
+          "end_ms": 35060,
+          "confidence": null
+        },
+        {
+          "text": "бюджет.",
+          "start_ms": 35060,
+          "end_ms": 35180,
+          "confidence": null
+        },
+        {
+          "text": "Это",
+          "start_ms": 35340,
+          "end_ms": 35380,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 35500,
+      "end_ms": 36980,
+      "text": "невозможно. Коллеги привыкли...",
+      "words": [
+        {
+          "text": "невозможно.",
+          "start_ms": 35500,
+          "end_ms": 35980,
+          "confidence": null
+        },
+        {
+          "text": "Коллеги",
+          "start_ms": 36180,
+          "end_ms": 36500,
+          "confidence": null
+        },
+        {
+          "text": "привыкли...",
+          "start_ms": 36620,
+          "end_ms": 36980,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 37180,
+      "end_ms": 40380,
+      "text": "Привыкли. А бюджет не резиновый. Мяу.",
+      "words": [
+        {
+          "text": "Привыкли.",
+          "start_ms": 37180,
+          "end_ms": 37660,
+          "confidence": null
+        },
+        {
+          "text": "А",
+          "start_ms": 38180,
+          "end_ms": 38220,
+          "confidence": null
+        },
+        {
+          "text": "бюджет",
+          "start_ms": 38380,
+          "end_ms": 38740,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 38820,
+          "end_ms": 38860,
+          "confidence": null
+        },
+        {
+          "text": "резиновый.",
+          "start_ms": 38940,
+          "end_ms": 39460,
+          "confidence": null
+        },
+        {
+          "text": "Мяу.",
+          "start_ms": 40060,
+          "end_ms": 40380,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_2",
+      "start_ms": 41340,
+      "end_ms": 44020,
+      "text": "Я подготовлю другой расчёт к пятница.",
+      "words": [
+        {
+          "text": "Я",
+          "start_ms": 41340,
+          "end_ms": 41380,
+          "confidence": null
+        },
+        {
+          "text": "подготовлю",
+          "start_ms": 41580,
+          "end_ms": 42140,
+          "confidence": null
+        },
+        {
+          "text": "другой",
+          "start_ms": 42420,
+          "end_ms": 42700,
+          "confidence": null
+        },
+        {
+          "text": "расчёт",
+          "start_ms": 42860,
+          "end_ms": 43180,
+          "confidence": null
+        },
+        {
+          "text": "к",
+          "start_ms": 43340,
+          "end_ms": 43380,
+          "confidence": null
+        },
+        {
+          "text": "пятница.",
+          "start_ms": 43500,
+          "end_ms": 44020,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-hard",
+    "tier": "hard",
+    "language": "ru",
+    "audio_duration_ms": 44856,
+    "processing_ms": 13482,
+    "rtf": 0.301,
+    "stage_ms": {
+      "decode": 42,
+      "vad": 1067,
+      "lid": 1976,
+      "asr": 5098,
+      "diarization": 10364,
+      "align": 1,
+      "punctuation": 0,
+      "export": 0,
+      "relabel": 4217,
+      "total": 13482
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/emb-eres2netv2/model.onnx",
+      "llm": "llm/qwen3-4b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 646,
+    "threads": 3,
+    "device_model": "Google Pixel 10",
+    "android_sdk": 37,
+    "total_ram_mb": 11563
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1",
+    "speaker_2": "Говорящий 2"
+  }
+}

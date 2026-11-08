@@ -54,6 +54,28 @@ def test_rescue_finds_energy_outside_covered_regions():
     assert rescue_segments(np.zeros(5 * SR, dtype=np.float32), [], {}) == []
 
 
+def test_lid_chunks_share_one_vad_pass_and_preserve_speech_boundaries():
+    from refpipe.config import DEFAULTS, deep_merge
+    from refpipe.types import TimeSpan
+    from refpipe.vad import Seg, speech_chunks_with_lid
+
+    class FakeVad:
+        calls = 0
+
+        def detect_samples(self, x):
+            self.calls += 1
+            return [Seg(*S(0, 3)), Seg(*S(3.5, 5.5)), Seg(*S(6.5, 9.5)), Seg(*S(10, 12.5))]
+
+    vad = FakeVad()
+    cfg = deep_merge(DEFAULTS, {"vad": {"pad_ms": 0, "rescue": {"enabled": False}},
+                                "asr": {"chunk": {"max_s": 25.0, "min_s": 1.0}}})
+    speech, chunks, lid_chunks = speech_chunks_with_lid(np.zeros(13 * SR, dtype=np.float32), cfg, vad)
+    assert vad.calls == 1
+    assert speech == [TimeSpan(0, 3000), TimeSpan(3500, 5500), TimeSpan(6500, 9500), TimeSpan(10000, 12500)]
+    assert chunks == [TimeSpan(0, 12500)]
+    assert lid_chunks == speech
+
+
 def test_isolate_short_pieces_become_their_own_chunks():
     x = np.zeros(60 * SR, dtype=np.float32)
     segs = [S(0, 6), S(6.5, 7.3), S(8, 14)]

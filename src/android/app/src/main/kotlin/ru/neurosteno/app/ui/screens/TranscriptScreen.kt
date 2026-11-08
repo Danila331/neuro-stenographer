@@ -190,6 +190,8 @@ fun TranscriptScreen(
 
     val transcript = doc?.transcript
     val utterances = transcript?.utterances.orEmpty()
+    val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 720
+    val headerItems = if (wide) 0 else 1
     val selection = FragmentSelection.clamp(if (selRaw < 0) null else FragmentSelection.decode(selRaw), utterances.size)
     androidx.activity.compose.BackHandler(enabled = selection != null) { selRaw = -1L; showFragmentSheet = false }
     val currentIndex by remember(utterances) {
@@ -201,7 +203,7 @@ fun TranscriptScreen(
     LaunchedEffect(currentIndex, follow, player.playing) {
         if (follow && player.playing && currentIndex >= 0) {
             programmatic = true
-            try { listState.animateScrollToItem(currentIndex + HEADER_ITEMS, scrollOffset = -80) } finally { programmatic = false }
+            try { listState.animateScrollToItem(currentIndex + headerItems, scrollOffset = -80) } finally { programmatic = false }
         }
     }
     // переход из выжимки/поиска: к реплике на нужном времени, подсветка на пару секунд, плеер встаёт на это место
@@ -211,7 +213,7 @@ fun TranscriptScreen(
         if (utterances.isEmpty()) return@LaunchedEffect
         val i = TranscriptEditor.indexAt(utterances, ms).let { if (it >= 0) it else 0 }
         programmatic = true
-        try { listState.animateScrollToItem(i + HEADER_ITEMS, scrollOffset = -80) } finally { programmatic = false }
+        try { listState.animateScrollToItem(i + headerItems, scrollOffset = -80) } finally { programmatic = false }
         flashIndex = i
         follow = true
         if (player.available) session.player.playFrom(utterances[i].startMs)
@@ -235,7 +237,7 @@ fun TranscriptScreen(
                         session.reloadAfterFragment(fs.added)
                         val first = fs.added.firstOrNull()
                         session.doc.value?.transcript?.utterances?.indexOfFirst { first != null && it.startMs == first.startMs }?.takeIf { it >= 0 }
-                            ?.let { listState.animateScrollToItem(it + HEADER_ITEMS) }
+                            ?.let { listState.animateScrollToItem(it + headerItems) }
                         scope.launch {
                             snackbar.currentSnackbarData?.dismiss()
                             val msg = "${fs.label} обработан заново: " + Format.plural(fs.added.size, "новая реплика", "новые реплики", "новых реплик")
@@ -307,53 +309,76 @@ fun TranscriptScreen(
                 SearchBar(
                     query = query, count = matches.size, cursor = cursor,
                     onQuery = { session.setQuery(it) },
-                    onStep = { d -> session.stepMatch(d)?.let { idx -> scope.launch { listState.animateScrollToItem(idx + HEADER_ITEMS) } } },
+                    onStep = { d -> session.stepMatch(d)?.let { idx -> scope.launch { listState.animateScrollToItem(idx + headerItems) } } },
                     onClose = { searching = false; session.setQuery("") },
                 )
             }
             when {
                 loadError != null -> MessageCard(loadError!!, isError = true, modifier = Modifier.padding(16.dp))
                 transcript == null -> Text("Загрузка…", Modifier.padding(16.dp))
-                else -> LazyColumn(
-                    state = listState,
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    item(key = "header") {
+                else -> {
+                    val headerContent: @Composable () -> Unit = {
                         Header(
                             entry = entry, transcript = transcript, llmAvailability = llmAvailability,
                             onExportJson = { onExport(ExportFormat.JSON) }, onMore = { showFormats = true }, onProtocol = onProtocol,
                             onSummary = onSummary, onSearch = onSearch,
                         )
                     }
-                    if (utterances.isEmpty()) {
-                        item(key = "empty") {
-                            MessageCard("В записи не найдено речи. Попробуйте другой файл или проверьте уровень громкости.")
+                    val listContent: androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
+                        if (utterances.isEmpty()) {
+                            item(key = "empty") {
+                                MessageCard("В записи не найдено речи. Попробуйте другой файл или проверьте уровень громкости.")
+                            }
+                        }
+                        itemsIndexed(utterances, key = { i, u -> "$i-${u.startMs}-${u.speakerId}" }) { i, u ->
+                            UtteranceCard(
+                                u = u, name = transcript.displayName(u.speakerId), current = i == currentIndex,
+                                matched = query.isNotBlank() && i in matches, query = query,
+                                selected = selection != null && i in selection, selectionMode = selection != null,
+                                highlighted = (u.startMs to u.endMs) in highlight, flash = i == flashIndex,
+                                canMerge = i < utterances.lastIndex, menuOpen = menuIndex == i,
+                                onClick = {
+                                    if (selection != null) selRaw = selection.toggle(i)?.encode() ?: -1L
+                                    else if (player.available) { follow = true; session.player.playFrom(u.startMs) }
+                                    else scope.launch { snackbar.showSnackbar("Запись недоступна для воспроизведения") }
+                                },
+                                onLongClick = { menuIndex = null; selRaw = (selection?.toggle(i) ?: FragmentSelection(i, i)).encode() },
+                                onReprocess = { menuIndex = null; selRaw = FragmentSelection(i, i).encode(); showFragmentSheet = true },
+                                onMenu = { menuIndex = i }, onMenuDismiss = { menuIndex = null },
+                                onEdit = { menuIndex = null; editIndex = i },
+                                onSpeaker = { menuIndex = null; speakerIndex = i },
+                                onMerge = { menuIndex = null; session.mergeWithNext(i); undoable("Реплики объединены") },
+                                onDelete = { menuIndex = null; session.delete(i); undoable("Реплика удалена") },
+                            )
+                        }
+                        item(key = "footer") { Spacer(Modifier.size(24.dp)) }
+                    }
+                    if (wide) {
+                        Row(Modifier.weight(1f).fillMaxSize()) {
+                            Column(
+                                Modifier.weight(0.38f).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+                            ) {
+                                headerContent()
+                            }
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier.weight(0.62f).fillMaxSize(),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                content = listContent,
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            item(key = "header") { headerContent() }
+                            listContent()
                         }
                     }
-                    itemsIndexed(utterances, key = { i, u -> "$i-${u.startMs}-${u.speakerId}" }) { i, u ->
-                        UtteranceCard(
-                            u = u, name = transcript.displayName(u.speakerId), current = i == currentIndex,
-                            matched = query.isNotBlank() && i in matches, query = query,
-                            selected = selection != null && i in selection, selectionMode = selection != null,
-                            highlighted = (u.startMs to u.endMs) in highlight, flash = i == flashIndex,
-                            canMerge = i < utterances.lastIndex, menuOpen = menuIndex == i,
-                            onClick = {
-                                if (selection != null) selRaw = selection.toggle(i)?.encode() ?: -1L
-                                else if (player.available) { follow = true; session.player.playFrom(u.startMs) }
-                                else scope.launch { snackbar.showSnackbar("Запись недоступна для воспроизведения") }
-                            },
-                            onLongClick = { menuIndex = null; selRaw = (selection?.toggle(i) ?: FragmentSelection(i, i)).encode() },
-                            onReprocess = { menuIndex = null; selRaw = FragmentSelection(i, i).encode(); showFragmentSheet = true },
-                            onMenu = { menuIndex = i }, onMenuDismiss = { menuIndex = null },
-                            onEdit = { menuIndex = null; editIndex = i },
-                            onSpeaker = { menuIndex = null; speakerIndex = i },
-                            onMerge = { menuIndex = null; session.mergeWithNext(i); undoable("Реплики объединены") },
-                            onDelete = { menuIndex = null; session.delete(i); undoable("Реплика удалена") },
-                        )
-                    }
-                    item(key = "footer") { Spacer(Modifier.size(24.dp)) }
                 }
             }
         }
@@ -368,7 +393,7 @@ fun TranscriptScreen(
         // идёт пересчёт фрагмента: индикатор с «Отменить» поверх расшифровки (экран можно покинуть -- сервис доработает)
         if (myFragmentRunning != null) {
             Box(
-                Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.45f))
+                Modifier.fillMaxSize().background(ru.neurosteno.app.ui.theme.BrutalPalette.Scrim.copy(alpha = 0.45f))
                     .clickable(enabled = true, indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) {},
                 contentAlignment = Alignment.Center,
             ) {
@@ -449,8 +474,6 @@ fun TranscriptScreen(
     }
 }
 
-private const val HEADER_ITEMS = 1
-
 @Composable
 private fun FormatRow(title: String, hint: String, onClick: () -> Unit) {
     BrutalCard(
@@ -473,52 +496,99 @@ private fun Header(
     onSummary: (() -> Unit)? = null,
     onSearch: (() -> Unit)? = null,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 4.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            BrutalTag(Format.clock(entry?.durationMs ?: transcript.durationMs), fill = Brutal.accent)
-            BrutalTag(Format.plural(transcript.speakerIds.size, "говорящий", "говорящих", "говорящих"))
-            BrutalTag(Format.plural(transcript.utterances.size, "реплика", "реплики", "реплик"))
-            if (entry?.edited == true) BrutalTag("ИЗМЕНЕНО", fill = Brutal.ink)
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(bottom = 10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            BrutalTag(Format.clock(entry?.durationMs ?: transcript.durationMs))
+            Text(
+                "${Format.plural(transcript.speakerIds.size, "говорящий", "говорящих", "говорящих")} · ${Format.plural(transcript.utterances.size, "реплика", "реплики", "реплик")}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Brutal.muted,
+            )
+            if (entry?.edited == true) BrutalTag("Изменено")
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            BrutalButton(onClick = onExportJson, modifier = Modifier.weight(1f).testTag(Tags.EXPORT_JSON)) { ButtonLabel("Экспорт JSON") }
-            BrutalButton(onClick = onMore, style = BrutalButtonStyle.Secondary, modifier = Modifier.weight(1f)) { ButtonLabel("Другие форматы") }
-        }
-        // Инструменты поверх расшифровки: «Протокол и вопросы» уже есть; «Выжимка» (B50) и «AI-поиск» (B51) -- места заложены, экраны появятся позже.
-        BrutalButton(onClick = onProtocol, style = BrutalButtonStyle.Ink, modifier = Modifier.fillMaxWidth().testTag("btn_protocol")) {
-            Icon(AppIcons.Description, contentDescription = null, modifier = Modifier.size(22.dp))
-            Spacer(Modifier.width(10.dp))
-            Column {
-                ButtonLabel("Протокол заседания и вопросы")
-                if (llmAvailability is LlmAvailability.Unavailable) {
-                    Text("Недоступно на этом устройстве — нажмите, чтобы узнать причину", style = MaterialTheme.typography.labelSmall, color = Brutal.onInk)
+        val stacked = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f ||
+            androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 720
+        if (stacked) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                BrutalButton(onClick = onExportJson, height = 48.dp, modifier = Modifier.fillMaxWidth().testTag(Tags.EXPORT_JSON)) {
+                    ButtonLabel("Экспорт JSON")
+                }
+                BrutalButton(onClick = onMore, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth()) {
+                    ButtonLabel("Другие форматы")
+                }
+            }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                BrutalButton(onClick = onExportJson, height = 48.dp, modifier = Modifier.weight(1f).testTag(Tags.EXPORT_JSON)) {
+                    ButtonLabel("Экспорт JSON")
+                }
+                BrutalButton(onClick = onMore, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.weight(1f)) {
+                    ButtonLabel("Другие форматы")
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            if (onSummary != null) ToolButton("Выжимка", onSummary, Modifier.weight(1f).testTag("btn_summary")) else ToolSlot("Выжимка", Modifier.weight(1f).testTag("slot_summary"))
-            if (onSearch != null) ToolButton("AI-поиск", onSearch, Modifier.weight(1f).testTag("btn_ai_search")) else ToolSlot("AI-поиск", Modifier.weight(1f).testTag("slot_ai_search"))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Работа с текстом", style = MaterialTheme.typography.titleSmall, color = Brutal.ink)
+            if (stacked) {
+                ToolButton("Протокол", onProtocol, Modifier.fillMaxWidth().testTag("btn_protocol"))
+                if (onSummary != null) {
+                    ToolButton("Выжимка", onSummary, Modifier.fillMaxWidth().testTag("btn_summary"))
+                } else {
+                    ToolSlot("Выжимка", Modifier.fillMaxWidth().testTag("slot_summary"))
+                }
+                if (onSearch != null) {
+                    ToolButton("AI-поиск", onSearch, Modifier.fillMaxWidth().testTag("btn_ai_search"))
+                } else {
+                    ToolSlot("AI-поиск", Modifier.fillMaxWidth().testTag("slot_ai_search"))
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    ToolButton("Протокол", onProtocol, Modifier.weight(1f).testTag("btn_protocol"))
+                    if (onSummary != null) {
+                        ToolButton("Выжимка", onSummary, Modifier.weight(1f).testTag("btn_summary"))
+                    } else {
+                        ToolSlot("Выжимка", Modifier.weight(1f).testTag("slot_summary"))
+                    }
+                    if (onSearch != null) {
+                        ToolButton("AI-поиск", onSearch, Modifier.weight(1f).testTag("btn_ai_search"))
+                    } else {
+                        ToolSlot("AI-поиск", Modifier.weight(1f).testTag("slot_ai_search"))
+                    }
+                }
+            }
+            if (llmAvailability is LlmAvailability.Unavailable) {
+                Text(
+                    "Локальная языковая модель недоступна. Откройте «Протокол», чтобы узнать причину.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Brutal.muted,
+                )
+            }
         }
-        entry?.warnings?.takeIf { it.isNotEmpty() }?.let { w ->
-            Text("Предупреждения обработки: ${w.joinToString("; ")}", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
+        entry?.warnings?.takeIf { it.isNotEmpty() }?.let { warnings ->
+            Text("Предупреждения обработки: ${warnings.joinToString("; ")}", style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
         }
+        BrutalDivider()
     }
 }
 
-/** Рабочая кнопка инструмента поверх расшифровки («Выжимка», «AI-поиск»). */
 @Composable
 private fun ToolButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    BrutalButton(onClick = onClick, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = modifier) { ButtonLabel(label) }
+    BrutalButton(onClick = onClick, style = BrutalButtonStyle.Secondary, height = 46.dp, modifier = modifier) {
+        ButtonLabel(label)
+    }
 }
 
-/** Заложенное место под будущий инструмент (B50/B51): неактивная кнопка с меткой «СКОРО». */
 @Composable
 private fun ToolSlot(label: String, modifier: Modifier = Modifier) {
-    BrutalButton(onClick = {}, enabled = false, style = BrutalButtonStyle.Secondary, height = 52.dp, modifier = modifier, contentDescription = "$label: скоро") {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ButtonLabel(label)
-            BrutalTag("СКОРО", textStyle = MaterialTheme.typography.labelSmall)
-        }
+    BrutalButton(
+        onClick = {},
+        enabled = false,
+        style = BrutalButtonStyle.Secondary,
+        height = 46.dp,
+        modifier = modifier,
+        contentDescription = "$label: скоро",
+    ) {
+        ButtonLabel("$label · скоро")
     }
 }
 
@@ -533,7 +603,6 @@ private fun UtteranceCard(
     selected: Boolean,
     selectionMode: Boolean,
     highlighted: Boolean,
-    /** Кратковременная подсветка реплики после перехода из выжимки/поиска (без метки «НОВАЯ»). */
     flash: Boolean = false,
     canMerge: Boolean,
     menuOpen: Boolean,
@@ -547,17 +616,8 @@ private fun UtteranceCard(
     onMerge: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    // Заливка отражает состояние: выбрана -- инверсия, только что пересчитана -- акцент, звучит сейчас -- акцент; обычная -- фон.
-    val fill = when {
-        selected -> Brutal.ink
-        highlighted || current || flash -> Brutal.accent
-        else -> Brutal.bg
-    }
-    val fg = when {
-        selected -> Brutal.onInk
-        highlighted || current || flash -> Brutal.onAccent
-        else -> Brutal.ink
-    }
+    val emphasized = selected || highlighted || current || flash
+    val fill = if (emphasized) Brutal.accentSoft else Color.Transparent
     val time = Format.clock(u.startMs)
     BrutalSurface(
         modifier = Modifier.fillMaxWidth()
@@ -567,32 +627,45 @@ private fun UtteranceCard(
             }
             .combinedClickable(
                 onClickLabel = if (selectionMode) (if (selected) "Снять выбор" else "Выбрать реплику") else "Воспроизвести с этого места",
-                onClick = onClick, onLongClickLabel = "Выбрать для повторной обработки", onLongClick = onLongClick,
+                onClick = onClick,
+                onLongClickLabel = "Выбрать для повторной обработки",
+                onLongClick = onLongClick,
             ),
-        fill = fill, contentColor = fg,
-        shadow = if (matched) 6.dp else BrutalDims.Shadow,
-        borderWidth = if (matched || selected) BrutalDims.BorderThick + 1.dp else BrutalDims.Border,
+        fill = fill,
+        contentColor = Brutal.ink,
+        borderWidth = if (matched || selected) BrutalDims.Border else 0.dp,
     ) {
-        Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f).padding(end = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 2.dp), verticalAlignment = Alignment.Top) {
+            Column(Modifier.weight(1f).padding(end = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SpeakerChip(name, u.speakerId, Modifier.weight(1f, fill = false))
-                    BrutalTag(time, fill = if (selected) Brutal.ink else Brutal.bg)
-                    if (highlighted) BrutalTag("НОВАЯ", fill = Brutal.ink)
+                    BrutalTag(time, fill = Color.Transparent)
+                    if (highlighted) BrutalTag("Новая", fill = Brutal.accent)
                 }
-                Text(highlight(u.text, query), style = MaterialTheme.typography.bodyLarge, color = fg)
+                Text(highlight(u.text, query), style = MaterialTheme.typography.bodyLarge, color = Brutal.ink)
             }
             Box {
-                BrutalIconButton(
-                    onClick = onMenu, contentDescription = "Действия с репликой: $name, $time",
-                    fill = if (selected) Brutal.ink else Brutal.bg,
-                ) { Icon(Icons.Default.MoreVert, contentDescription = null) }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = onMenuDismiss, containerColor = Brutal.bg, shape = BrutalShape, border = BorderStroke(BrutalDims.Border, Brutal.ink)) {
-                    DropdownMenuItem(text = { Text("Обработать заново", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Refresh, null) }, onClick = onReprocess,
-                        modifier = Modifier.testTag("menu_reprocess"))
+                BrutalIconButton(onClick = onMenu, contentDescription = "Действия с репликой: $name, $time") {
+                    Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(22.dp))
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = onMenuDismiss,
+                    containerColor = Brutal.surface,
+                    shape = BrutalShape,
+                    border = BorderStroke(BrutalDims.Border, Brutal.outlineSoft),
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Обработать заново", style = MaterialTheme.typography.labelLarge) },
+                        leadingIcon = { Icon(Icons.Default.Refresh, null) },
+                        onClick = onReprocess,
+                        modifier = Modifier.testTag("menu_reprocess"),
+                    )
                     DropdownMenuItem(text = { Text("Править текст", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = onEdit)
                     DropdownMenuItem(text = { Text("Сменить говорящего", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Person, null) }, onClick = onSpeaker)
-                    if (canMerge) DropdownMenuItem(text = { Text("Объединить со следующей", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(AppIcons.Merge, null) }, onClick = onMerge)
+                    if (canMerge) {
+                        DropdownMenuItem(text = { Text("Объединить со следующей", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(AppIcons.Merge, null) }, onClick = onMerge)
+                    }
                     DropdownMenuItem(text = { Text("Удалить реплику", style = MaterialTheme.typography.labelLarge) }, leadingIcon = { Icon(Icons.Default.Delete, null) }, onClick = onDelete)
                 }
             }
@@ -600,19 +673,18 @@ private fun UtteranceCard(
     }
 }
 
-/** Найденное в поиске -- чёрная плашка с белым текстом (читается и на акцентной, и на белой заливке карточки). */
 @Composable
 private fun highlight(text: String, query: String): AnnotatedString {
     val ranges = SearchUtil.ranges(text, query)
     if (ranges.isEmpty()) return AnnotatedString(text)
-    val bg = Brutal.ink
-    val fg = Brutal.onInk
     return buildAnnotatedString {
         var pos = 0
-        for (r in ranges) {
-            append(text.substring(pos, r.first))
-            withStyle(SpanStyle(background = bg, color = fg, fontWeight = FontWeight.Bold)) { append(text.substring(r.first, r.last + 1)) }
-            pos = r.last + 1
+        for (range in ranges) {
+            append(text.substring(pos, range.first))
+            withStyle(SpanStyle(background = Brutal.accentSoft, color = Brutal.ink, fontWeight = FontWeight.Bold)) {
+                append(text.substring(range.first, range.last + 1))
+            }
+            pos = range.last + 1
         }
         append(text.substring(pos))
     }
@@ -642,65 +714,98 @@ private fun PlayerBar(state: PlayerState, player: AudioPlayer, utterances: List<
     var dragging by remember { mutableStateOf<Float?>(null) }
     var speedMenu by remember { mutableStateOf(false) }
     val duration = state.durationMs.coerceAtLeast(1)
-    Column(Modifier.fillMaxWidth().background(Brutal.bg)) {
-        BrutalDivider(thickness = BrutalDims.BorderThick)
-        val landscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-        val btn = if (landscape) 56.dp else 64.dp
-        val seek: @Composable (Modifier) -> Unit = { mod ->
-            Row(mod, verticalAlignment = Alignment.CenterVertically) {
-                BrutalTag(Format.clock(((dragging ?: (state.positionMs.toFloat() / duration)) * duration).toLong()), fill = Brutal.ink)
-                BrutalSlider(
-                    value = dragging ?: (state.positionMs.toFloat() / duration).coerceIn(0f, 1f),
-                    onValueChange = { dragging = it },
-                    onValueChangeFinished = { dragging?.let { player.seekTo((it * duration).toLong()) }; dragging = null },
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp).semantics { contentDescription = "Положение в записи" },
-                )
-                BrutalTag(Format.clock(state.durationMs))
-            }
-        }
-        val controls: @Composable (Modifier) -> Unit = { mod ->
-            Row(mod, horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-                BrutalIconButton(onClick = { player.seekBy(-10_000) }, contentDescription = "Назад на 10 секунд") { Icon(AppIcons.Replay10, contentDescription = null) }
-                BrutalIconButton(
-                    onClick = { player.toggle() }, contentDescription = if (state.playing) "Пауза" else "Воспроизвести", fill = Brutal.accent,
-                    modifier = Modifier.size(btn).testTag("btn_play_pause"),
-                ) {
-                    if (state.playing) Icon(AppIcons.Pause, contentDescription = null, modifier = Modifier.size(32.dp)) else Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(34.dp))
-                }
-                BrutalIconButton(onClick = { player.seekBy(10_000) }, contentDescription = "Вперёд на 10 секунд") { Icon(AppIcons.Forward10, contentDescription = null) }
-                Box {
-                    BrutalChip(
-                        selected = false, onClick = { speedMenu = true }, label = speedLabel(state.speed),
-                        modifier = Modifier.semantics { contentDescription = "Скорость воспроизведения ${speedLabel(state.speed)}" },
+    Column(Modifier.fillMaxWidth().background(Brutal.surface).navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        BrutalCard(
+            Modifier.fillMaxWidth(),
+            fill = Brutal.cardDark,
+            contentColor = Brutal.onCardDark,
+            shadow = 4.dp,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            val landscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            val playSize = if (landscape) 52.dp else 60.dp
+            val seek: @Composable (Modifier) -> Unit = { mod ->
+                Row(mod, verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        Format.clock(((dragging ?: (state.positionMs.toFloat() / duration)) * duration).toLong()),
+                        style = ru.neurosteno.app.ui.theme.MonoStyle,
+                        color = Brutal.onCardDark,
                     )
-                    DropdownMenu(expanded = speedMenu, onDismissRequest = { speedMenu = false }, containerColor = Brutal.bg, shape = BrutalShape, border = BorderStroke(BrutalDims.Border, Brutal.ink)) {
-                        AudioPlayer.SPEEDS.forEach { s ->
-                            DropdownMenuItem(text = { Text(speedLabel(s), style = MaterialTheme.typography.labelLarge) }, onClick = { player.setSpeed(s); speedMenu = false })
+                    BrutalSlider(
+                        value = dragging ?: (state.positionMs.toFloat() / duration).coerceIn(0f, 1f),
+                        onValueChange = { dragging = it },
+                        onValueChangeFinished = { dragging?.let { player.seekTo((it * duration).toLong()) }; dragging = null },
+                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp).semantics { contentDescription = "Положение в записи" },
+                    )
+                    Text(Format.clock(state.durationMs), style = ru.neurosteno.app.ui.theme.MonoStyle, color = Brutal.onCardDark)
+                }
+            }
+            val controls: @Composable (Modifier) -> Unit = { mod ->
+                Row(mod, horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+                    BrutalIconButton(
+                        onClick = { player.seekBy(-10_000) },
+                        contentDescription = "Назад на 10 секунд",
+                        fill = Color.White.copy(alpha = 0.08f),
+                        contentColor = Brutal.onCardDark,
+                    ) { Icon(AppIcons.Replay10, contentDescription = null) }
+                    BrutalIconButton(
+                        onClick = { player.toggle() },
+                        contentDescription = if (state.playing) "Пауза" else "Воспроизвести",
+                        fill = Brutal.accent,
+                        modifier = Modifier.size(playSize).testTag("btn_play_pause"),
+                    ) {
+                        if (state.playing) Icon(AppIcons.Pause, contentDescription = null, modifier = Modifier.size(28.dp))
+                        else Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(32.dp))
+                    }
+                    BrutalIconButton(
+                        onClick = { player.seekBy(10_000) },
+                        contentDescription = "Вперёд на 10 секунд",
+                        fill = Color.White.copy(alpha = 0.08f),
+                        contentColor = Brutal.onCardDark,
+                    ) { Icon(AppIcons.Forward10, contentDescription = null) }
+                    Box {
+                        BrutalChip(
+                            selected = false,
+                            onClick = { speedMenu = true },
+                            label = speedLabel(state.speed),
+                            modifier = Modifier.semantics { contentDescription = "Скорость воспроизведения ${speedLabel(state.speed)}" },
+                        )
+                        DropdownMenu(
+                            expanded = speedMenu,
+                            onDismissRequest = { speedMenu = false },
+                            containerColor = Brutal.surface,
+                            shape = BrutalShape,
+                            border = BorderStroke(BrutalDims.Border, Brutal.outlineSoft),
+                        ) {
+                            AudioPlayer.SPEEDS.forEach { speed ->
+                                DropdownMenuItem(
+                                    text = { Text(speedLabel(speed), style = MaterialTheme.typography.labelLarge) },
+                                    onClick = { player.setSpeed(speed); speedMenu = false },
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-        // дорожка говорящих под плеером (B54): те же цвета, что у меток реплик; тап/протяжка -- перемотка
-        val timeline: @Composable () -> Unit = {
-            ru.neurosteno.app.ui.components.SpeakerTimeline(
-                utterances = utterances, highlighted = highlight, durationMs = state.durationMs, positionMs = state.positionMs,
-                onSeek = { player.seekTo(it) }, modifier = Modifier.padding(top = 4.dp),
-            )
-        }
-        if (landscape) {
-            // в альбомной ориентации плеер -- одна строка, чтобы остаться компактным и не съедать список реплик
-            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp)) {
+            val timeline: @Composable () -> Unit = {
+                ru.neurosteno.app.ui.components.SpeakerTimeline(
+                    utterances = utterances,
+                    highlighted = highlight,
+                    durationMs = state.durationMs,
+                    positionMs = state.positionMs,
+                    onSeek = { player.seekTo(it) },
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            if (landscape) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     controls(Modifier)
-                    seek(Modifier.weight(1f).padding(start = 12.dp))
+                    seek(Modifier.weight(1f).padding(start = 16.dp))
                 }
                 timeline()
-            }
-        } else {
-            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
+            } else {
                 seek(Modifier.fillMaxWidth())
-                controls(Modifier.fillMaxWidth())
+                controls(Modifier.fillMaxWidth().padding(top = 6.dp))
                 timeline()
             }
         }
@@ -757,16 +862,17 @@ private fun ChangeSpeakerDialog(
 @Composable
 private fun SpeakerChoiceRow(id: String, label: String, selected: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp)
-            .background(if (selected) Brutal.accent else Brutal.bg, BrutalShape)
-            .border(BrutalDims.Border, Brutal.ink, BrutalShape)
+        Modifier.fillMaxWidth().defaultMinSize(minHeight = 52.dp)
+            .background(if (selected) Brutal.accentSoft else Brutal.surface, BrutalShape)
+            .border(BrutalDims.Border, if (selected) Brutal.accent else Brutal.outlineSoft, BrutalShape)
             .clickable(role = androidx.compose.ui.semantics.Role.RadioButton, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
             .semantics(mergeDescendants = true) { contentDescription = if (selected) "$label, выбран" else label },
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        SpeakerSquare(id, 22.dp)
-        Text(label, style = MaterialTheme.typography.labelLarge, color = if (selected) Brutal.onAccent else Brutal.ink)
+        SpeakerSquare(id, 18.dp)
+        Text(label, style = MaterialTheme.typography.labelLarge, color = Brutal.ink)
     }
 }
 

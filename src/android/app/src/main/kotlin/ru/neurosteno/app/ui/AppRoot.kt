@@ -62,8 +62,8 @@ interface AppHost {
     fun cancelProcessing()
     fun startFragment(params: ru.neurosteno.app.FragmentParams)
     fun cancelFragment()
-    /** Цвет значков строки состояния/навигации под выбранную тему (светлые значки на тёмном фоне и наоборот). */
-    fun applySystemBars(dark: Boolean)
+    /** Цвет значков строки состояния/навигации: hero требует светлые значки даже в светлой теме. */
+    fun applySystemBars(dark: Boolean, hero: Boolean = false)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -71,12 +71,6 @@ interface AppHost {
 fun AppRoot(host: AppHost, vm: AppViewModel) {
     val graph = vm.graph
     val settings by graph.settings.state.collectAsStateWithLifecycle()
-    val dark = when (settings.theme) {
-        ru.neurosteno.app.data.ThemeChoice.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
-        ru.neurosteno.app.data.ThemeChoice.LIGHT -> false
-        ru.neurosteno.app.data.ThemeChoice.DARK -> true
-    }
-    androidx.compose.runtime.SideEffect { host.applySystemBars(dark) }
     NeuroTheme(settings.theme) {
         // resource-id у тегов: на них опираются uiautomator-скрипты и автоматизация проверки
         Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
@@ -96,6 +90,17 @@ private fun AppContent(host: AppHost, vm: AppViewModel) {
     val settings by graph.settings.state.collectAsStateWithLifecycle()
     val modelMessage by graph.modelsController.lastMessage.collectAsStateWithLifecycle()
     val activeSet = rows.firstOrNull { it.active }
+    val dark = when (settings.theme) {
+        ru.neurosteno.app.data.ThemeChoice.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+        ru.neurosteno.app.data.ThemeChoice.LIGHT -> false
+        ru.neurosteno.app.data.ThemeChoice.DARK -> true
+    }
+    val hero = processing is ProcessingUi.Running || when (nav.current) {
+        Route.Home -> BuildConfig.BUNDLED_MODELS || models !is ModelsStatus.Missing
+        Route.Record -> true
+        else -> false
+    }
+    androidx.compose.runtime.SideEffect { host.applySystemBars(dark, hero) }
 
     // расшифровка готова -> сразу открываем её (без лишнего шага)
     LaunchedEffect(processing) {

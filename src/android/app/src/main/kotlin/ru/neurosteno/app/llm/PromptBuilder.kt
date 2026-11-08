@@ -81,10 +81,15 @@ object PromptBuilder {
     fun selectRelevant(chunks: List<String>, question: String, budgetChars: Int): List<String> {
         if (chunks.sumOf { it.length } <= budgetChars) return chunks
         val keys = stems(question)
-        val scored = chunks.mapIndexed { i, c ->
-            val cs = stems(c)
-            i to keys.count { it in cs }
-        }.sortedWith(compareByDescending<Pair<Int, Int>> { it.second }.thenBy { it.first })
+        val docStems = chunks.map(::stems)
+        val documentFrequency = keys.associateWith { key -> docStems.count { key in it } }
+        fun idf(key: String): Double {
+            val frequency = documentFrequency.getValue(key)
+            return kotlin.math.ln((chunks.size - frequency + 0.5) / (frequency + 0.5) + 1.0)
+        }
+        val scored = chunks.indices.map { i ->
+            i to keys.filter { it in docStems[i] }.sumOf(::idf)
+        }.sortedWith(compareByDescending<Pair<Int, Double>> { it.second }.thenBy { it.first })
         val chosen = ArrayList<Int>()
         var used = 0
         for ((i, _) in scored) {
@@ -96,6 +101,13 @@ object PromptBuilder {
         return chosen.sorted().map { chunks[it] }
     }
 
+    private val QUESTION_STOPWORDS = setOf(
+        "сколько", "какой", "какая", "какие", "как", "что", "когда", "где", "почему", "зачем", "быть", "будут",
+        "будет", "есть", "после", "перед", "для", "это", "все", "всего", "может", "надо", "нужно",
+    )
+
+    /** Четырёхбуквенные основы связывают формы русских слов; вопросительные и служебные слова отбрасываются. */
     private fun stems(text: String): Set<String> =
-        Regex("[\\p{L}\\p{N}]+").findAll(text.lowercase().replace('ё', 'е')).map { it.value }.filter { it.length >= 4 }.map { it.take(5) }.toSet()
+        Regex("[\\p{L}\\p{N}]+").findAll(text.lowercase().replace('ё', 'е')).map { it.value }
+            .filter { it.length >= 4 && it !in QUESTION_STOPWORDS }.map { it.take(4) }.toSet()
 }

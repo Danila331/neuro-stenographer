@@ -284,3 +284,18 @@ def speech_chunks(x: np.ndarray, cfg: dict, vad: "SileroVad") -> tuple[list[Time
     seg = speech_segments(x, cfg, vad)
     chunks = chunks_from_segments(seg, cfg, x)
     return [_span(a, b) for a, b in seg if b > a], [_span(a, b) for a, b in chunks if b > a]
+
+
+def speech_chunks_with_lid(x: np.ndarray, cfg: dict, vad: "SileroVad", lid_max_s: float = 5.0,
+                           ) -> tuple[list[TimeSpan], list[TimeSpan], list[TimeSpan]]:
+    """Build ASR and LID chunk plans from one VAD pass; LID cuts use the same speech boundaries."""
+    if cfg["vad"].get("chunking") == "legacy":
+        iv = _legacy_pad_and_merge(_legacy_detect(vad, x), int(cfg["vad"]["pad_ms"]), len(x) * 1000 // SR)
+        return (iv, _legacy_make_chunks(x, iv, float(cfg["asr"]["chunk"]["max_s"])),
+                _legacy_make_chunks(x, iv, lid_max_s))
+    seg = speech_segments(x, cfg, vad)
+    chunks = chunks_from_segments(seg, cfg, x)
+    ch = cfg["asr"]["chunk"]
+    lid_chunks = pack_chunks(seg, lid_max_s, float(ch.get("min_s", 0)), x, int(ch.get("isolate_short_ms", 0)))
+    speech = [_span(a, b) for a, b in seg if b > a]
+    return speech, [_span(a, b) for a, b in chunks if b > a], [_span(a, b) for a, b in lid_chunks if b > a]

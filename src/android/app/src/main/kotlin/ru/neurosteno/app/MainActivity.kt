@@ -200,10 +200,10 @@ class MainActivity : ComponentActivity(), AppHost {
         startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
     }
 
-    override fun applySystemBars(dark: Boolean) {
+    override fun applySystemBars(dark: Boolean, hero: Boolean) {
         val transparent = android.graphics.Color.TRANSPARENT
         enableEdgeToEdge(
-            statusBarStyle = if (dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent),
+            statusBarStyle = if (dark || hero) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent),
             navigationBarStyle = if (dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent),
         )
     }

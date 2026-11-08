@@ -118,6 +118,6 @@ private fun StageBar(label: String, ms: Long, totalMs: Long) {
             Text(label, style = MaterialTheme.typography.bodyMedium)
             Text("${Format.duration(ms)} · ${(frac * 100).toInt()}%", style = MonoStyle, color = Brutal.ink)
         }
-        BrutalProgress(frac.coerceAtLeast(0.01f), height = 14.dp)
+        BrutalProgress(frac.coerceAtLeast(0.01f), height = 8.dp)
     }
 }

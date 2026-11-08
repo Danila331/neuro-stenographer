@@ -45,7 +45,8 @@ class ProtocolFlow(
     private fun runChunkMerge(
         lines: List<String>, generate: Generate, status: Status, onPrompt: (String) -> Unit, onPiece: () -> Unit, onText: (String) -> Unit,
     ): String {
-        val frags = PromptBuilder.chunk(lines, PromptBuilder.contentBudgetChars(nCtx, FRAGMENT_MAX_TOKENS, system.length))
+        val budget = minOf(PromptBuilder.contentBudgetChars(nCtx, FRAGMENT_MAX_TOKENS, system.length), FRAGMENT_BUDGET_CHARS)
+        val frags = PromptBuilder.chunk(lines, budget)
         val outs = ArrayList<String>()
         frags.forEachIndexed { i, part ->
             status.onStatus(if (frags.size == 1) "Составление протокола…" else "Протокол: часть ${i + 1} из ${frags.size}…")
@@ -98,6 +99,8 @@ class ProtocolFlow(
     companion object {
         /** Протокол одного фрагмента в режиме chunk_merge (эталон llm-bench: `FRAG_MAX`). */
         const val FRAGMENT_MAX_TOKENS = 450
+        /** Длинная запись делится на focused-фрагменты; короткие диалоги остаются одним запросом. */
+        const val FRAGMENT_BUDGET_CHARS = 2500
         const val PROTOCOL_MAX_TOKENS = 700
         const val NOTES_MAX_TOKENS = 320
     }

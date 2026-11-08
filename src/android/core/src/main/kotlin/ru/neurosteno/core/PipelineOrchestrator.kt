@@ -37,6 +37,8 @@ data class PipelineSettings(
     val normalizeGain: NormalizeGainConfig = NormalizeGainConfig(),
     /** LID на каждом VAD-чанке (при `languageMode == auto` и наличии английской ASR). */
     val perChunkLanguage: Boolean = false,
+    /** LID на коротких подсегментах с разбиением только смешанных чанков. */
+    val adaptiveLid: Boolean = true,
     /** Чанки основной ASR: максимум/минимум, секунд (`asr.chunk.*`). */
     val chunkMaxS: Double = 25.0,
     val chunkMinS: Double = 1.0,
@@ -75,6 +77,7 @@ data class PipelineSettings(
             diarizationEnabled = cfg.diarization.enabled,
             normalizeGain = cfg.audio.normalizeGain,
             perChunkLanguage = cfg.language.perChunk,
+            adaptiveLid = cfg.language.adaptiveLid,
             chunkMaxS = cfg.asr.chunk.maxS,
             chunkMinS = cfg.asr.chunk.minS,
             vadPadMs = cfg.vad.padMs,
@@ -205,7 +208,7 @@ class PipelineOrchestrator(
         }
 
         // ---- language id ----
-        val langPlan = timed(Stage.LID) { planLanguage(asrAudio, speech, chunks, tracker, warnings) }
+        val langPlan = timed(Stage.LID) { planLanguage(asrAudio, speech, chunks, sp.lidChunks, tracker, warnings) }
         val language = langPlan.language
 
         // ---- asr || diarization ----
@@ -293,30 +296,43 @@ class PipelineOrchestrator(
         val perChunk: Boolean get() = ruSpans != null && enSpans != null
     }
 
-    /** Речь и чанки ASR: pack -- по эталону refpipe (в отсчётах); legacy -- интервалы VAD, чанки режет движок. */
-    private class SpeechChunks(val speech: List<TimeSpan>, val chunks: List<TimeSpan>, val packed: Boolean)
+    /** Речь и чанки ASR/LID: pack -- по эталону refpipe (в отсчётах); legacy -- интервалы VAD. */
+    private class SpeechChunks(
+        val speech: List<TimeSpan>,
+        val chunks: List<TimeSpan>,
+        val lidChunks: List<TimeSpan>,
+        val packed: Boolean,
+    )
 
     private suspend fun planSpeech(audio: AudioBuffer, tracker: Tracker, warnings: MutableList<String>): SpeechChunks {
         val durationMs = audio.durationMs
         val whole = TimeSpan(0, durationMs)
+        val adaptive = settings.perChunkLanguage && settings.adaptiveLid
         if (!settings.packChunking) {
             val speech = soft(Stage.VAD, warnings, listOf(whole)) {
                 sanitizeSpans(blocking(tracker, Stage.VAD) { engines.vad().use { it.detect(audio) } }, durationMs)
             }
             val chunks = if (settings.perChunkLanguage) ChunkPlanner.plan(audio.samples, speech, (settings.chunkMaxS * 1000).toLong()) else speech
-            return SpeechChunks(speech, chunks, packed = false)
+            val lidChunks = if (adaptive) ChunkPlanner.plan(audio.samples, speech, 5_000) else chunks
+            return SpeechChunks(speech, chunks, lidChunks, packed = false)
         }
         val raw = soft<List<SampleSpan>?>(Stage.VAD, warnings, null) {
             blocking(tracker, Stage.VAD) { engines.vad().use { it.detectSamples(audio) } }
         } ?: listOf(SampleSpan(0, audio.samples.size)) // VAD не сработал -- вся запись как речь
         val plan = VadChunking.plan(audio.samples, raw, settings.vadPadMs, settings.vadRescue, settings.chunkMaxS, settings.chunkMinS)
-        return SpeechChunks(plan.speech, plan.chunks, packed = true)
+        val lidChunks = if (adaptive) {
+            VadChunking.plan(audio.samples, raw, settings.vadPadMs, settings.vadRescue, 5.0, settings.chunkMinS).chunks
+        } else {
+            plan.chunks
+        }
+        return SpeechChunks(plan.speech, plan.chunks, lidChunks, packed = true)
     }
 
     private suspend fun planLanguage(
         audio: AudioBuffer,
         speech: List<TimeSpan>,
         chunksIn: List<TimeSpan>,
+        lidChunksIn: List<TimeSpan>,
         tracker: Tracker,
         warnings: MutableList<String>,
     ): LangPlan {
@@ -325,19 +341,29 @@ class PipelineOrchestrator(
             LanguageConfig.EN in settings.supportedLanguages && lidFactory != null
         if (!perChunk) return LangPlan(chooseLanguage(audio, speech, tracker, warnings))
 
-        val chunks = chunksIn
+        var chunks = chunksIn
+        var plannedLabels: List<String>? = null
         val preds: List<String?>? = soft<List<String?>?>(Stage.LID, warnings, null) {
             blocking(tracker, Stage.LID) { l ->
                 lidFactory().use { lid ->
-                    chunks.mapIndexed { i, c ->
-                        l.onProgress(Stage.LID, i.toFloat() / chunks.size)
-                        if (c.endMs - c.startMs < LanguageSmoother.MIN_LID_MS) null else lid.detect(audio, listOf(c))
+                    if (settings.adaptiveLid) {
+                        val plan = AdaptiveLanguageChunker.plan(chunksIn, lidChunksIn, detect = { c ->
+                            if (c.endMs - c.startMs < LanguageSmoother.MIN_LID_MS) null else lid.detect(audio, listOf(c))
+                        })
+                        chunks = plan.first
+                        plannedLabels = plan.third
+                        plan.second
+                    } else {
+                        chunks.mapIndexed { i, c ->
+                            l.onProgress(Stage.LID, i.toFloat() / chunks.size)
+                            if (c.endMs - c.startMs < LanguageSmoother.MIN_LID_MS) null else lid.detect(audio, listOf(c))
+                        }
                     }
                 }
             }
         }
         if (preds == null) return LangPlan(LanguageConfig.RU)
-        val labels = LanguageSmoother.smooth(preds, chunks.map { it.endMs - it.startMs })
+        val labels = plannedLabels ?: LanguageSmoother.smooth(preds, chunks.map { it.endMs - it.startMs })
         val ru = chunks.filterIndexed { i, _ -> labels[i] == LanguageConfig.RU }
         val en = chunks.filterIndexed { i, _ -> labels[i] == LanguageConfig.EN }
         val enMs = en.sumOf { it.endMs - it.startMs }

@@ -87,7 +87,9 @@ fun SummaryScreen(
                 is SummaryState.Failed -> {
                     item { MessageCard(state.message, isError = true) }
                     state.doc?.let { content(it, names, caps, blockedReason, null, null, actions, working = false) }
-                    item { Controls(working = false, hasDoc = state.doc != null, blocked = blockedReason, actions = actions, retryLabel = "Повторить") }
+                    if (state.doc == null) {
+                        item { Controls(working = false, hasDoc = false, blocked = blockedReason, actions = actions, retryLabel = "Повторить") }
+                    }
                 }
                 is SummaryState.Shown -> content(state.doc, names, caps, blockedReason, state, state.notice, actions, working = state.working)
             }
@@ -138,9 +140,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.content(
 @Composable
 private fun StatusTags(doc: SummaryDoc, working: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (doc.isLlm && !working) BrutalTag("ИИ-ВЫЖИМКА", fill = Brutal.ink, modifier = Modifier.testTag("summary_tag_llm"))
-        else BrutalTag("БЫСТРАЯ ВЫЖИМКА · БЕЗ ИИ", fill = Brutal.accent, modifier = Modifier.testTag("summary_tag_quick"))
-        BrutalTag(Format.plural(doc.topics.size, "тема", "темы", "тем"))
+        if (doc.isLlm && !working) {
+            BrutalTag("ИИ-выжимка", fill = Brutal.accentSoft, textStyle = MaterialTheme.typography.labelMedium, modifier = Modifier.testTag("summary_tag_llm"))
+        } else {
+            BrutalTag("Быстрая · без ИИ", fill = Brutal.panel, textStyle = MaterialTheme.typography.labelMedium, modifier = Modifier.testTag("summary_tag_quick"))
+        }
+        BrutalTag(Format.plural(doc.topics.size, "тема", "темы", "тем"), textStyle = MaterialTheme.typography.labelMedium)
     }
 }
 
@@ -186,42 +191,53 @@ private fun Controls(working: Boolean, hasDoc: Boolean, blocked: String?, action
 @Composable
 private fun TopicCard(index: Int, t: SummaryTopic, names: (String) -> String, onJump: (Long, Int?) -> Unit) {
     BrutalCard(Modifier.fillMaxWidth().testTag("summary_topic_$index"), contentPadding = PaddingValues(0.dp)) {
-        // заголовок темы: диапазон времени и название; тап -- к началу темы
         Column(
             Modifier.fillMaxWidth().clickable(onClickLabel = "Перейти к началу темы") { onJump(t.startMs, null) }
-                .padding(14.dp).semantics(mergeDescendants = true) { contentDescription = "Тема: ${t.title}, ${Format.clock(t.startMs)}–${Format.clock(t.endMs)}" },
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(16.dp).semantics(mergeDescendants = true) {
+                    contentDescription = "Тема: ${t.title}, ${Format.clock(t.startMs)}–${Format.clock(t.endMs)}"
+                },
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            BrutalTag("${Format.clock(t.startMs)}–${Format.clock(t.endMs)}", fill = Brutal.accent)
+            BrutalTag("${Format.clock(t.startMs)}–${Format.clock(t.endMs)}", fill = Brutal.panel)
             Text(t.title, style = MaterialTheme.typography.titleMedium)
         }
-        Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            t.points.forEachIndexed { j, p ->
-                val r = p.refs.firstRef()
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            t.points.forEachIndexed { j, point ->
                 RefRow(
                     modifier = Modifier.testTag("summary_point_${index}_$j"),
-                    ref = r, onJump = onJump, description = "${names(p.speaker)}: ${p.text}",
+                    ref = point.refs.firstRef(),
+                    onJump = onJump,
+                    description = "${names(point.speaker)}: ${point.text}",
                 ) {
-                    SpeakerChip(names(p.speaker), p.speaker)
-                    Text(p.text, style = MaterialTheme.typography.bodyLarge)
+                    SpeakerChip(names(point.speaker), point.speaker)
+                    Text(point.text, style = MaterialTheme.typography.bodyLarge)
                 }
             }
-            t.decisions.forEachIndexed { j, d ->
-                RefRow(modifier = Modifier.testTag("summary_decision_${index}_$j"), ref = d.refs.firstRef(), onJump = onJump, description = "Решение: ${d.text}") {
+            t.decisions.forEachIndexed { j, decision ->
+                RefRow(
+                    modifier = Modifier.testTag("summary_decision_${index}_$j"),
+                    ref = decision.refs.firstRef(),
+                    onJump = onJump,
+                    description = "Решение: ${decision.text}",
+                ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        BrutalTag("РЕШЕНИЕ", fill = Brutal.ink)
-                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        BrutalTag("Решение", fill = Brutal.accentSoft, textStyle = MaterialTheme.typography.labelMedium)
+                        Icon(Icons.Default.Check, contentDescription = null, tint = Brutal.accent, modifier = Modifier.size(18.dp))
                     }
-                    Text(d.text, style = MaterialTheme.typography.bodyLarge)
+                    Text(decision.text, style = MaterialTheme.typography.bodyLarge)
                 }
             }
             t.tasks.forEachIndexed { j, task ->
-                RefRow(modifier = Modifier.testTag("summary_task_${index}_$j"), ref = task.refs.firstRef(), onJump = onJump,
-                    description = "Задача" + (if (task.who.isNotBlank()) " для ${task.who}" else "") + ": ${task.text}") {
+                RefRow(
+                    modifier = Modifier.testTag("summary_task_${index}_$j"),
+                    ref = task.refs.firstRef(),
+                    onJump = onJump,
+                    description = "Задача" + (if (task.who.isNotBlank()) " для ${task.who}" else "") + ": ${task.text}",
+                ) {
                     @OptIn(ExperimentalLayoutApi::class)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        BrutalTag("ЗАДАЧА", fill = Brutal.ink)
-                        if (task.who.isNotBlank()) BrutalTag(task.who)
+                        BrutalTag("Задача", fill = Brutal.accentSoft, textStyle = MaterialTheme.typography.labelMedium)
+                        if (task.who.isNotBlank()) BrutalTag(task.who, textStyle = MaterialTheme.typography.labelMedium)
                     }
                     Text(task.text, style = MaterialTheme.typography.bodyLarge)
                 }

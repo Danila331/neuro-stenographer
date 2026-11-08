@@ -1,0 +1,275 @@
+{
+  "transcript": [
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 3480,
+      "end_ms": 5080,
+      "text": "Уточните, какой цвет? Синий.",
+      "words": [
+        {
+          "text": "Уточните,",
+          "start_ms": 3480,
+          "end_ms": 3920,
+          "confidence": null
+        },
+        {
+          "text": "какой",
+          "start_ms": 4160,
+          "end_ms": 4200,
+          "confidence": null
+        },
+        {
+          "text": "цвет?",
+          "start_ms": 4440,
+          "end_ms": 4560,
+          "confidence": null
+        },
+        {
+          "text": "Синий.",
+          "start_ms": 4920,
+          "end_ms": 5080,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 6960,
+      "end_ms": 8560,
+      "text": "Против. Синий цвет мне не нравится.",
+      "words": [
+        {
+          "text": "Против.",
+          "start_ms": 6960,
+          "end_ms": 7080,
+          "confidence": null
+        },
+        {
+          "text": "Синий",
+          "start_ms": 7400,
+          "end_ms": 7600,
+          "confidence": null
+        },
+        {
+          "text": "цвет",
+          "start_ms": 7760,
+          "end_ms": 7880,
+          "confidence": null
+        },
+        {
+          "text": "мне",
+          "start_ms": 8040,
+          "end_ms": 8080,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 8160,
+          "end_ms": 8200,
+          "confidence": null
+        },
+        {
+          "text": "нравится.",
+          "start_ms": 8320,
+          "end_ms": 8560,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 10640,
+      "end_ms": 13760,
+      "text": "А я не конкурсная. Я просто против. Можно мне фото?",
+      "words": [
+        {
+          "text": "А",
+          "start_ms": 10640,
+          "end_ms": 10680,
+          "confidence": null
+        },
+        {
+          "text": "я",
+          "start_ms": 10760,
+          "end_ms": 10800,
+          "confidence": null
+        },
+        {
+          "text": "не",
+          "start_ms": 10920,
+          "end_ms": 10960,
+          "confidence": null
+        },
+        {
+          "text": "конкурсная.",
+          "start_ms": 11120,
+          "end_ms": 11560,
+          "confidence": null
+        },
+        {
+          "text": "Я",
+          "start_ms": 11960,
+          "end_ms": 12000,
+          "confidence": null
+        },
+        {
+          "text": "просто",
+          "start_ms": 12160,
+          "end_ms": 12200,
+          "confidence": null
+        },
+        {
+          "text": "против.",
+          "start_ms": 12440,
+          "end_ms": 12480,
+          "confidence": null
+        },
+        {
+          "text": "Можно",
+          "start_ms": 13280,
+          "end_ms": 13320,
+          "confidence": null
+        },
+        {
+          "text": "мне",
+          "start_ms": 13440,
+          "end_ms": 13480,
+          "confidence": null
+        },
+        {
+          "text": "фото?",
+          "start_ms": 13600,
+          "end_ms": 13760,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 18880,
+      "end_ms": 22000,
+      "text": "Хорошая идея. Срыв, конечно, ну это другое дело.",
+      "words": [
+        {
+          "text": "Хорошая",
+          "start_ms": 18880,
+          "end_ms": 19160,
+          "confidence": null
+        },
+        {
+          "text": "идея.",
+          "start_ms": 19280,
+          "end_ms": 19480,
+          "confidence": null
+        },
+        {
+          "text": "Срыв,",
+          "start_ms": 20000,
+          "end_ms": 20280,
+          "confidence": null
+        },
+        {
+          "text": "конечно,",
+          "start_ms": 20440,
+          "end_ms": 20480,
+          "confidence": null
+        },
+        {
+          "text": "ну",
+          "start_ms": 20920,
+          "end_ms": 20960,
+          "confidence": null
+        },
+        {
+          "text": "это",
+          "start_ms": 21240,
+          "end_ms": 21280,
+          "confidence": null
+        },
+        {
+          "text": "другое",
+          "start_ms": 21480,
+          "end_ms": 21720,
+          "confidence": null
+        },
+        {
+          "text": "дело.",
+          "start_ms": 21800,
+          "end_ms": 22000,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 25140,
+      "end_ms": 25180,
+      "text": "Хорошо.",
+      "words": [
+        {
+          "text": "Хорошо.",
+          "start_ms": 25140,
+          "end_ms": 25180,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "speaker_id": "speaker_1",
+      "start_ms": 30300,
+      "end_ms": 30940,
+      "text": "Решение принято.",
+      "words": [
+        {
+          "text": "Решение",
+          "start_ms": 30300,
+          "end_ms": 30540,
+          "confidence": null
+        },
+        {
+          "text": "принято.",
+          "start_ms": 30700,
+          "end_ms": 30940,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_version": "0.1.0-hard",
+    "tier": "hard",
+    "language": "ru",
+    "audio_duration_ms": 32662,
+    "processing_ms": 9040,
+    "rtf": 0.277,
+    "stage_ms": {
+      "decode": 43,
+      "vad": 260,
+      "lid": 2320,
+      "asr": 4160,
+      "diarization": 6393,
+      "align": 0,
+      "punctuation": 0,
+      "export": 0,
+      "relabel": 1627,
+      "total": 9040
+    },
+    "models": {
+      "vad": "silero-vad/silero_vad.onnx",
+      "asr": "asr/gigaam-v3-rnnt-punct-int8",
+      "asr_en": "asr/parakeet-tdt-110m-en-int8",
+      "lid": "asr/whisper-tiny-int8",
+      "diarization_segmentation": "diar/pyannote-segmentation-3.0/model.int8.onnx",
+      "diarization_embedding": "diar/emb-eres2netv2/model.onnx",
+      "llm": "llm/qwen3-4b-q4_k_m.gguf"
+    },
+    "peak_pss_mb": 732,
+    "threads": 3,
+    "device_model": "Google Pixel 10",
+    "android_sdk": 37,
+    "total_ram_mb": 11563
+  },
+  "speakers": {
+    "speaker_1": "Говорящий 1"
+  }
+}

@@ -4,20 +4,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.navigationBarsPadding
-import ru.neurosteno.app.ui.theme.BrutalDivider
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -31,9 +33,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import ru.neurosteno.app.ProcessingUi
@@ -45,18 +50,16 @@ import ru.neurosteno.app.ui.components.NeuroTopBar
 import ru.neurosteno.app.ui.theme.Brutal
 import ru.neurosteno.app.ui.theme.BrutalButton
 import ru.neurosteno.app.ui.theme.BrutalButtonStyle
-import ru.neurosteno.app.ui.theme.BrutalDims
 import ru.neurosteno.app.ui.theme.BrutalPlaque
-import ru.neurosteno.app.ui.theme.BrutalProgress
-import ru.neurosteno.app.ui.theme.BrutalShape
-import ru.neurosteno.app.ui.theme.BrutalSurface
-import ru.neurosteno.app.ui.theme.BrutalTag
 import ru.neurosteno.app.ui.theme.ButtonLabel
+import ru.neurosteno.app.ui.theme.ControlShape
 import ru.neurosteno.app.ui.theme.MonoStyle
+import ru.neurosteno.app.ui.theme.PillShape
 import ru.neurosteno.app.ui.theme.PlaqueKind
+import ru.neurosteno.app.ui.theme.RevolutHeroBackground
+import ru.neurosteno.app.ui.theme.SheetShape
 import ru.neurosteno.core.Stage
 
-/** Стадии, которые показываются пользователю (шумоподавление добавляется, только если действительно запускалось). */
 private val VISIBLE_STAGES = listOf(Stage.DECODE, Stage.VAD, Stage.LID, Stage.ASR, Stage.DIARIZATION, Stage.ALIGN, Stage.PUNCTUATION)
 
 @Composable
@@ -70,97 +73,154 @@ fun ProcessingScreen(
     onCancel: () -> Unit,
 ) {
     val now by produceState(System.currentTimeMillis()) {
-        while (true) { value = System.currentTimeMillis(); delay(1_000) }
+        while (true) {
+            value = System.currentTimeMillis()
+            delay(1_000)
+        }
     }
     val elapsed = (now - state.startedAtMs).coerceAtLeast(0)
     val eta = EtaEstimator.remainingMs(elapsed, state.overall, state.audioDurationMs, priorRtf)
     val percentText = Format.percent(state.overall)
-    val headerBlock: @Composable () -> Unit = {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text(state.sourceName, style = MaterialTheme.typography.titleMedium, maxLines = 2, color = Brutal.ink)
-            if (models is ModelsStatus.Installing) {
-                BrutalPlaque("Подготовка моделей (только при первом запуске): ${Format.percent(models.fraction)}. Обработка начнётся сразу после неё.", kind = PlaqueKind.Neutral) {
-                    BrutalProgress(models.fraction)
-                }
-            }
-            // огромный процент на акцентной заливке
-            BrutalSurface(
-                Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "Общий прогресс $percentText" },
-                fill = Brutal.accent, shadow = 6.dp, contentColor = Brutal.onAccent,
-            ) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(percentText, style = MaterialTheme.typography.displayLarge, color = Brutal.onAccent)
-                    BrutalProgress(state.overall)
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    when {
-                        state.cancelling -> "Отмена…"
-                        eta != null -> "Осталось примерно ${Format.duration(eta)} · прошло ${Format.duration(elapsed)}"
-                        else -> "Оценка оставшегося времени появится через несколько секунд · прошло ${Format.duration(elapsed)}"
-                    },
-                    style = MaterialTheme.typography.bodyMedium, color = Brutal.ink,
-                )
-                state.audioDurationMs?.let { BrutalTag("ЗАПИСЬ ${Format.clock(it)}") }
-            }
-        }
-    }
-    val stagesBlock: @Composable () -> Unit = {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            val stages = buildList {
-                addAll(VISIBLE_STAGES)
-                state.fractions[Stage.DENOISE]?.let { if (it in 0.001f..0.999f) add(1, Stage.DENOISE) }
-            }
-            stages.forEach { st -> StageRow(st, state.fractions[st] ?: 0f, active = state.fractions[st]?.let { it > 0f && it < 1f } == true) }
-        }
-    }
     val hintBlock: @Composable () -> Unit = {
         if (showNotificationHint) {
-            BrutalPlaque("Включите уведомления, чтобы видеть прогресс, когда приложение свёрнуто. Обработка идёт и без них.", kind = PlaqueKind.Neutral) {
+            BrutalPlaque(
+                "Включите уведомления, чтобы видеть прогресс, когда приложение свёрнуто. Обработка идёт и без них.",
+                kind = PlaqueKind.Neutral,
+            ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     BrutalButton(onClick = onEnableNotifications, height = 44.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Включить") }
-                    BrutalButton(onClick = onDismissNotificationHint, style = BrutalButtonStyle.Secondary, height = 44.dp, modifier = Modifier.weight(1f)) { ButtonLabel("Не сейчас") }
+                    BrutalButton(onClick = onDismissNotificationHint, style = BrutalButtonStyle.Secondary, height = 44.dp, modifier = Modifier.weight(1f)) {
+                        ButtonLabel("Не сейчас")
+                    }
                 }
             }
         }
-    }
-    // «Отменить» всегда на виду (в портрете закреплена внизу, а не уезжает под список стадий)
-    val cancelButton: @Composable () -> Unit = {
-        BrutalButton(
-            onClick = onCancel, enabled = !state.cancelling, style = BrutalButtonStyle.Secondary,
-            modifier = Modifier.fillMaxWidth().testTag(Tags.CANCEL),
-        ) { ButtonLabel("Отменить") }
     }
     val noteBlock: @Composable () -> Unit = {
         Text(
             "Обработка идёт на устройстве, без интернета. Приложение можно свернуть: процесс продолжится в фоне.",
-            style = MaterialTheme.typography.bodySmall, color = Brutal.muted,
+            style = MaterialTheme.typography.bodySmall,
+            color = Brutal.muted,
         )
     }
-    Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Обработка записи") }) { padding ->
-        BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            if (maxWidth >= 720.dp) {
-                // альбомная ориентация: слева общий прогресс и «Отменить», справа стадии -- всё видно без прокрутки
-                Row(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        headerBlock(); hintBlock(); cancelButton(); noteBlock()
-                    }
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { stagesBlock() }
-                }
-            } else {
-                Column(Modifier.fillMaxSize()) {
+    val cancelButton: @Composable () -> Unit = {
+        BrutalButton(
+            onClick = onCancel,
+            enabled = !state.cancelling,
+            style = BrutalButtonStyle.Secondary,
+            modifier = Modifier.fillMaxWidth().testTag(Tags.CANCEL),
+        ) { ButtonLabel("Отменить") }
+    }
+    val stagesBlock: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Этапы", style = MaterialTheme.typography.titleMedium, color = Brutal.ink, modifier = Modifier.padding(bottom = 10.dp))
+            val stages = buildList {
+                addAll(VISIBLE_STAGES)
+                state.fractions[Stage.DENOISE]?.let { if (it in 0.001f..0.999f) add(1, Stage.DENOISE) }
+            }
+            stages.forEach { stage ->
+                StageRow(stage, state.fractions[stage] ?: 0f, active = state.fractions[stage]?.let { it > 0f && it < 1f } == true)
+            }
+        }
+    }
+
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().background(Brutal.heroEnd)) {
+        if (maxWidth >= 720.dp) {
+            Row(Modifier.fillMaxSize()) {
+                ProcessingHero(state, models, percentText, eta, elapsed, Modifier.weight(0.43f).fillMaxHeight())
+                Column(Modifier.weight(0.57f).fillMaxHeight().background(Brutal.bg)) {
                     Column(
-                        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        Modifier.weight(1f).verticalScroll(rememberScrollState()).statusBarsPadding().padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
-                        headerBlock(); stagesBlock(); hintBlock(); noteBlock()
+                        stagesBlock()
+                        hintBlock()
+                        noteBlock()
                     }
-                    BrutalDivider()
-                    Box(Modifier.padding(horizontal = 20.dp, vertical = 10.dp).navigationBarsPadding()) { cancelButton() }
+                    Box(Modifier.background(Brutal.surface).padding(20.dp).navigationBarsPadding()) { cancelButton() }
+                }
+            }
+        } else {
+            Column(Modifier.fillMaxSize()) {
+                ProcessingHero(state, models, percentText, eta, elapsed, Modifier.fillMaxWidth().heightIn(min = 328.dp))
+                Column(Modifier.weight(1f).fillMaxWidth().background(Brutal.bg, SheetShape)) {
+                    Column(
+                        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 18.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                    ) {
+                        stagesBlock()
+                        hintBlock()
+                        noteBlock()
+                    }
+                    Box(Modifier.background(Brutal.surface).padding(horizontal = 20.dp, vertical = 12.dp).navigationBarsPadding()) { cancelButton() }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProcessingHero(
+    state: ProcessingUi.Running,
+    models: ModelsStatus,
+    percentText: String,
+    eta: Long?,
+    elapsed: Long,
+    modifier: Modifier = Modifier,
+) {
+    RevolutHeroBackground(modifier) {
+        Column(
+            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 24.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Text("Обработка записи", style = MaterialTheme.typography.titleLarge, color = Color.White)
+            Text(
+                state.sourceName,
+                style = MaterialTheme.typography.bodySmall,
+                color = Brutal.heroMuted,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (models is ModelsStatus.Installing) {
+                Text("Подготовка моделей · ${Format.percent(models.fraction)}", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                HeroProgress(models.fraction, "Подготовка моделей ${Format.percent(models.fraction)}")
+            }
+            Column(
+                Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    percentText,
+                    style = MaterialTheme.typography.displayLarge,
+                    color = Color.White,
+                    modifier = Modifier.semantics { contentDescription = "Общий прогресс $percentText" },
+                )
+                HeroProgress(state.overall, "Общий прогресс $percentText")
+                Text(
+                    when {
+                        state.cancelling -> "Отмена…"
+                        eta != null -> "Осталось примерно ${Format.duration(eta)} · прошло ${Format.duration(elapsed)}"
+                        else -> "Оценка времени появится через несколько секунд · прошло ${Format.duration(elapsed)}"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Brutal.heroMuted,
+                )
+                state.audioDurationMs?.let {
+                    Text("Запись ${Format.clock(it)}", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroProgress(fraction: Float?, description: String) {
+    Box(
+        Modifier.fillMaxWidth().height(7.dp).clip(PillShape).background(Color.White.copy(alpha = 0.22f))
+            .semantics { contentDescription = description },
+    ) {
+        if (fraction != null) Box(Modifier.fillMaxHeight().fillMaxWidth(fraction.coerceIn(0f, 1f)).background(Color.White, PillShape))
     }
 }
 
@@ -173,31 +233,32 @@ private fun StageRow(stage: Stage, fraction: Float, active: Boolean) {
         active -> Format.percent(fraction)
         else -> "ожидание"
     }
-    val fill = if (active) Brutal.accent else Brutal.bg
     Row(
-        Modifier.fillMaxWidth().defaultMinSize(minHeight = 46.dp)
-            .background(fill, BrutalShape).border(if (active) BrutalDims.BorderThick else BrutalDims.Border, if (done || active) Brutal.ink else Brutal.muted, BrutalShape)
-            .padding(horizontal = 10.dp, vertical = 6.dp)
+        Modifier.fillMaxWidth().defaultMinSize(minHeight = 52.dp)
+            .background(if (active) Brutal.accentSoft else Color.Transparent, ControlShape)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
             .semantics(mergeDescendants = true) { contentDescription = "$title: $status" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(28.dp).background(if (done) Brutal.ink else Brutal.bg, BrutalShape).border(2.dp, if (done || active) Brutal.ink else Brutal.muted, BrutalShape),
+            Modifier.size(28.dp).background(if (done || active) Brutal.accentSoft else Color.Transparent, CircleShape)
+                .border(1.dp, if (done || active) Brutal.accent else Brutal.outline, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            if (done) Icon(Icons.Default.Check, contentDescription = null, tint = Brutal.onInk, modifier = Modifier.size(20.dp))
-            else if (active) Box(Modifier.size(10.dp).background(Brutal.ink))
+            if (done) Icon(Icons.Default.Check, contentDescription = null, tint = Brutal.accent, modifier = Modifier.size(18.dp))
+            else if (active) Box(Modifier.size(8.dp).background(Brutal.accent, CircleShape))
         }
         Spacer(Modifier.width(12.dp))
         Text(
-            title, style = if (active) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
-            color = if (active) Brutal.onAccent else if (done) Brutal.ink else Brutal.muted, modifier = Modifier.weight(1f),
+            title,
+            style = if (active || done) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyLarge,
+            color = if (active || done) Brutal.ink else Brutal.muted,
+            modifier = Modifier.weight(1f),
         )
-        if (active) BrutalTag(Format.percent(fraction), fill = Brutal.ink)
+        if (active) Text(Format.percent(fraction), style = MonoStyle, color = Brutal.accent)
     }
 }
 
-/** Ошибка обработки: понятное сообщение и что делать дальше. */
 @Composable
 fun FailureScreen(
     state: ProcessingUi.Failed,
@@ -208,16 +269,18 @@ fun FailureScreen(
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Не удалось обработать", onBack = onClose) }) { padding ->
         Column(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            BrutalSurface(Modifier.size(72.dp), fill = Brutal.error, contentColor = Brutal.onAccent) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(44.dp)) }
+            Box(Modifier.size(64.dp).background(Brutal.errorSoft, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = Brutal.error, modifier = Modifier.size(32.dp))
             }
             state.sourceName?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
             MessageCard(state.message, isError = true)
             BrutalButton(onClick = onPickAnother, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Выбрать другой файл") }
             if (state.message.contains("модел", ignoreCase = true)) {
-                BrutalButton(onClick = onModels, style = BrutalButtonStyle.Secondary, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Открыть «Модели»") }
+                BrutalButton(onClick = onModels, style = BrutalButtonStyle.Secondary, modifier = Modifier.fillMaxWidth()) {
+                    ButtonLabel("Открыть «Модели»")
+                }
             }
             BrutalButton(onClick = onClose, style = BrutalButtonStyle.Secondary, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Закрыть") }
         }

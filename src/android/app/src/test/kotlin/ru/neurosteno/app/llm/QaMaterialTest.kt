@@ -29,6 +29,17 @@ class QaMaterialTest {
     }
 
     @Test
+    fun rareRelevantTermOutweighsRepeatedGenericTerms() {
+        val chunks = listOf(
+            "сколько платим оркестру пять тысяч рублей",
+            "сколько платим за жилеты для добровольцев",
+            "дворники просят поднять оплату до семидесяти рублей",
+        )
+        val picked = PromptBuilder.selectRelevant(chunks, "Сколько будут платить дворникам после повышения?", chunks[0].length + chunks[1].length)
+        assertTrue(picked.toString(), picked.any { it.contains("семидесяти") })
+    }
+
+    @Test
     fun ratioIsClamped() {
         val budget = PromptBuilder.contentBudgetChars(4096, 400, 300)
         val tiny = PromptBuilder.qaMaterial(lines, "забора", budget, 0.0) // зажато до 5 %

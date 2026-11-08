@@ -165,7 +165,7 @@ private fun HitCard(index: Int, hit: SearchHit, showRecord: Boolean, onOpen: (St
             Modifier.fillMaxWidth().clickable(onClickLabel = "Открыть запись на ${Format.clock(hit.startMs)}") { onOpen(hit.recordId, hit.startMs) }.padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
         ) {
-            BrutalTag("${Format.clock(hit.startMs)}–${Format.clock(hit.endMs)}", fill = Brutal.accent)
+            BrutalTag("${Format.clock(hit.startMs)}–${Format.clock(hit.endMs)}", fill = Brutal.accentSoft)
             if (showRecord) Text(hit.recordTitle, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
         }
         Column(Modifier.padding(bottom = 8.dp)) {
@@ -193,12 +193,12 @@ private fun HitCard(index: Int, hit: SearchHit, showRecord: Boolean, onOpen: (St
 private fun highlighted(text: String, terms: List<String>): AnnotatedString {
     val ranges = Highlight.ranges(text, terms)
     if (ranges.isEmpty()) return AnnotatedString(text)
-    val accent = Brutal.accent
+    val accent = Brutal.accentSoft
     return buildAnnotatedString {
         var pos = 0
         for (r in ranges) {
             append(text.substring(pos, r.first))
-            withStyle(SpanStyle(background = accent, color = Color.Black, fontWeight = FontWeight.Bold)) { append(text.substring(r.first, r.last + 1)) }
+            withStyle(SpanStyle(background = accent, color = Brutal.ink, fontWeight = FontWeight.Bold)) { append(text.substring(r.first, r.last + 1)) }
             pos = r.last + 1
         }
         append(text.substring(pos))
@@ -238,7 +238,7 @@ private fun AnswerBlock(ui: SearchUi, actions: SearchActions) {
 /** Ответ ИИ: ссылки `[мм:сс, Говорящий N]` -- кликабельные, ведут к реплике нужной записи. */
 @Composable
 private fun AnswerText(text: String, ui: SearchUi, onOpen: (String, Long) -> Unit) {
-    val link = SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, background = Brutal.accent, color = Color.Black)
+    val link = SpanStyle(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, background = Brutal.accentSoft, color = Brutal.ink)
     val annotated = buildAnnotatedString {
         for (part in CitationParser.parse(text)) when (part) {
             is CitationParser.Part.Text -> append(part.text)

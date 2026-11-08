@@ -123,6 +123,8 @@ data class LanguageConfig(
     @SerialName("lid_seconds") val lidSeconds: Int = 10,
     /** LID на каждом VAD-чанке с гистерезисом (смешанные ru/en диалоги); false -- один язык на файл. */
     @SerialName("per_chunk") val perChunk: Boolean = false,
+    /** LID на 5-секундных подсегментах; одноязычные чанки сохраняют исходные границы. */
+    @SerialName("adaptive_lid") val adaptiveLid: Boolean = true,
 ) {
     val effectiveMode: String
         get() = when (mode.lowercase()) {

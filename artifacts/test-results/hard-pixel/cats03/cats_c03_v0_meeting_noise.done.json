@@ -1,0 +1,39 @@
+{
+  "status": "done",
+  "source": "cats_c03_v0_meeting_noise.wav",
+  "finished_at_ms": 1794106450566,
+  "audio_duration_ms": 44856,
+  "processing_ms": 13482,
+  "rtf": 0.301,
+  "language": "ru",
+  "utterances": 20,
+  "tier": "hard",
+  "model_set": "hard",
+  "stage_ms": {
+    "decode": 42,
+    "vad": 1067,
+    "lid": 1976,
+    "asr": 5098,
+    "diarization": 10364,
+    "align": 1,
+    "punctuation": 0,
+    "export": 0,
+    "relabel": 4217,
+    "total": 13482
+  },
+  "peak_pss_mb": 646,
+  "threads": 3,
+  "device_model": "Google Pixel 10",
+  "android_sdk": 37,
+  "total_ram_mb": 11563,
+  "app_version": "0.1.0-hard",
+  "results_dir": "/storage/emulated/0/Android/data/ru.neurosteno.app.hard/files/results",
+  "files": [
+    "cats_c03_v0_meeting_noise.json",
+    "cats_c03_v0_meeting_noise.full.json"
+  ],
+  "problems": [],
+  "warnings": [
+    "Ресурсы: мало памяти (доступно 3633 МБ, нужно ~4000 МБ): потоков 3, без второго прохода и денойза"
+  ]
+}

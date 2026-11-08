@@ -1,4 +1,4 @@
-# :app — интерфейс «Нейро-стенографиста» (Jetpack Compose, нео-брутализм поверх Material 3)
+# :app — интерфейс «Нейро-стенографиста» (Jetpack Compose, Quiet Spruce поверх Material 3)
 
 Один экран-Activity (`MainActivity`) + `AppRoot` с простым стеком навигации (`nav/Nav.kt`, стек переживает поворот).
 Обработка идёт в foreground-сервисе (`ProcessingService`), интерфейс только наблюдает `ProcessingState`.
@@ -27,24 +27,20 @@ JSON и в строке logcat `done <имя>: … peak_pss_mb=… threads=… d
 Если `results` недоступна для записи (остаток от другой установки/uid → `EACCES`), берётся `results-<uid>`, затем внутренняя `filesDir/results`;
 путь — в `results=` строки `done` и в `results_dir` маркера.
 
-## Дизайн-система (B52, `ui/theme`)
+## Дизайн-система (Quiet Spruce, `ui/theme`)
 
-Нео-брутализм по `docs/team/DESIGN_BRIEF.md`: белый фон и чёрный текст (тёмная тема -- инверсия), рамки 2-3 dp, жёсткие тени без размытия,
-радиус 3 dp, один неоновый акцент, 8 цветов говорящих с чёрным текстом.
+Полная спецификация — корневой `design.md`, краткие продуктовые ограничения — `docs/team/DESIGN_BRIEF.md`. Тёплые нейтральные фоны,
+хвойный акцент, границы 1 dp, радиусы 14–24 dp и нулевая тень по умолчанию. Старые имена `Brutal*` сохранены только как API совместимости.
 
-- `Accent.kt` -- акцент. **Один переключатель**: `AccentConfig.DEFAULT` (`GREEN` #B6FF00 или `PINK` #FF2E88). В debug-сборке акцент
-  меняется на лету: `adb shell am broadcast -a ru.neurosteno.app.DEBUG_ACCENT -p ru.neurosteno.app.medium --es accent pink` (green|pink|default).
-  Контраст чёрного текста на акценте (WCAG): зелёный 17,3:1, розовый 6,0:1; сам акцент как цвет текста не используется (на белом 1,2:1 / 3,5:1).
-- `Color.kt` -- `BrutalPalette`, `SpeakerPalette` (один и тот же цвет говорящего на всех экранах, через `speakerFill(id)`).
-- `Type.kt` -- шрифты OFL с кириллицей, вшиты в APK (`res/font`, лицензии в `assets/licenses`): Unbounded (заголовки), Golos Text (текст),
-  JetBrains Mono (время и числа). Все три -- вариативные, начертание задаётся `FontVariation`.
-- `Theme.kt` -- `NeuroTheme`, `Brutal` (bg, ink, accent, muted...), размеры `BrutalDims`, форма `BrutalShape`.
-- `Primitives.kt` -- `BrutalCard`/`BrutalSurface`, `BrutalButton` (нажатая «вдавливается» в тень), `BrutalIconButton`, `BrutalChip`, `SpeakerChip`,
-  `BrutalTag`, `BrutalPlaque`, `BrutalSwitch`, `BrutalProgress`, `BrutalSlider`, `BrutalTextField`, `SectionTitle`. Тень рисуется в зарезервированном
-  отступе справа/снизу, поэтому родители (LazyColumn, Scaffold) её не обрезают. `BrutalButton` по умолчанию -- по ширине содержимого;
-  `fillMaxWidth()`/`weight()` вызывающего растягивают и лицо кнопки.
-- Резерв под «Выжимку» (B50) и «AI-поиск» (B51): неактивные плитки «СКОРО» на экране расшифровки (`slot_summary`, `slot_ai_search`).
-- Скрипты скриншотов: `app/tools/redesign_shots.sh` (4 экрана x светлая/тёмная x оба акцента) и `app/tools/redesign_extra_shots.sh` (остальные экраны, шрифт x1,6, альбомная).
+- `Accent.kt` — основной хвойный акцент и debug-вариант терракоты. Команда переключения прежняя: `green|pink|default`.
+- `Color.kt` — палитра светлой и тёмной темы, мягкие поверхности, контуры, ошибки и 8 приглушённых цветов говорящих через `speakerFill(id)`.
+- `Type.kt` — вшитые OFL-шрифты с кириллицей: Golos Text (UI и документ), Unbounded (только wordmark), JetBrains Mono (время и технические числа).
+- `Theme.kt` — `NeuroTheme`, токены цвета, Material 3 scheme и формы. Compose-токены — единственный источник новых цветов.
+- `Primitives.kt` — `BrutalCard`/`BrutalSurface`, `BrutalButton` (спокойный press scale), `BrutalIconButton`, `BrutalChip`, `SpeakerChip`,
+  `BrutalTag`, `BrutalPlaque`, `BrutalSwitch`, `BrutalProgress`, `BrutalSlider`, `BrutalTextField`, `SectionTitle`.
+  Минимальная цель нажатия — 48 dp; `fillMaxWidth()` и `weight()` продолжают работать как прежде.
+- Резерв под «Выжимку» и «AI-поиск»: недоступные инструменты помечаются «· скоро» (`slot_summary`, `slot_ai_search`).
+- Проверки дизайн-токенов: `QuietSpruceThemeTest`; AI-состояния и темы: `InsightScreenshotsTest`.
 
 ## Живая расшифровка при записи (B13)
 

@@ -16,8 +16,8 @@ BASE_URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/v${VERSION}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANDROID_DIR="$(cd "$HERE/.." && pwd)"
-COMMON="$(git -C "$HERE" rev-parse --path-format=absolute --git-common-dir)"
-ROOT="$(dirname "$COMMON")"
+COMMON="$(git -C "$HERE" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+if [ -n "$COMMON" ]; then ROOT="$(dirname "$COMMON")"; else ROOT="$(cd "$HERE/../../.." && pwd)"; fi
 CACHE="$ROOT/.cache/android-deps/sherpa-onnx-${VERSION}"
 MAVEN="$ANDROID_DIR/third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx/${VERSION}"
 mkdir -p "$CACHE"

@@ -60,23 +60,32 @@ fun ModelsScreen(
     Scaffold(containerColor = Brutal.bg, topBar = { NeuroTopBar("Модели", onBack = onBack) }) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BrutalTag("СВОБОДНО ${Format.bytes(freeBytes).uppercase()}", fill = Brutal.accent)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    BrutalTag("Свободно ${Format.bytes(freeBytes)}", fill = Brutal.accentSoft, textStyle = MaterialTheme.typography.labelMedium)
                     Text(
                         "Все вычисления выполняются на устройстве. Интернет нужен только для скачивания наборов моделей — и только по вашей кнопке.",
-                        style = MaterialTheme.typography.bodyMedium, color = Brutal.muted,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Brutal.muted,
                     )
                 }
             }
-            if (message != null) item { MessageCard(message, isError = true) { BrutalButton(onClick = onDismissMessage, style = BrutalButtonStyle.Secondary, height = 44.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Понятно") } } }
+            if (message != null) item {
+                MessageCard(message, isError = true) {
+                    BrutalButton(onClick = onDismissMessage, style = BrutalButtonStyle.Secondary, height = 44.dp, modifier = Modifier.fillMaxWidth()) {
+                        ButtonLabel("Понятно")
+                    }
+                }
+            }
             if (bundledSetId != null && rows.none { it.id == bundledSetId && it.installed }) {
                 item {
                     MessageCard("Встроенный набор «$bundledSetId» сейчас удалён из хранилища приложения. Его можно восстановить из APK без интернета.") {
-                        BrutalButton(onClick = actions.restoreBuiltin, modifier = Modifier.fillMaxWidth().testTag("btn_restore_builtin")) { ButtonLabel("Восстановить из APK") }
+                        BrutalButton(onClick = actions.restoreBuiltin, modifier = Modifier.fillMaxWidth().testTag("btn_restore_builtin")) {
+                            ButtonLabel("Восстановить из APK")
+                        }
                     }
                 }
             }
@@ -93,16 +102,19 @@ fun ModelSetCard(row: ModelSetRow, bundledSetId: String?, actions: ModelActions,
     val isBundled = row.id == bundledSetId
     BrutalCard(
         Modifier.fillMaxWidth().semantics(mergeDescendants = false) { contentDescription = "Набор моделей ${row.title}" },
-        fill = if (row.active) Brutal.accent else Brutal.bg,
+        fill = if (row.active) Brutal.accentSoft else Brutal.surface,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(row.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f, fill = false))
-                if (row.active) BrutalTag("АКТИВНЫЙ", fill = Brutal.ink)
-                else if (row.recommended && !row.installed) BrutalTag("РЕКОМЕНДУЕМ", fill = Brutal.accent)
+                if (row.active) {
+                    BrutalTag("Активная", fill = Brutal.accent, textStyle = MaterialTheme.typography.labelMedium)
+                } else if (row.recommended && !row.installed) {
+                    BrutalTag("Рекомендуем", fill = Brutal.panel, textStyle = MaterialTheme.typography.labelMedium)
+                }
             }
             if (row.description.isNotBlank()) Text(row.description, style = MaterialTheme.typography.bodyMedium)
-            Text(statusLine(row, isBundled), style = MaterialTheme.typography.labelMedium, color = if (row.active) Brutal.onAccent else Brutal.muted)
+            Text(statusLine(row, isBundled), style = MaterialTheme.typography.bodySmall, color = Brutal.muted)
 
             when (val d = row.download) {
                 is DownloadUi.Running -> {
@@ -177,7 +189,7 @@ private fun IdleActions(
         if (row.installed) {
             if (!row.active) BrutalButton(onClick = { actions.activate(row.id) }, height = 48.dp, modifier = Modifier.fillMaxWidth().testTag("btn_activate_${row.id}")) { ButtonLabel("Сделать активным") }
             BrutalButton(onClick = onAskDelete, style = BrutalButtonStyle.Secondary, height = 48.dp, modifier = Modifier.fillMaxWidth().testTag("btn_delete_${row.id}")) {
-                ButtonLabel(if (isBundled) "Удалить встроенный набор" else "Удалить")
+                ButtonLabel(if (isBundled) "Удалить набор" else "Удалить")
             }
         } else {
             if (isBundled) BrutalButton(onClick = actions.restoreBuiltin, height = 48.dp, modifier = Modifier.fillMaxWidth()) { ButtonLabel("Восстановить из APK") }

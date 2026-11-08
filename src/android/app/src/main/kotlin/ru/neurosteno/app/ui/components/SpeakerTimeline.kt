@@ -61,7 +61,7 @@ fun SpeakerTimeline(
     val stripDp = TimelineLayout.heightDp(layout.lanes, laneDp, gapDp) + 8f // + рамка и отступы
     val shown = (dragMs ?: positionMs).coerceIn(0L, maxOf(durationMs, 1L))
     val total = maxOf(durationMs, 1L)
-    val bg = Brutal.bg
+    val bg = Brutal.surface
     val ink = Brutal.ink
     val accent = Brutal.accent
     val addedCount = items.count { it.added }
@@ -91,39 +91,46 @@ fun SpeakerTimeline(
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxWidth().height(stripDp.dp)) {
-            val frame = 2.dp.toPx()
             val laneH = laneDp.dp.toPx()
             val gap = gapDp.dp.toPx()
             val padY = 3.dp.toPx()
-            // рамка полосы
-            drawRect(bg, Offset.Zero, size)
-            drawRect(ink, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Stroke(frame))
-            for (s in layout.segments) {
-                val top = padY + s.lane * (laneH + gap)
-                val x0 = s.x0.coerceIn(0f, size.width)
-                val w = (s.x1 - s.x0).coerceAtLeast(1f)
-                drawRect(speakerFill(s.speakerId), Offset(x0, top), Size(w, laneH))
-                if (s.added) {
-                    clipRect(x0, top, x0 + w, top + laneH) {
-                        var k = -laneH
-                        while (k < w + laneH) {
-                            drawLine(ink, Offset(x0 + k, top + laneH), Offset(x0 + k + laneH, top), strokeWidth = 1.2.dp.toPx())
-                            k += 4.dp.toPx()
+            drawRoundRect(
+                color = bg,
+                topLeft = Offset.Zero,
+                size = size,
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx()),
+            )
+            for (segment in layout.segments) {
+                val top = padY + segment.lane * (laneH + gap)
+                val x0 = segment.x0.coerceIn(0f, size.width)
+                val width = (segment.x1 - segment.x0).coerceAtLeast(1f)
+                drawRoundRect(
+                    color = speakerFill(segment.speakerId),
+                    topLeft = Offset(x0, top),
+                    size = Size(width, laneH),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()),
+                )
+                if (segment.added) {
+                    clipRect(x0, top, x0 + width, top + laneH) {
+                        var offset = -laneH
+                        while (offset < width + laneH) {
+                            drawLine(
+                                ink.copy(alpha = 0.48f),
+                                Offset(x0 + offset, top + laneH),
+                                Offset(x0 + offset + laneH, top),
+                                strokeWidth = 1.dp.toPx(),
+                            )
+                            offset += 4.dp.toPx()
                         }
                     }
-                    drawRect(ink, Offset(x0, top), Size(w, laneH), style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
-                } else if (w > 3.dp.toPx()) {
-                    drawRect(ink, Offset(x0, top), Size(w, laneH), style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
+                    drawRect(accent, Offset(x0, top), Size(width, laneH), style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
                 }
             }
-            // метка текущей позиции: чёрная линия с «ореолом» цвета фона -- видна и на неоновом отрезке, и на белом
             val x = layout.msToX(shown).coerceIn(0f, size.width)
             val halo = 7.dp.toPx()
-            drawRect(bg, Offset(x - halo / 2, -0f), Size(halo, size.height))
-            drawRect(ink, Offset(x - 1.5.dp.toPx(), 0f), Size(3.dp.toPx(), size.height))
-            // «шапка» метки акцентным цветом
+            drawRect(bg, Offset(x - halo / 2, 0f), Size(halo, size.height))
+            drawRect(accent, Offset(x - 1.dp.toPx(), 0f), Size(2.dp.toPx(), size.height))
             drawRect(accent, Offset(x - 4.dp.toPx(), 0f), Size(8.dp.toPx(), 4.dp.toPx()))
-            drawRect(ink, Offset(x - 4.dp.toPx(), 0f), Size(8.dp.toPx(), 4.dp.toPx()), style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
         }
     }
 }

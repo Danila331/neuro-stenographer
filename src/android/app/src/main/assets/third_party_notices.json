@@ -410,7 +410,7 @@
     "kind": "font",
     "name": "Unbounded",
     "version": "variable (wght 200-900)",
-    "purpose": "Заголовки интерфейса",
+    "purpose": "Резервный display-шрифт",
     "license": "OFL-1.1",
     "license_file": "OFL-unbounded.txt",
     "text_complete": true,
@@ -422,7 +422,7 @@
     "kind": "font",
     "name": "Golos Text",
     "version": "variable (wght 400-900)",
-    "purpose": "Основной текст интерфейса",
+    "purpose": "Резервный текстовый шрифт",
     "license": "OFL-1.1",
     "license_file": "OFL-golostext.txt",
     "text_complete": true,
@@ -440,5 +440,17 @@
     "text_complete": true,
     "source": "https://github.com/JetBrains/JetBrainsMono",
     "note": "Copyright 2020 The JetBrains Mono Project Authors"
+  },
+  {
+    "id": "font/inter",
+    "kind": "font",
+    "name": "Inter",
+    "version": "variable (opsz, wght)",
+    "purpose": "Основной текст и заголовки интерфейса",
+    "license": "OFL-1.1",
+    "license_file": "OFL-inter.txt",
+    "text_complete": true,
+    "source": "https://github.com/rsms/inter",
+    "note": "Copyright 2020 The Inter Project Authors"
   }
 ]

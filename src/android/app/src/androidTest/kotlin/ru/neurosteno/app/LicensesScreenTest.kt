@@ -1,6 +1,7 @@
 package ru.neurosteno.app
 
 import android.app.Application
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
@@ -60,7 +61,7 @@ class LicensesScreenTest {
         rule.setContent { NeuroTheme { LicenseTextScreen(notice, Notices.licenseText(ctx, notice), onBack = {}) } }
         rule.onNodeWithTag("license_note").assertIsDisplayed()
         rule.onNodeWithTag("license_text").assertIsDisplayed()
-        rule.onNodeWithText("ObjectBox", substring = true).assertIsDisplayed()
+        rule.onNodeWithTag("license_text").assert(androidx.compose.ui.test.hasText("ObjectBox", substring = true))
     }
 
     @Test
