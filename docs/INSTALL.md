@@ -13,10 +13,10 @@
 
 ## Установка APK
 
-Файлы `neurosteno-{lite,medium,hard,online}-0.1.0.apk` (в git не входят, размер > 100 МБ; скачать: [GitHub Release v0.1.0](https://github.com/Danila331/neuro-stenographer/releases/tag/v0.1.0), там medium, lite и online; hard не выложен из-за лимита 2 ГиБ на файл) кладутся в `artifacts/apk/`;
-размеры и sha256 — `artifacts/apk/SHA256SUMS.txt`, проверка `shasum -a 256 -c SHA256SUMS.txt`. Для жюри — `neurosteno-medium-0.1.0.apk` (1,78 ГиБ).
+В [GitHub Release v0.1.0](https://github.com/Danila331/neuro-stenographer/releases/tag/v0.1.0) опубликованы `neurosteno-lite-0.1.0.apk` (автономный, 967 МиБ) и `neurosteno-online-0.1.0.apk` (50,6 МиБ, скачивает модели при первом запуске). Остальные наборы можно скачать в менеджере «Модели» внутри приложения. Medium и Hard также собираются из исходников.
+Файлы APK не входят в git; размеры и sha256 — `artifacts/apk/SHA256SUMS.txt`, проверка `shasum -a 256 -c SHA256SUMS.txt`. Для автоматической проверки — `neurosteno-lite-0.1.0.apk`: модели уже встроены, импорт аудио и экспорт JSON работают офлайн.
 
-- **adb:** `adb install -r artifacts/apk/neurosteno-medium-0.1.0.apk` (на эмуляторе — тот же ключ `adb`).
+- **adb:** `adb install -r artifacts/apk/neurosteno-lite-0.1.0.apk` (на эмуляторе — тот же ключ `adb`).
 - **Вручную:** скопировать APK на устройство, открыть в файловом менеджере, разрешить установку из этого источника.
   APK подписан локальным ключом, не Google Play: предупреждение системы ожидаемо.
 - Варианты ставятся рядом (разные `applicationId`: `ru.neurosteno.app.lite|medium|hard|online`).
